@@ -5,9 +5,13 @@
 //-----------------------------------------------------------------------------------------------
 #include "Game/App.hpp"
 
+#include "Engine/Core/DevConsole.hpp"
+#include "Engine/Core/EngineCommon.hpp"
+#include "Engine/Core/EventSystem.hpp"
 #include "Engine/Core/Time.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
+#include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/Renderer.hpp"
 #include "Engine/Renderer/Window.hpp"
 #include "Game/GameCommon.hpp"
@@ -15,16 +19,21 @@
 #include "Game/GameRaycastVsDiscs.hpp"
 
 //-----------------------------------------------------------------------------------------------
-App *                  g_theApp      = nullptr; // Created and owned by Main_Windows.cpp
-InputSystem *          g_theInput    = nullptr;
-Renderer *             g_theRenderer = nullptr; // Created and owned by the App
-RandomNumberGenerator *g_theRNG      = nullptr; // Created and owned by the App
-Window *               g_theWindow   = nullptr;
+App*                   g_theApp        = nullptr; // Created and owned by Main_Windows.cpp
+BitmapFont*            g_theBitmapFont = nullptr; // Created and owned by the App
+InputSystem*           g_theInput      = nullptr; // Created and owned by the App
+Game*                  g_theGame       = nullptr; // Created and owned by the App
+Renderer*              g_theRenderer   = nullptr; // Created and owned by the App
+RandomNumberGenerator* g_theRNG        = nullptr; // Created and owned by the App
+Window*                g_theWindow     = nullptr; // Created and owned by the App
 
 //-----------------------------------------------------------------------------------------------
 void App::Startup()
 {
-	// Create All Engine Subsystems
+	EventSystemConfig eventSystemConfig;
+	g_theEventSystem = new EventSystem(eventSystemConfig);
+	g_theEventSystem->SubscribeEventCallbackFunction("WindowClose", OnWindowClose);
+
 	InputSystemConfig inputConfig;
 	g_theInput = new InputSystem(inputConfig);
 
@@ -51,9 +60,14 @@ void App::Startup()
 	renderConfig.m_window = g_theWindow;
 	g_theRenderer         = new Renderer(renderConfig); // Create render
 
+	DevConsoleConfig devConsoleConfig;
+	g_theDevConsole = new DevConsole(devConsoleConfig);
+
+	g_theEventSystem->Startup();
 	g_theInput->Startup();
 	g_theWindow->Startup();
 	g_theRenderer->Startup();
+	g_theDevConsole->StartUp();
 
 	g_theRNG  = new RandomNumberGenerator();
 	m_theGame = new GameRaycastVsDiscs();
@@ -64,15 +78,25 @@ void App::Startup()
 //
 void App::Shutdown()
 {
-	delete m_theGame;
-	m_theGame = nullptr;
+	delete g_theGame;
+	g_theGame = nullptr;
 
+	delete g_theRNG;
+	g_theRNG = nullptr;
+
+	delete g_theBitmapFont;
+	g_theBitmapFont = nullptr;
+
+	g_theDevConsole->Shutdown();
 	g_theRenderer->Shutdown();
 	g_theWindow->Shutdown();
 	g_theInput->Shutdown();
+	g_theEventSystem->Shutdown();
 
 	// Destroy all Engine Subsystem
 
+	delete g_theDevConsole;
+	g_theDevConsole = nullptr;
 
 	delete g_theRenderer;
 	g_theRenderer = nullptr;
@@ -82,6 +106,9 @@ void App::Shutdown()
 
 	delete g_theInput;
 	g_theInput = nullptr;
+
+	delete g_theEventSystem;
+	g_theEventSystem = nullptr;
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -101,16 +128,16 @@ void App::RunFrame()
 	EndFrame();           // Engine post-frame stuff
 }
 
-//-----------------------------------------------------------------------------------------------
-bool App::IsQuitting() const
-{
-	return m_isQuitting;
-}
+// //-----------------------------------------------------------------------------------------------
+// bool App::IsQuitting() const
+// {
+// 	return m_isQuitting;
+// }
 
 void App::RunMainLoop()
 {
 	// Program main loop; keep running frames until it's time to quit
-	while (!IsQuitting())
+	while (!m_isQuitting)
 	{
 		// Sleep(16); // Temporary code to "slow down" our app to ~60Hz until we have proper frame timing in
 		RunFrame();
@@ -120,13 +147,13 @@ void App::RunMainLoop()
 //-----------------------------------------------------------------------------------------------
 void App::BeginFrame() const
 {
+	g_theEventSystem->BeginFrame();
 	g_theInput->BeginFrame();
 	g_theWindow->BeginFrame();
 	g_theRenderer->BeginFrame();
+	g_theDevConsole->BeginFrame();
 	// g_theNetwork->BeginFrame();
 	// g_theWindow->BeginFrame();
-	// g_theDevConsole->BeginFrame();
-	// g_theEventSystem->BeginFrame();
 	// g_theNetwork->BeginFrame();
 }
 
@@ -156,9 +183,11 @@ void App::Render() const
 //-----------------------------------------------------------------------------------------------
 void App::EndFrame() const
 {
+	g_theEventSystem->EndFrame();
+	g_theInput->EndFrame();
 	g_theWindow->EndFrame();
 	g_theRenderer->EndFrame();
-	g_theInput->EndFrame();
+	g_theDevConsole->EndFrame();
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -232,4 +261,19 @@ void App::DeleteAndCreateNewGame()
 	m_theGame = nullptr;
 
 	m_theGame = new GameNearestPoint();
+}
+
+//-----------------------------------------------------------------------------------------------
+bool OnWindowClose(EventArgs& arg)
+{
+	UNUSED(arg)
+    
+	RequestQuit();
+	return true;
+}
+
+//----------------------------------------------------------------------------------------------------
+void RequestQuit()
+{
+	m_isQuitting = true;
 }

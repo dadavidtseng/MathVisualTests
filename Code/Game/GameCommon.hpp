@@ -6,6 +6,7 @@
 #pragma once
 #include "Engine/Renderer/Window.hpp"
 
+
 class Arrow;
 struct Capsule2;
 struct AABB2;
@@ -17,14 +18,19 @@ struct Disc2;
 struct Rgba8;
 struct Vec2;
 class App;
-class AudioSystem;
+// class AudioSystem;
+class BitmapFont;
+class Game;
 class InputSystem;
 class Renderer;
 class RandomNumberGenerator;
+class Window;
 
 // one-time declaration
 extern App*                   g_theApp;
-extern AudioSystem*           g_theAudio;
+// extern AudioSystem*           g_theAudio;
+extern BitmapFont*            g_theBitmapFont;
+extern Game*                  g_theGame;
 extern InputSystem*           g_theInput;
 extern Renderer*              g_theRenderer;
 extern RandomNumberGenerator* g_theRNG;

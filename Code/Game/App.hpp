@@ -4,6 +4,7 @@
 
 //----------------------------------------------------------------------------------------------------
 #pragma once
+#include "Engine/Core/EventSystem.hpp"
 #include "Game/GameCommon.hpp"
 
 //----------------------------------------------------------------------------------------------------
@@ -21,7 +22,7 @@ public:
 	void RunFrame();
 
 	void RunMainLoop();
-	bool IsQuitting() const;
+	// bool IsQuitting() const;
 	
 
 private:
@@ -36,10 +37,13 @@ private:
 	void AdjustForPauseAndTimeDistortion(float& deltaSeconds) const;
 	void DeleteAndCreateNewGame();
 
-	bool     m_isQuitting         = false;
 	bool     m_isPaused           = false;
 	bool     m_isSlowMo           = false;
 	float    m_timeLastFrameStart = 0.f;
 	Game*    m_theGame            = nullptr;
 	GameMode m_currentGameMode{GameMode::GAME_MODE_RAYCAST_VS_DISCS};
 };
+
+static bool OnWindowClose(EventArgs& arg);
+static void RequestQuit();
+static bool m_isQuitting;
