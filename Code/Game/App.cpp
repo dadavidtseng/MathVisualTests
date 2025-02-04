@@ -1,8 +1,8 @@
-//-----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------
 // App.cpp
-//
+//----------------------------------------------------------------------------------------------------
 
-//-----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------
 #include "Game/App.hpp"
 
 #include "Engine/Core/DevConsole.hpp"
@@ -18,59 +18,59 @@
 #include "Game/GameNearestPoint.hpp"
 #include "Game/GameRaycastVsDiscs.hpp"
 
-//-----------------------------------------------------------------------------------------------
-App*                   g_theApp        = nullptr; // Created and owned by Main_Windows.cpp
-BitmapFont*            g_theBitmapFont = nullptr; // Created and owned by the App
-InputSystem*           g_theInput      = nullptr; // Created and owned by the App
-Game*                  g_theGame       = nullptr; // Created and owned by the App
-Renderer*              g_theRenderer   = nullptr; // Created and owned by the App
-RandomNumberGenerator* g_theRNG        = nullptr; // Created and owned by the App
-Window*                g_theWindow     = nullptr; // Created and owned by the App
+//----------------------------------------------------------------------------------------------------
+App*                   g_theApp        = nullptr;      // Created and owned by Main_Windows.cpp
+BitmapFont*            g_theBitmapFont = nullptr;      // Created and owned by the App
+InputSystem*           g_theInput      = nullptr;      // Created and owned by the App
+Game*                  g_theGame       = nullptr;      // Created and owned by the App
+Renderer*              g_theRenderer   = nullptr;      // Created and owned by the App
+RandomNumberGenerator* g_theRNG        = nullptr;      // Created and owned by the App
+Window*                g_theWindow     = nullptr;      // Created and owned by the App
 
-//-----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------
 void App::Startup()
 {
-	EventSystemConfig eventSystemConfig;
-	g_theEventSystem = new EventSystem(eventSystemConfig);
-	g_theEventSystem->SubscribeEventCallbackFunction("WindowClose", OnWindowClose);
+    EventSystemConfig eventSystemConfig;
+    g_theEventSystem = new EventSystem(eventSystemConfig);
+    g_theEventSystem->SubscribeEventCallbackFunction("WindowClose", OnWindowClose);
 
-	InputSystemConfig inputConfig;
-	g_theInput = new InputSystem(inputConfig);
+    InputSystemConfig inputConfig;
+    g_theInput = new InputSystem(inputConfig);
 
-	WindowConfig windowConfig;
-	windowConfig.m_aspectRatio = 2.f;
-	windowConfig.m_inputSystem = g_theInput;
+    WindowConfig windowConfig;
+    windowConfig.m_aspectRatio = 2.f;
+    windowConfig.m_inputSystem = g_theInput;
 
-	windowConfig.m_consoleTitle[0]  = " .----------------.  .----------------.  .----------------.\n";
-	windowConfig.m_consoleTitle[1]  = "| .--------------. || .--------------. || .--------------. |\n";
-	windowConfig.m_consoleTitle[2]  = "| | ____    ____ | || | ____   ____  | || |  _________   | |\n";
-	windowConfig.m_consoleTitle[3]  = "| ||_   \\  /   _|| || ||_  _| |_  _| | || | |  _   _  |  | |\n";
-	windowConfig.m_consoleTitle[4]  = "| |  |   \\/   |  | || |  \\ \\   / /   | || | |_/ | | \\_|  | |\n";
-	windowConfig.m_consoleTitle[5]  = "| |  | |\\  /| |  | || |   \\ \\ / /    | || |     | |      | |\n";
-	windowConfig.m_consoleTitle[6]  = "| | _| |_\\/_| |_ | || |    \\ ' /     | || |    _| |_     | |\n";
-	windowConfig.m_consoleTitle[7]  = "| ||_____||_____|| || |     \\_/      | || |   |_____|    | |\n";
-	windowConfig.m_consoleTitle[8]  = "| |              | || |              | || |              | |\n";
-	windowConfig.m_consoleTitle[9]  = "| '--------------' || '--------------' || '--------------' |\n";
-	windowConfig.m_consoleTitle[10] = " '----------------'  '----------------'  '----------------' \n";
+    windowConfig.m_consoleTitle[0]  = " .----------------.  .----------------.  .----------------.\n";
+    windowConfig.m_consoleTitle[1]  = "| .--------------. || .--------------. || .--------------. |\n";
+    windowConfig.m_consoleTitle[2]  = "| | ____    ____ | || | ____   ____  | || |  _________   | |\n";
+    windowConfig.m_consoleTitle[3]  = "| ||_   \\  /   _|| || ||_  _| |_  _| | || | |  _   _  |  | |\n";
+    windowConfig.m_consoleTitle[4]  = "| |  |   \\/   |  | || |  \\ \\   / /   | || | |_/ | | \\_|  | |\n";
+    windowConfig.m_consoleTitle[5]  = "| |  | |\\  /| |  | || |   \\ \\ / /    | || |     | |      | |\n";
+    windowConfig.m_consoleTitle[6]  = "| | _| |_\\/_| |_ | || |    \\ ' /     | || |    _| |_     | |\n";
+    windowConfig.m_consoleTitle[7]  = "| ||_____||_____|| || |     \\_/      | || |   |_____|    | |\n";
+    windowConfig.m_consoleTitle[8]  = "| |              | || |              | || |              | |\n";
+    windowConfig.m_consoleTitle[9]  = "| '--------------' || '--------------' || '--------------' |\n";
+    windowConfig.m_consoleTitle[10] = " '----------------'  '----------------'  '----------------' \n";
 
-	windowConfig.m_windowTitle = "Math Visual Tests";
-	g_theWindow                = new Window(windowConfig);
+    windowConfig.m_windowTitle = "Math Visual Tests";
+    g_theWindow                = new Window(windowConfig);
 
-	RenderConfig renderConfig;
-	renderConfig.m_window = g_theWindow;
-	g_theRenderer         = new Renderer(renderConfig); // Create render
+    RenderConfig renderConfig;
+    renderConfig.m_window = g_theWindow;
+    g_theRenderer         = new Renderer(renderConfig); // Create render
 
-	DevConsoleConfig devConsoleConfig;
-	g_theDevConsole = new DevConsole(devConsoleConfig);
+    DevConsoleConfig devConsoleConfig;
+    g_theDevConsole = new DevConsole(devConsoleConfig);
 
-	g_theEventSystem->Startup();
-	g_theInput->Startup();
-	g_theWindow->Startup();
-	g_theRenderer->Startup();
-	g_theDevConsole->StartUp();
+    g_theEventSystem->Startup();
+    g_theInput->Startup();
+    g_theWindow->Startup();
+    g_theRenderer->Startup();
+    g_theDevConsole->StartUp();
 
-	g_theRNG  = new RandomNumberGenerator();
-	m_theGame = new GameRaycastVsDiscs();
+    g_theRNG  = new RandomNumberGenerator();
+    m_theGame = new GameRaycastVsDiscs();
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -78,37 +78,37 @@ void App::Startup()
 //
 void App::Shutdown()
 {
-	delete g_theGame;
-	g_theGame = nullptr;
+    delete g_theGame;
+    g_theGame = nullptr;
 
-	delete g_theRNG;
-	g_theRNG = nullptr;
+    delete g_theRNG;
+    g_theRNG = nullptr;
 
-	delete g_theBitmapFont;
-	g_theBitmapFont = nullptr;
+    delete g_theBitmapFont;
+    g_theBitmapFont = nullptr;
 
-	g_theDevConsole->Shutdown();
-	g_theRenderer->Shutdown();
-	g_theWindow->Shutdown();
-	g_theInput->Shutdown();
-	g_theEventSystem->Shutdown();
+    g_theDevConsole->Shutdown();
+    g_theRenderer->Shutdown();
+    g_theWindow->Shutdown();
+    g_theInput->Shutdown();
+    g_theEventSystem->Shutdown();
 
-	// Destroy all Engine Subsystem
+    // Destroy all Engine Subsystem
 
-	delete g_theDevConsole;
-	g_theDevConsole = nullptr;
+    delete g_theDevConsole;
+    g_theDevConsole = nullptr;
 
-	delete g_theRenderer;
-	g_theRenderer = nullptr;
+    delete g_theRenderer;
+    g_theRenderer = nullptr;
 
-	delete g_theWindow;
-	g_theWindow = nullptr;
+    delete g_theWindow;
+    g_theWindow = nullptr;
 
-	delete g_theInput;
-	g_theInput = nullptr;
+    delete g_theInput;
+    g_theInput = nullptr;
 
-	delete g_theEventSystem;
-	g_theEventSystem = nullptr;
+    delete g_theEventSystem;
+    g_theEventSystem = nullptr;
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -116,16 +116,16 @@ void App::Shutdown()
 //
 void App::RunFrame()
 {
-	const float timeNow      = static_cast<float>(GetCurrentTimeSeconds());
-	const float deltaSeconds = timeNow - m_timeLastFrameStart;
-	m_timeLastFrameStart     = timeNow;
+    float const timeNow      = static_cast<float>(GetCurrentTimeSeconds());
+    float const deltaSeconds = timeNow - m_timeLastFrameStart;
+    m_timeLastFrameStart     = timeNow;
 
-	// DebuggerPrintf("TimeNow = %.06f\n", timeNow);
+    // DebuggerPrintf("TimeNow = %.06f\n", timeNow);
 
-	BeginFrame();         // Engine pre-frame stuff
-	Update(deltaSeconds); // Game updates / moves / spawns / hurts / kills stuff
-	Render();             // Game draws current state of things
-	EndFrame();           // Engine post-frame stuff
+    BeginFrame();         // Engine pre-frame stuff
+    Update(deltaSeconds); // Game updates / moves / spawns / hurts / kills stuff
+    Render();             // Game draws current state of things
+    EndFrame();           // Engine post-frame stuff
 }
 
 // //-----------------------------------------------------------------------------------------------
@@ -136,34 +136,34 @@ void App::RunFrame()
 
 void App::RunMainLoop()
 {
-	// Program main loop; keep running frames until it's time to quit
-	while (!m_isQuitting)
-	{
-		// Sleep(16); // Temporary code to "slow down" our app to ~60Hz until we have proper frame timing in
-		RunFrame();
-	}
+    // Program main loop; keep running frames until it's time to quit
+    while (!m_isQuitting)
+    {
+        // Sleep(16); // Temporary code to "slow down" our app to ~60Hz until we have proper frame timing in
+        RunFrame();
+    }
 }
 
 //-----------------------------------------------------------------------------------------------
 void App::BeginFrame() const
 {
-	g_theEventSystem->BeginFrame();
-	g_theInput->BeginFrame();
-	g_theWindow->BeginFrame();
-	g_theRenderer->BeginFrame();
-	g_theDevConsole->BeginFrame();
-	// g_theNetwork->BeginFrame();
-	// g_theWindow->BeginFrame();
-	// g_theNetwork->BeginFrame();
+    g_theEventSystem->BeginFrame();
+    g_theInput->BeginFrame();
+    g_theWindow->BeginFrame();
+    g_theRenderer->BeginFrame();
+    g_theDevConsole->BeginFrame();
+    // g_theNetwork->BeginFrame();
+    // g_theWindow->BeginFrame();
+    // g_theNetwork->BeginFrame();
 }
 
 //-----------------------------------------------------------------------------------------------
 void App::Update(float deltaSeconds)
 {
-	HandleKeyPressed();
-	HandleKeyReleased();
-	AdjustForPauseAndTimeDistortion(deltaSeconds);
-	m_theGame->Update(deltaSeconds);
+    HandleKeyPressed();
+    HandleKeyReleased();
+    AdjustForPauseAndTimeDistortion(deltaSeconds);
+    m_theGame->Update(deltaSeconds);
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -175,105 +175,107 @@ void App::Update(float deltaSeconds)
 //
 void App::Render() const
 {
-	const Rgba8 clearColor = Rgba8(0, 0, 0);
-	g_theRenderer->ClearScreen(clearColor);
-	m_theGame->Render();
+    Rgba8 const clearColor = Rgba8::BLACK;
+
+    g_theRenderer->ClearScreen(clearColor);
+    m_theGame->Render();
 }
 
 //-----------------------------------------------------------------------------------------------
 void App::EndFrame() const
 {
-	g_theEventSystem->EndFrame();
-	g_theInput->EndFrame();
-	g_theWindow->EndFrame();
-	g_theRenderer->EndFrame();
-	g_theDevConsole->EndFrame();
+    g_theEventSystem->EndFrame();
+    g_theInput->EndFrame();
+    g_theWindow->EndFrame();
+    g_theRenderer->EndFrame();
+    g_theDevConsole->EndFrame();
 }
 
 //-----------------------------------------------------------------------------------------------
 void App::HandleKeyPressed()
 {
-	XboxController const& controller = g_theInput->GetController(0);
+    XboxController const& controller = g_theInput->GetController(0);
 
-	if (g_theInput->WasKeyJustPressed('O'))
-	{
-		m_isPaused = true;
-		m_theGame->Update(1.f / 60.f);
-	}
+    if (g_theInput->WasKeyJustPressed('O'))
+    {
+        m_isPaused = true;
+        m_theGame->Update(1.f / 60.f);
+    }
 
-	if (g_theInput->WasKeyJustPressed('T'))
-		m_isSlowMo = true;
+    if (g_theInput->WasKeyJustPressed('T'))
+        m_isSlowMo = true;
 
-	if (g_theInput->WasKeyJustPressed('P'))
-		m_isPaused = !m_isPaused;
+    if (g_theInput->WasKeyJustPressed('P'))
+        m_isPaused = !m_isPaused;
 
-	if (g_theInput->WasKeyJustPressed(KEYCODE_ESC) || controller.WasButtonJustPressed(XBOX_BUTTON_BACK))
-	{
-		m_isQuitting = true;
-	}
+    if (g_theInput->WasKeyJustPressed(KEYCODE_ESC) || controller.WasButtonJustPressed(XBOX_BUTTON_BACK))
+    {
+        m_isQuitting = true;
+    }
 
-	if (g_theInput->WasKeyJustPressed(KEYCODE_F7))
-	{
-		delete m_theGame; // Clean up the current game mode
+    if (g_theInput->WasKeyJustPressed(KEYCODE_F7))
+    {
+        delete m_theGame; // Clean up the current game mode
 
-		// Cycle through game modes
-		if (m_currentGameMode == GameMode::GAME_MODE_NEAREST_POINT)
-		{
-			m_theGame         = new GameRaycastVsDiscs();
-			m_currentGameMode = GameMode::GAME_MODE_RAYCAST_VS_DISCS;
-		}
-		else
-		{
-			m_theGame         = new GameNearestPoint();
-			m_currentGameMode = GameMode::GAME_MODE_NEAREST_POINT;
-		}
-	}
+        // Cycle through game modes
+        if (m_currentGameMode == GameMode::GAME_MODE_NEAREST_POINT)
+        {
+            m_theGame         = new GameRaycastVsDiscs();
+            m_currentGameMode = GameMode::GAME_MODE_RAYCAST_VS_DISCS;
+        }
+        else
+        {
+            m_theGame         = new GameNearestPoint();
+            m_currentGameMode = GameMode::GAME_MODE_NEAREST_POINT;
+        }
+    }
 }
 
 //-----------------------------------------------------------------------------------------------
 void App::HandleKeyReleased()
 {
-	XboxController const& controller = g_theInput->GetController(0);
+    XboxController const& controller = g_theInput->GetController(0);
 
-	if (g_theInput->WasKeyJustReleased('T') ||
-		controller.WasButtonJustReleased(XBOX_BUTTON_DPAD_UP))
-		m_isSlowMo = false;
+    if (g_theInput->WasKeyJustReleased('T') ||
+        controller.WasButtonJustReleased(XBOX_BUTTON_DPAD_UP))
+        m_isSlowMo = false;
 }
 
 //-----------------------------------------------------------------------------------------------
 void App::HandleQuitRequested()
 {
-	m_isQuitting = true;
+    m_isQuitting = true;
 }
 
 void App::AdjustForPauseAndTimeDistortion(float& deltaSeconds) const
 {
-	if (m_isPaused)
-		deltaSeconds = 0.f;
+    if (m_isPaused)
+        deltaSeconds = 0.f;
 
-	if (m_isSlowMo)
-		deltaSeconds *= 1 / 10.f;
+    if (m_isSlowMo)
+        deltaSeconds *= 1 / 10.f;
 }
 
+//----------------------------------------------------------------------------------------------------
 void App::DeleteAndCreateNewGame()
 {
-	delete m_theGame;
-	m_theGame = nullptr;
+    delete m_theGame;
+    m_theGame = nullptr;
 
-	m_theGame = new GameNearestPoint();
+    m_theGame = new GameNearestPoint();
 }
 
 //-----------------------------------------------------------------------------------------------
 bool OnWindowClose(EventArgs& arg)
 {
-	UNUSED(arg)
-    
-	RequestQuit();
-	return true;
+    UNUSED(arg)
+
+    RequestQuit();
+    return true;
 }
 
 //----------------------------------------------------------------------------------------------------
 void RequestQuit()
 {
-	m_isQuitting = true;
+    m_isQuitting = true;
 }
