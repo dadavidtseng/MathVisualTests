@@ -21,7 +21,6 @@
 //----------------------------------------------------------------------------------------------------
 App*                   g_theApp        = nullptr;      // Created and owned by Main_Windows.cpp
 BitmapFont*            g_theBitmapFont = nullptr;      // Created and owned by the App
-InputSystem*           g_theInput      = nullptr;      // Created and owned by the App
 Game*                  g_theGame       = nullptr;      // Created and owned by the App
 Renderer*              g_theRenderer   = nullptr;      // Created and owned by the App
 RandomNumberGenerator* g_theRNG        = nullptr;      // Created and owned by the App

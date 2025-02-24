@@ -24,7 +24,7 @@
 GameNearestPoint::GameNearestPoint()
 {
 	m_screenCamera = new Camera();
-	m_screenCamera->SetOrthoView(Vec2(0.f, 0.f), Vec2(SCREEN_SIZE_X, SCREEN_SIZE_Y));
+	m_screenCamera->SetOrthoGraphicView(Vec2(0.f, 0.f), Vec2(SCREEN_SIZE_X, SCREEN_SIZE_Y));
 
 	m_referencePoint = Vec2(SCREEN_SIZE_X / 2.f, SCREEN_SIZE_Y / 2.f);
 
@@ -70,8 +70,8 @@ void GameNearestPoint::Render() const
 Vec2 GameNearestPoint::GetMouseWorldPos() const
 {
 	Vec2 const mouseUV = g_theWindow->GetNormalizedMouseUV();
-	Vec2 bottomLeft = m_screenCamera->GetOrthoBottomLeft();
-	Vec2 topRight = m_screenCamera->GetOrthoTopRight();
+	Vec2 bottomLeft = m_screenCamera->GetOrthographicBottomLeft();
+	Vec2 topRight = m_screenCamera->GetOrthographicTopRight();
 	AABB2 const	orthoBounds( bottomLeft, topRight );
 	return orthoBounds.GetPointAtUV( mouseUV );
 }
