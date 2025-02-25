@@ -80,6 +80,7 @@ void DebugDrawRing(Vec2 const& center, const float radius, const float thickness
 		verts[vertIndexF].m_color    = color;
 	}
 
+	g_theRenderer->BindTexture(nullptr);
 	g_theRenderer->DrawVertexArray(NUM_VERTS, &verts[0]);
 }
 
@@ -112,6 +113,7 @@ void DebugDrawLine(Vec2 const& start, Vec2 const& end, float thickness, Rgba8 co
 	verts[4].m_color    = color;
 	verts[5].m_color    = color;
 
+	g_theRenderer->BindTexture(nullptr);
 	g_theRenderer->DrawVertexArray(6, &verts[0]);
 }
 
@@ -160,7 +162,7 @@ void DebugDrawGlowCircle(Vec2 const& center, float radius, Rgba8 const& color, f
 		verts[vertIndexB].m_color = glowColor;
 		verts[vertIndexC].m_color = glowColor;
 	}
-
+	g_theRenderer->BindTexture(nullptr);
 	g_theRenderer->DrawVertexArray(NUM_VERTS, &verts[0]);
 }
 
@@ -208,6 +210,7 @@ void DebugDrawGlowBox(Vec2 const& center, Vec2 const& dimensions, Rgba8 const& c
 	}
 
 	// Draw the vertex array
+	g_theRenderer->BindTexture(nullptr);
 	g_theRenderer->DrawVertexArray(NUM_VERTS, &verts[0]);
 }
 
@@ -273,7 +276,7 @@ void DebugDrawBoxRing(Vec2 const& center, float radius, float thickness, Rgba8 c
 	{
 		verts[i].m_color = color;
 	}
-
+	g_theRenderer->BindTexture(nullptr);
 	g_theRenderer->DrawVertexArray(24, &verts[0]);
 }
 
@@ -345,6 +348,7 @@ void DrawLineSegment2D(Vec2 const& start, Vec2 const& end, Rgba8 const& color, f
 	verts[5].m_color    = color;
 
 	// Draw the vertex array for the line segment
+	g_theRenderer->BindTexture(nullptr);
 	g_theRenderer->DrawVertexArray(6, verts);
 }
 
@@ -359,6 +363,7 @@ void DrawTriangle2D(Vec2 const& ccw0, Vec2 const& ccw1, Vec2 const& ccw2, Rgba8 
 {
 	std::vector<Vertex_PCU> verts;
 	AddVertsForTriangle2D(verts, ccw0, ccw1, ccw2, color);
+	g_theRenderer->BindTexture(nullptr);
 	g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
 
@@ -374,7 +379,7 @@ void DrawAABB2D(const AABB2& aabb2, Rgba8 const& color)
 {
 	std::vector<Vertex_PCU> verts;
 	AddVertsForAABB2D(verts, aabb2, color);
-
+	g_theRenderer->BindTexture(nullptr);
 	g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
 
@@ -382,6 +387,7 @@ void DrawOBB2D(const OBB2& obb2, Rgba8 const& color)
 {
 	std::vector<Vertex_PCU> verts;
 	AddVertsForOBB2D(verts, obb2, color);
+	g_theRenderer->BindTexture(nullptr);
 	g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
 
@@ -389,7 +395,7 @@ void DrawCapsule2D(Vec2 const& boneStart, Vec2 const& boneEnd, float radius, Rgb
 {
 	std::vector<Vertex_PCU> verts;
 	AddVertsForCapsule2D(verts, boneStart, boneEnd, radius, color);
-
+	g_theRenderer->BindTexture(nullptr);
 	g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
 
@@ -402,6 +408,6 @@ void DrawArrow2D(Vec2 const& tailPos, Vec2 const& tipPos, float radius, float th
 	std::vector<Vertex_PCU> verts;
 
 	AddVertsForArrow2D(verts, tailPos, tipPos, radius, thickness, color);
-
+	g_theRenderer->BindTexture(nullptr);
 	g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
