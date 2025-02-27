@@ -32,10 +32,10 @@ GameRaycastVsDiscs::~GameRaycastVsDiscs()
 }
 
 //----------------------------------------------------------------------------------------------------
-void GameRaycastVsDiscs::Update(const float deltaSeconds)
+void GameRaycastVsDiscs::Update()
 {
-    UpdateFromKeyboard(deltaSeconds);
-    UpdateFromController(deltaSeconds);
+    // UpdateFromKeyboard(deltaSeconds);
+    // UpdateFromController(deltaSeconds);
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -76,46 +76,46 @@ Vec2 GameRaycastVsDiscs::GetMouseWorldPos() const
 
 
 //----------------------------------------------------------------------------------------------------
-void GameRaycastVsDiscs::UpdateFromKeyboard(const float deltaSeconds)
+void GameRaycastVsDiscs::UpdateFromKeyboard()
 {
-    if (g_theInput->WasKeyJustPressed(KEYCODE_F8))
-        GenerateRandomDiscs();
-
-    if (g_theInput->IsKeyDown(KEYCODE_W))
-        m_lineSegment.m_start.y += m_moveSpeed * deltaSeconds;
-
-    if (g_theInput->IsKeyDown(KEYCODE_S))
-        m_lineSegment.m_start.y -= m_moveSpeed * deltaSeconds;
-
-    if (g_theInput->IsKeyDown(KEYCODE_A))
-        m_lineSegment.m_start.x -= m_moveSpeed * deltaSeconds;
-
-    if (g_theInput->IsKeyDown(KEYCODE_D))
-        m_lineSegment.m_start.x += m_moveSpeed * deltaSeconds;
-
-    if (g_theInput->IsKeyDown(KEYCODE_I))
-        m_lineSegment.m_end.y += m_moveSpeed * deltaSeconds;
-
-    if (g_theInput->IsKeyDown(KEYCODE_K))
-        m_lineSegment.m_end.y -= m_moveSpeed * deltaSeconds;
-
-    if (g_theInput->IsKeyDown(KEYCODE_J))
-        m_lineSegment.m_end.x -= m_moveSpeed * deltaSeconds;
-
-    if (g_theInput->IsKeyDown(KEYCODE_L))
-        m_lineSegment.m_end.x += m_moveSpeed * deltaSeconds;
-
-    if (g_theInput->IsKeyDown(KEYCODE_LEFT_MOUSE))
-        m_lineSegment.m_start = GetMouseWorldPos();
-
-    if (g_theInput->IsKeyDown(KEYCODE_RIGHT_MOUSE))
-        m_lineSegment.m_end = GetMouseWorldPos();
+    // if (g_theInput->WasKeyJustPressed(KEYCODE_F8))
+    //     GenerateRandomDiscs();
+    //
+    // if (g_theInput->IsKeyDown(KEYCODE_W))
+    //     m_lineSegment.m_start.y += m_moveSpeed * deltaSeconds;
+    //
+    // if (g_theInput->IsKeyDown(KEYCODE_S))
+    //     m_lineSegment.m_start.y -= m_moveSpeed * deltaSeconds;
+    //
+    // if (g_theInput->IsKeyDown(KEYCODE_A))
+    //     m_lineSegment.m_start.x -= m_moveSpeed * deltaSeconds;
+    //
+    // if (g_theInput->IsKeyDown(KEYCODE_D))
+    //     m_lineSegment.m_start.x += m_moveSpeed * deltaSeconds;
+    //
+    // if (g_theInput->IsKeyDown(KEYCODE_I))
+    //     m_lineSegment.m_end.y += m_moveSpeed * deltaSeconds;
+    //
+    // if (g_theInput->IsKeyDown(KEYCODE_K))
+    //     m_lineSegment.m_end.y -= m_moveSpeed * deltaSeconds;
+    //
+    // if (g_theInput->IsKeyDown(KEYCODE_J))
+    //     m_lineSegment.m_end.x -= m_moveSpeed * deltaSeconds;
+    //
+    // if (g_theInput->IsKeyDown(KEYCODE_L))
+    //     m_lineSegment.m_end.x += m_moveSpeed * deltaSeconds;
+    //
+    // if (g_theInput->IsKeyDown(KEYCODE_LEFT_MOUSE))
+    //     m_lineSegment.m_start = GetMouseWorldPos();
+    //
+    // if (g_theInput->IsKeyDown(KEYCODE_RIGHT_MOUSE))
+    //     m_lineSegment.m_end = GetMouseWorldPos();
 }
 
 //----------------------------------------------------------------------------------------------------
-void GameRaycastVsDiscs::UpdateFromController(const float deltaSeconds)
+void GameRaycastVsDiscs::UpdateFromController()
 {
-    UNUSED(deltaSeconds)
+    // UNUSED(deltaSeconds)
 }
 
 //----------------------------------------------------------------------------------------------------

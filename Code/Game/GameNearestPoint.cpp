@@ -17,6 +17,7 @@
 #include "Engine/Math/OBB2.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
 #include "Engine/Math/Triangle2.hpp"
+#include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/Renderer.hpp"
 #include "Game/GameCommon.hpp"
 
@@ -39,10 +40,10 @@ GameNearestPoint::~GameNearestPoint()
 }
 
 //----------------------------------------------------------------------------------------------------
-void GameNearestPoint::Update(const float deltaSeconds)
+void GameNearestPoint::Update()
 {
-	UpdateFromKeyBoard(deltaSeconds);
-	UpdateFromController(deltaSeconds);
+	UpdateFromKeyBoard();
+	UpdateFromController();
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -51,16 +52,22 @@ void GameNearestPoint::Render() const
 	g_theRenderer->BeginCamera(*m_screenCamera);
 	RenderShapes();
 
-	//TODO: The current mode, and relevant keys & controls, are printed in text near the top of the screen.
 	std::vector<Vertex_PCU> titleVerts;
-	AddVertsForTextTriangles2D(titleVerts,
-							   "CURRENT MODE: NearestPoint",
-							   Vec2(10.f, SCREEN_SIZE_Y-60.f),
-							   50.f,
-							   WHITE,
-							   1.f,
-							   true,
-							   0.1f);
+	g_theBitmapFont->AddVertsForTextInBox2D(titleVerts,
+		"CURRENT MODE: NearestPoint",
+		AABB2(Vec2(10.f, SCREEN_SIZE_Y-60.f), Vec2(10.f,SCREEN_SIZE_Y)),
+		10.f);
+	//TODO: The current mode, and relevant keys & controls, are printed in text near the top of the screen.
+
+	// AddVertsForTextTriangles2D(titleVerts,
+	// 						   "CURRENT MODE: NearestPoint",
+	// 						   Vec2(10.f, SCREEN_SIZE_Y-60.f),
+	// 						   50.f,
+	// 						   WHITE,
+	// 						   1.f,
+	// 						   true,
+	// 						   0.1f);
+	g_theRenderer->BindTexture(&g_theBitmapFont->GetTexture());
 	g_theRenderer->DrawVertexArray(static_cast<int>(titleVerts.size()), titleVerts.data());
 	
 	g_theRenderer->EndCamera(*m_screenCamera);
@@ -77,34 +84,34 @@ Vec2 GameNearestPoint::GetMouseWorldPos() const
 }
 
 //----------------------------------------------------------------------------------------------------
-void GameNearestPoint::UpdateFromKeyBoard(const float deltaSeconds)
+void GameNearestPoint::UpdateFromKeyBoard()
 {
-	if (g_theInput->WasKeyJustPressed(KEYCODE_F8))
-	{
-		GenerateRandomShapes();
-		m_referencePoint = Vec2(SCREEN_SIZE_X / 2.f, SCREEN_SIZE_Y / 2.f);
-	}
-
-	if (g_theInput->IsKeyDown(KEYCODE_W))
-		m_referencePoint.y += m_moveSpeed * deltaSeconds;
-
-	if (g_theInput->IsKeyDown(KEYCODE_S))
-		m_referencePoint.y -= m_moveSpeed * deltaSeconds;
-
-	if (g_theInput->IsKeyDown(KEYCODE_A))
-		m_referencePoint.x -= m_moveSpeed * deltaSeconds;
-
-	if (g_theInput->IsKeyDown(KEYCODE_D))
-		m_referencePoint.x += m_moveSpeed * deltaSeconds;
-
-	if (g_theInput->IsKeyDown(KEYCODE_LEFT_MOUSE))
-		m_referencePoint = GetMouseWorldPos();
+	// if (g_theInput->WasKeyJustPressed(KEYCODE_F8))
+	// {
+	// 	GenerateRandomShapes();
+	// 	m_referencePoint = Vec2(SCREEN_SIZE_X / 2.f, SCREEN_SIZE_Y / 2.f);
+	// }
+	//
+	// if (g_theInput->IsKeyDown(KEYCODE_W))
+	// 	m_referencePoint.y += m_moveSpeed * deltaSeconds;
+	//
+	// if (g_theInput->IsKeyDown(KEYCODE_S))
+	// 	m_referencePoint.y -= m_moveSpeed * deltaSeconds;
+	//
+	// if (g_theInput->IsKeyDown(KEYCODE_A))
+	// 	m_referencePoint.x -= m_moveSpeed * deltaSeconds;
+	//
+	// if (g_theInput->IsKeyDown(KEYCODE_D))
+	// 	m_referencePoint.x += m_moveSpeed * deltaSeconds;
+	//
+	// if (g_theInput->IsKeyDown(KEYCODE_LEFT_MOUSE))
+	// 	m_referencePoint = GetMouseWorldPos();
 }
 
 //----------------------------------------------------------------------------------------------------
-void GameNearestPoint::UpdateFromController(const float deltaSeconds)
+void GameNearestPoint::UpdateFromController()
 {
-	UNUSED(deltaSeconds)
+	// UNUSED(deltaSeconds)
 }
 
 //----------------------------------------------------------------------------------------------------

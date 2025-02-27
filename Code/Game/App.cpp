@@ -5,6 +5,7 @@
 //----------------------------------------------------------------------------------------------------
 #include "Game/App.hpp"
 
+#include "Engine/Core/Clock.hpp"
 #include "Engine/Core/DevConsole.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Core/EventSystem.hpp"
@@ -59,17 +60,29 @@ void App::Startup()
     renderConfig.m_window = g_theWindow;
     g_theRenderer         = new Renderer(renderConfig); // Create render
 
+    // Initialize devConsoleCamera
+    m_devConsoleCamera = new Camera();
+
+    Vec2 const bottomLeft     = Vec2::ZERO;
+    Vec2 const screenTopRight = Vec2(SCREEN_SIZE_X, SCREEN_SIZE_Y);
+
+    m_devConsoleCamera->SetOrthoGraphicView(bottomLeft, screenTopRight);
+
     DevConsoleConfig devConsoleConfig;
+    devConsoleConfig.m_defaultRenderer = g_theRenderer;
+    devConsoleConfig.m_defaultFontName = "SquirrelFixedFont";
+    devConsoleConfig.m_defaultCamera   = m_devConsoleCamera;
     g_theDevConsole = new DevConsole(devConsoleConfig);
 
     g_theEventSystem->Startup();
-    g_theInput->Startup();
     g_theWindow->Startup();
     g_theRenderer->Startup();
     g_theDevConsole->StartUp();
+    g_theInput->Startup();
 
+    g_theBitmapFont = g_theRenderer->CreateOrGetBitmapFontFromFile("Data/Fonts/SquirrelFixedFont"); // DO NOT SPECIFY FILE .EXTENSION!!  (Important later on.)
     g_theRNG  = new RandomNumberGenerator();
-    m_theGame = new GameRaycastVsDiscs();
+    g_theGame = new GameRaycastVsDiscs();
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -77,6 +90,7 @@ void App::Startup()
 //
 void App::Shutdown()
 {
+    // Destroy all Engine Subsystem
     delete g_theGame;
     g_theGame = nullptr;
 
@@ -86,16 +100,15 @@ void App::Shutdown()
     delete g_theBitmapFont;
     g_theBitmapFont = nullptr;
 
+    g_theInput->Shutdown();
     g_theDevConsole->Shutdown();
+
+    delete m_devConsoleCamera;
+    m_devConsoleCamera = nullptr;
+
     g_theRenderer->Shutdown();
     g_theWindow->Shutdown();
-    g_theInput->Shutdown();
     g_theEventSystem->Shutdown();
-
-    // Destroy all Engine Subsystem
-
-    delete g_theDevConsole;
-    g_theDevConsole = nullptr;
 
     delete g_theRenderer;
     g_theRenderer = nullptr;
@@ -105,9 +118,6 @@ void App::Shutdown()
 
     delete g_theInput;
     g_theInput = nullptr;
-
-    delete g_theEventSystem;
-    g_theEventSystem = nullptr;
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -115,14 +125,8 @@ void App::Shutdown()
 //
 void App::RunFrame()
 {
-    float const timeNow      = static_cast<float>(GetCurrentTimeSeconds());
-    float const deltaSeconds = timeNow - m_timeLastFrameStart;
-    m_timeLastFrameStart     = timeNow;
-
-    // DebuggerPrintf("TimeNow = %.06f\n", timeNow);
-
     BeginFrame();         // Engine pre-frame stuff
-    Update(deltaSeconds); // Game updates / moves / spawns / hurts / kills stuff
+    Update(); // Game updates / moves / spawns / hurts / kills stuff
     Render();             // Game draws current state of things
     EndFrame();           // Engine post-frame stuff
 }
@@ -147,22 +151,37 @@ void App::RunMainLoop()
 void App::BeginFrame() const
 {
     g_theEventSystem->BeginFrame();
-    g_theInput->BeginFrame();
     g_theWindow->BeginFrame();
     g_theRenderer->BeginFrame();
     g_theDevConsole->BeginFrame();
-    // g_theNetwork->BeginFrame();
-    // g_theWindow->BeginFrame();
+    g_theInput->BeginFrame();
     // g_theNetwork->BeginFrame();
 }
 
 //-----------------------------------------------------------------------------------------------
-void App::Update(float deltaSeconds)
+void App::Update()
 {
+    Clock::TickSystemClock();
+
+    bool const doesWindowHasFocus   = GetActiveWindow() == g_theWindow->GetWindowHandle();
+    // bool const shouldUsePointerMode = !doesWindowHasFocus || g_theDevConsole->IsOpen() || g_theGame->IsAttractMode();
+    bool const shouldUsePointerMode = !doesWindowHasFocus || g_theDevConsole->IsOpen() ;
+
+    if (shouldUsePointerMode == true)
+    {
+        g_theInput->SetCursorMode(CursorMode::POINTER);
+    }
+    else
+    {
+        g_theInput->SetCursorMode(CursorMode::FPS);
+    }
+
+    g_theGame->Update();
+
     HandleKeyPressed();
     HandleKeyReleased();
-    AdjustForPauseAndTimeDistortion(deltaSeconds);
-    m_theGame->Update(deltaSeconds);
+    // AdjustForPauseAndTimeDistortion();
+    // m_theGame->Update();
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -174,10 +193,14 @@ void App::Update(float deltaSeconds)
 //
 void App::Render() const
 {
-    Rgba8 const clearColor = Rgba8::BLACK;
+    Rgba8 const clearColor = Rgba8::GREY;
 
     g_theRenderer->ClearScreen(clearColor);
-    m_theGame->Render();
+    g_theGame->Render();
+
+    AABB2 const box = AABB2(Vec2::ZERO, Vec2(1600.f, 30.f));
+
+    g_theDevConsole->Render(box);
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -198,7 +221,7 @@ void App::HandleKeyPressed()
     if (g_theInput->WasKeyJustPressed('O'))
     {
         m_isPaused = true;
-        m_theGame->Update(1.f / 60.f);
+        // m_theGame->Update(1.f / 60.f);
     }
 
     if (g_theInput->WasKeyJustPressed('T'))

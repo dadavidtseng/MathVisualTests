@@ -22,13 +22,13 @@ public:
 	GameRaycastVsDiscs();
 	~GameRaycastVsDiscs() override;
 
-	void Update(float deltaSeconds) override;
+	void Update() override;
 	void Render() const override;
 	Vec2 GetMouseWorldPos() const;
 
 private:
-	void UpdateFromKeyboard(float deltaSeconds);
-	void UpdateFromController(float deltaSeconds);
+	void UpdateFromKeyboard();
+	void UpdateFromController();
 	Vec2 GenerateRandomPointInScreen() const;
 	void GenerateRandomLineSegmentInScreen();
 	void GenerateRandomDiscs();

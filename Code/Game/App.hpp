@@ -7,6 +7,7 @@
 #include "Engine/Core/EventSystem.hpp"
 #include "Game/GameCommon.hpp"
 
+class Camera;
 //----------------------------------------------------------------------------------------------------
 class Game;
 
@@ -24,7 +25,7 @@ public:
 
 private:
     void BeginFrame() const;
-    void Update(float deltaSeconds);
+    void Update();
     void Render() const;
     void EndFrame() const;
 
@@ -39,6 +40,7 @@ private:
     float    m_timeLastFrameStart = 0.f;
     Game*    m_theGame            = nullptr;
     GameMode m_currentGameMode{GameMode::GAME_MODE_RAYCAST_VS_DISCS};
+    Camera*  m_devConsoleCamera = nullptr;
 };
 
 static bool OnWindowClose(EventArgs& arg);
