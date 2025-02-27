@@ -32,7 +32,7 @@ void App::Startup()
 {
     EventSystemConfig eventSystemConfig;
     g_theEventSystem = new EventSystem(eventSystemConfig);
-    g_theEventSystem->SubscribeEventCallbackFunction("WindowClose", OnWindowClose);
+    g_theEventSystem->SubscribeEventCallbackFunction("OnCloseButtonClicked", OnCloseButtonClicked);
 
     InputSystemConfig inputConfig;
     g_theInput = new InputSystem(inputConfig);
@@ -72,7 +72,7 @@ void App::Startup()
     devConsoleConfig.m_defaultRenderer = g_theRenderer;
     devConsoleConfig.m_defaultFontName = "SquirrelFixedFont";
     devConsoleConfig.m_defaultCamera   = m_devConsoleCamera;
-    g_theDevConsole = new DevConsole(devConsoleConfig);
+    g_theDevConsole                    = new DevConsole(devConsoleConfig);
 
     g_theEventSystem->Startup();
     g_theWindow->Startup();
@@ -81,8 +81,8 @@ void App::Startup()
     g_theInput->Startup();
 
     g_theBitmapFont = g_theRenderer->CreateOrGetBitmapFontFromFile("Data/Fonts/SquirrelFixedFont"); // DO NOT SPECIFY FILE .EXTENSION!!  (Important later on.)
-    g_theRNG  = new RandomNumberGenerator();
-    g_theGame = new GameRaycastVsDiscs();
+    g_theRNG        = new RandomNumberGenerator();
+    g_theGame       = new GameRaycastVsDiscs();
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -163,23 +163,12 @@ void App::Update()
 {
     Clock::TickSystemClock();
 
-    bool const doesWindowHasFocus   = GetActiveWindow() == g_theWindow->GetWindowHandle();
-    // bool const shouldUsePointerMode = !doesWindowHasFocus || g_theDevConsole->IsOpen() || g_theGame->IsAttractMode();
-    bool const shouldUsePointerMode = !doesWindowHasFocus || g_theDevConsole->IsOpen() ;
-
-    if (shouldUsePointerMode == true)
-    {
-        g_theInput->SetCursorMode(CursorMode::POINTER);
-    }
-    else
-    {
-        g_theInput->SetCursorMode(CursorMode::FPS);
-    }
-
-    g_theGame->Update();
-
+    g_theInput->SetCursorMode(CursorMode::POINTER);
     HandleKeyPressed();
     HandleKeyReleased();
+    g_theGame->Update();
+
+
     // AdjustForPauseAndTimeDistortion();
     // m_theGame->Update();
 }
@@ -193,7 +182,7 @@ void App::Update()
 //
 void App::Render() const
 {
-    Rgba8 const clearColor = Rgba8::GREY;
+    Rgba8 const clearColor = Rgba8::BLACK;
 
     g_theRenderer->ClearScreen(clearColor);
     g_theGame->Render();
@@ -224,11 +213,9 @@ void App::HandleKeyPressed()
         // m_theGame->Update(1.f / 60.f);
     }
 
-    if (g_theInput->WasKeyJustPressed('T'))
-        m_isSlowMo = true;
+    if (g_theInput->WasKeyJustPressed('T')) m_isSlowMo = true;
 
-    if (g_theInput->WasKeyJustPressed('P'))
-        m_isPaused = !m_isPaused;
+    if (g_theInput->WasKeyJustPressed('P')) m_isPaused = !m_isPaused;
 
     if (g_theInput->WasKeyJustPressed(KEYCODE_ESC) || controller.WasButtonJustPressed(XBOX_BUTTON_BACK))
     {
@@ -237,17 +224,17 @@ void App::HandleKeyPressed()
 
     if (g_theInput->WasKeyJustPressed(KEYCODE_F7))
     {
-        delete m_theGame; // Clean up the current game mode
+        delete g_theGame; // Clean up the current game mode
 
         // Cycle through game modes
         if (m_currentGameMode == GameMode::GAME_MODE_NEAREST_POINT)
         {
-            m_theGame         = new GameRaycastVsDiscs();
+            g_theGame         = new GameRaycastVsDiscs();
             m_currentGameMode = GameMode::GAME_MODE_RAYCAST_VS_DISCS;
         }
         else
         {
-            m_theGame         = new GameNearestPoint();
+            g_theGame         = new GameNearestPoint();
             m_currentGameMode = GameMode::GAME_MODE_NEAREST_POINT;
         }
     }
@@ -271,24 +258,22 @@ void App::HandleQuitRequested()
 
 void App::AdjustForPauseAndTimeDistortion(float& deltaSeconds) const
 {
-    if (m_isPaused)
-        deltaSeconds = 0.f;
+    if (m_isPaused) deltaSeconds = 0.f;
 
-    if (m_isSlowMo)
-        deltaSeconds *= 1 / 10.f;
+    if (m_isSlowMo) deltaSeconds *= 1 / 10.f;
 }
 
 //----------------------------------------------------------------------------------------------------
 void App::DeleteAndCreateNewGame()
 {
-    delete m_theGame;
-    m_theGame = nullptr;
+    delete g_theGame;
+    g_theGame = nullptr;
 
-    m_theGame = new GameNearestPoint();
+    g_theGame = new GameNearestPoint();
 }
 
 //-----------------------------------------------------------------------------------------------
-bool OnWindowClose(EventArgs& arg)
+bool OnCloseButtonClicked(EventArgs& arg)
 {
     UNUSED(arg)
 

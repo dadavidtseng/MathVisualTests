@@ -38,11 +38,11 @@ private:
     bool     m_isPaused           = false;
     bool     m_isSlowMo           = false;
     float    m_timeLastFrameStart = 0.f;
-    Game*    m_theGame            = nullptr;
+    // Game*    m_theGame            = nullptr;
     GameMode m_currentGameMode{GameMode::GAME_MODE_RAYCAST_VS_DISCS};
     Camera*  m_devConsoleCamera = nullptr;
 };
 
-static bool OnWindowClose(EventArgs& arg);
+static bool OnCloseButtonClicked(EventArgs& arg);
 static void RequestQuit();
 static bool m_isQuitting;

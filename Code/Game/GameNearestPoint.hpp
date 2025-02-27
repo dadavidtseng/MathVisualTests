@@ -29,8 +29,8 @@ public:
     Vec2 GetMouseWorldPos() const;
 
 private:
-    void UpdateFromKeyBoard();
-    void UpdateFromController();
+    void UpdateFromKeyBoard(float deltaSeconds);
+    void UpdateFromController(float deltaSeconds);
 
     void RenderShapes() const;
     void GenerateRandomShapes();

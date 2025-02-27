@@ -5,12 +5,13 @@
 //----------------------------------------------------------------------------------------------------
 #include "Game/GameRaycastVsDiscs.hpp"
 
+#include "Engine/Core/Clock.hpp"
 #include "Engine/Core/EngineCommon.hpp"
-#include "Engine/Core/SimpleTriangleFont.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Math/MathUtils.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
 #include "Engine/Math/RaycastUtils.hpp"
+#include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/Renderer.hpp"
 #include "Game/GameCommon.hpp"
 
@@ -19,6 +20,8 @@ GameRaycastVsDiscs::GameRaycastVsDiscs()
 {
     m_screenCamera = new Camera();
     m_screenCamera->SetOrthoGraphicView(Vec2(0.f, 0.f), Vec2(SCREEN_SIZE_X, SCREEN_SIZE_Y));
+
+    m_gameClock = new Clock(Clock::GetSystemClock());
 
     GenerateRandomDiscs();
     GenerateRandomLineSegmentInScreen();
@@ -34,8 +37,10 @@ GameRaycastVsDiscs::~GameRaycastVsDiscs()
 //----------------------------------------------------------------------------------------------------
 void GameRaycastVsDiscs::Update()
 {
-    // UpdateFromKeyboard(deltaSeconds);
-    // UpdateFromController(deltaSeconds);
+    float const deltaSeconds = static_cast<float>(m_gameClock->GetDeltaSeconds());
+
+    UpdateFromKeyboard(deltaSeconds);
+    UpdateFromController(deltaSeconds);
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -43,21 +48,19 @@ void GameRaycastVsDiscs::Render() const
 {
     g_theRenderer->BeginCamera(*m_screenCamera);
 
-    RenderDisc2();
-    RenderRaycastResult();
 
-    //TODO: The current mode, and relevant keys & controls, are printed in text near the top of the screen.
     std::vector<Vertex_PCU> titleVerts;
-    AddVertsForTextTriangles2D(titleVerts,
-                               "CURRENT MODE: RaycastVsDiscs",
-                               Vec2(10.f, SCREEN_SIZE_Y - 60.f),
-                               50.f,
-                               WHITE,
-                               1.f,
-                               true,
-                               0.1f);
+    g_theBitmapFont->AddVertsForTextInBox2D(titleVerts,
+                                            "CURRENT MODE: RaycastVsDiscs",
+                                            AABB2(Vec2(0.f, 750.f), Vec2(1600.f, 800.f)),
+                                            10.f);
+
+    g_theRenderer->BindTexture(&g_theBitmapFont->GetTexture());
+
     g_theRenderer->DrawVertexArray(static_cast<int>(titleVerts.size()), titleVerts.data());
 
+    RenderDisc2();
+    RenderRaycastResult();
 
     g_theRenderer->EndCamera(*m_screenCamera);
 }
@@ -66,56 +69,54 @@ void GameRaycastVsDiscs::Render() const
 //------------------------------------------------------------------------------------------------
 Vec2 GameRaycastVsDiscs::GetMouseWorldPos() const
 {
-	Vec2 const mouseUV = g_theWindow->GetNormalizedMouseUV();
-	Vec2 bottomLeft = m_screenCamera->GetOrthographicBottomLeft();
-	Vec2 topRight = m_screenCamera->GetOrthographicTopRight();
-	AABB2 const	orthoBounds( bottomLeft, topRight );
-	return orthoBounds.GetPointAtUV( mouseUV );
-}
-
-
-
-//----------------------------------------------------------------------------------------------------
-void GameRaycastVsDiscs::UpdateFromKeyboard()
-{
-    // if (g_theInput->WasKeyJustPressed(KEYCODE_F8))
-    //     GenerateRandomDiscs();
-    //
-    // if (g_theInput->IsKeyDown(KEYCODE_W))
-    //     m_lineSegment.m_start.y += m_moveSpeed * deltaSeconds;
-    //
-    // if (g_theInput->IsKeyDown(KEYCODE_S))
-    //     m_lineSegment.m_start.y -= m_moveSpeed * deltaSeconds;
-    //
-    // if (g_theInput->IsKeyDown(KEYCODE_A))
-    //     m_lineSegment.m_start.x -= m_moveSpeed * deltaSeconds;
-    //
-    // if (g_theInput->IsKeyDown(KEYCODE_D))
-    //     m_lineSegment.m_start.x += m_moveSpeed * deltaSeconds;
-    //
-    // if (g_theInput->IsKeyDown(KEYCODE_I))
-    //     m_lineSegment.m_end.y += m_moveSpeed * deltaSeconds;
-    //
-    // if (g_theInput->IsKeyDown(KEYCODE_K))
-    //     m_lineSegment.m_end.y -= m_moveSpeed * deltaSeconds;
-    //
-    // if (g_theInput->IsKeyDown(KEYCODE_J))
-    //     m_lineSegment.m_end.x -= m_moveSpeed * deltaSeconds;
-    //
-    // if (g_theInput->IsKeyDown(KEYCODE_L))
-    //     m_lineSegment.m_end.x += m_moveSpeed * deltaSeconds;
-    //
-    // if (g_theInput->IsKeyDown(KEYCODE_LEFT_MOUSE))
-    //     m_lineSegment.m_start = GetMouseWorldPos();
-    //
-    // if (g_theInput->IsKeyDown(KEYCODE_RIGHT_MOUSE))
-    //     m_lineSegment.m_end = GetMouseWorldPos();
+    Vec2 const  mouseUV    = g_theWindow->GetNormalizedMouseUV();
+    Vec2        const bottomLeft = m_screenCamera->GetOrthographicBottomLeft();
+    Vec2        const topRight   = m_screenCamera->GetOrthographicTopRight();
+    AABB2 const orthoBounds(bottomLeft, topRight);
+    return orthoBounds.GetPointAtUV(mouseUV);
 }
 
 //----------------------------------------------------------------------------------------------------
-void GameRaycastVsDiscs::UpdateFromController()
+void GameRaycastVsDiscs::UpdateFromKeyboard(float const deltaSeconds)
 {
-    // UNUSED(deltaSeconds)
+    if (g_theInput->WasKeyJustPressed(KEYCODE_F8))
+        GenerateRandomDiscs();
+
+    if (g_theInput->IsKeyDown(KEYCODE_W))
+        m_lineSegment.m_start.y += m_moveSpeed * deltaSeconds;
+
+    if (g_theInput->IsKeyDown(KEYCODE_S))
+        m_lineSegment.m_start.y -= m_moveSpeed * deltaSeconds;
+
+    if (g_theInput->IsKeyDown(KEYCODE_A))
+        m_lineSegment.m_start.x -= m_moveSpeed * deltaSeconds;
+
+    if (g_theInput->IsKeyDown(KEYCODE_D))
+        m_lineSegment.m_start.x += m_moveSpeed * deltaSeconds;
+
+    if (g_theInput->IsKeyDown(KEYCODE_I))
+        m_lineSegment.m_end.y += m_moveSpeed * deltaSeconds;
+
+    if (g_theInput->IsKeyDown(KEYCODE_K))
+        m_lineSegment.m_end.y -= m_moveSpeed * deltaSeconds;
+
+    if (g_theInput->IsKeyDown(KEYCODE_J))
+        m_lineSegment.m_end.x -= m_moveSpeed * deltaSeconds;
+
+    if (g_theInput->IsKeyDown(KEYCODE_L))
+        m_lineSegment.m_end.x += m_moveSpeed * deltaSeconds;
+
+    if (g_theInput->IsKeyDown(KEYCODE_LEFT_MOUSE))
+        m_lineSegment.m_start = GetMouseWorldPos();
+
+    if (g_theInput->IsKeyDown(KEYCODE_RIGHT_MOUSE))
+        m_lineSegment.m_end = GetMouseWorldPos();
+}
+
+//----------------------------------------------------------------------------------------------------
+void GameRaycastVsDiscs::UpdateFromController(float const deltaSeconds)
+{
+    UNUSED(deltaSeconds)
 }
 
 //----------------------------------------------------------------------------------------------------

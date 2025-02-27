@@ -285,6 +285,7 @@ void DrawDisc2(Vec2 const& center, float radius, Rgba8 const& color)
 {
 	std::vector<Vertex_PCU> verts;
 	AddVertsForDisc2D(verts, center, radius, color);
+	g_theRenderer->BindTexture(nullptr);
 	g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
 

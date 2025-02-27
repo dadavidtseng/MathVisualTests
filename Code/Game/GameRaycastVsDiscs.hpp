@@ -27,8 +27,8 @@ public:
 	Vec2 GetMouseWorldPos() const;
 
 private:
-	void UpdateFromKeyboard();
-	void UpdateFromController();
+	void UpdateFromKeyboard(float deltaSeconds);
+	void UpdateFromController(float deltaSeconds);
 	Vec2 GenerateRandomPointInScreen() const;
 	void GenerateRandomLineSegmentInScreen();
 	void GenerateRandomDiscs();
