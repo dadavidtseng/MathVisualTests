@@ -9,7 +9,6 @@
 #include "Engine/Core/DevConsole.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Core/EventSystem.hpp"
-#include "Engine/Core/Time.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
@@ -58,7 +57,7 @@ void App::Startup()
 
     RenderConfig renderConfig;
     renderConfig.m_window = g_theWindow;
-    g_theRenderer         = new Renderer(renderConfig); // Create render
+    g_theRenderer         = new Renderer(renderConfig);
 
     // Initialize devConsoleCamera
     m_devConsoleCamera = new Camera();

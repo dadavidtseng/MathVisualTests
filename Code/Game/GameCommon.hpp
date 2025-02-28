@@ -63,16 +63,16 @@ void DrawCapsule2D(Vec2 const& boneStart, Vec2 const& boneEnd, float radius, Rgb
 void DrawCapsule2D(const Capsule2& capsule, Rgba8 const& color);
 void DrawArrow2D(Vec2 const& tailPos, Vec2 const& tipPos, float radius, float thickness, Rgba8 const& color);
 
-extern Rgba8 const LIGHT_BLUE;
-extern Rgba8 const BLUE;
-extern Rgba8 const WHITE;
-extern Rgba8 const TRANSLUCENT_WHITE;
-extern Rgba8 const ORANGE;
-extern Rgba8 const CYAN;
-extern Rgba8 const GREY;
-
 enum class GameMode
 {
 	GAME_MODE_NEAREST_POINT,
 	GAME_MODE_RAYCAST_VS_DISCS
 };
+
+//----------------------------------------------------------------------------------------------------
+template <typename T>
+void SafeDelete(T*& ptr)
+{
+	delete ptr;
+	ptr = nullptr;
+}

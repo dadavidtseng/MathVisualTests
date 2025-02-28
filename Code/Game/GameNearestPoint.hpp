@@ -29,8 +29,8 @@ public:
     Vec2 GetMouseWorldPos() const;
 
 private:
-    void UpdateFromKeyBoard(float deltaSeconds);
-    void UpdateFromController(float deltaSeconds);
+    void UpdateFromKeyboard(float deltaSeconds) override;
+    void UpdateFromController(float deltaSeconds) override;
 
     void RenderShapes() const;
     void GenerateRandomShapes();
@@ -55,10 +55,7 @@ private:
 
     void RenderReferencePoint() const;
 
-    Camera*      m_screenCamera  = nullptr;
-    Vec2         m_baseCameraPos = Vec2(0.f, 0.f);
     Vec2         m_referencePoint;
-    float        m_moveSpeed = 500.f;
     Disc2        m_randomDisc;
     LineSegment2 m_randomLineSegment;
     LineSegment2 m_randomInfiniteLine;
