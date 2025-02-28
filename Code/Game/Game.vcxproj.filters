@@ -27,6 +27,12 @@
     <ClCompile Include="Main_Windows.cpp">
       <Filter>Gameplay</Filter>
     </ClCompile>
+    <ClCompile Include="GameRaycastVsAABBs.cpp">
+      <Filter>Gameplay</Filter>
+    </ClCompile>
+    <ClCompile Include="GameRaycastVsLineSegments.cpp">
+      <Filter>Gameplay</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.hpp">
@@ -45,6 +51,12 @@
       <Filter>Gameplay</Filter>
     </ClInclude>
     <ClInclude Include="EngineBuildPreferences.hpp">
+      <Filter>Gameplay</Filter>
+    </ClInclude>
+    <ClInclude Include="GameRaycastVsAABBs.hpp">
+      <Filter>Gameplay</Filter>
+    </ClInclude>
+    <ClInclude Include="GameRaycastVsLineSegments.hpp">
       <Filter>Gameplay</Filter>
     </ClInclude>
   </ItemGroup>

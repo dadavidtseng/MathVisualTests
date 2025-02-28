@@ -48,6 +48,8 @@ void GameRaycastVsDiscs::Render() const
 {
     g_theRenderer->BeginCamera(*m_screenCamera);
 
+    RenderDisc2();
+    RenderRaycastResult();
 
     std::vector<Vertex_PCU> titleVerts;
     g_theBitmapFont->AddVertsForTextInBox2D(titleVerts,
@@ -59,8 +61,7 @@ void GameRaycastVsDiscs::Render() const
 
     g_theRenderer->DrawVertexArray(static_cast<int>(titleVerts.size()), titleVerts.data());
 
-    RenderDisc2();
-    RenderRaycastResult();
+
 
     g_theRenderer->EndCamera(*m_screenCamera);
 }

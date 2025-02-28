@@ -11,6 +11,15 @@ class Camera;
 class Clock;
 
 //----------------------------------------------------------------------------------------------------
+enum class eGameMode
+{
+    NEAREST_POINT,
+    RAYCAST_VS_DISCS,
+    RAYCAST_VS_LINESEGMENTS,
+    RAYCAST_VS_AABBS
+};
+
+//----------------------------------------------------------------------------------------------------
 class Game
 {
 public:
@@ -23,7 +32,7 @@ protected:
     Clock*  m_gameClock     = nullptr;
     Camera* m_screenCamera  = nullptr;
     Vec2    m_baseCameraPos = Vec2::ZERO;
-    float        m_moveSpeed = 500.f;
+    float   m_moveSpeed     = 500.f;
 
 private:
     virtual void UpdateFromKeyboard(float deltaSeconds) = 0;

@@ -63,12 +63,6 @@ void DrawCapsule2D(Vec2 const& boneStart, Vec2 const& boneEnd, float radius, Rgb
 void DrawCapsule2D(Capsule2 const& capsule, Rgba8 const& color);
 void DrawArrow2D(Vec2 const& tailPos, Vec2 const& tipPos, float radius, float thickness, Rgba8 const& color);
 
-enum class GameMode
-{
-    GAME_MODE_NEAREST_POINT,
-    GAME_MODE_RAYCAST_VS_DISCS
-};
-
 //----------------------------------------------------------------------------------------------------
 template <typename T>
 void SafeDelete(T*& ptr)

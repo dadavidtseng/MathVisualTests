@@ -226,15 +226,15 @@ void App::HandleKeyPressed()
         delete g_theGame; // Clean up the current game mode
 
         // Cycle through game modes
-        if (m_currentGameMode == GameMode::GAME_MODE_NEAREST_POINT)
+        if (m_currentGameMode == eGameMode::NEAREST_POINT)
         {
             g_theGame         = new GameRaycastVsDiscs();
-            m_currentGameMode = GameMode::GAME_MODE_RAYCAST_VS_DISCS;
+            m_currentGameMode = eGameMode::RAYCAST_VS_DISCS;
         }
         else
         {
             g_theGame         = new GameNearestPoint();
-            m_currentGameMode = GameMode::GAME_MODE_NEAREST_POINT;
+            m_currentGameMode = eGameMode::NEAREST_POINT;
         }
     }
 }
