@@ -47,7 +47,7 @@ private:
     Vec2 ClampPointToScreen(const Vec2& point, float halfWidth, float halfHeight) const;
     void RenderDisc2() const;
     void RenderLineSegment2() const;
-    void RenderLineInfinite2() const;
+    void RenderLineInfinite2D() const;
     void RenderTriangle2D() const;
     void RenderAABB2() const;
     void RenderOBB2() const;

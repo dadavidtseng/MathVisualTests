@@ -26,7 +26,7 @@ class RandomNumberGenerator;
 class Window;
 
 // one-time declaration
-extern App*                   g_theApp;
+extern App* g_theApp;
 // extern AudioSystem*           g_theAudio;
 extern BitmapFont*            g_theBitmapFont;
 extern Game*                  g_theGame;
@@ -37,8 +37,8 @@ extern Window*                g_theWindow;
 //-----------------------------------------------------------------------------------------------
 // initial settings
 //
-constexpr float SCREEN_SIZE_X = 1600.f;
-constexpr float SCREEN_SIZE_Y = 800.f;
+constexpr float SCREEN_SIZE_X   = 1600.f;
+constexpr float SCREEN_SIZE_Y   = 800.f;
 constexpr float SCREEN_CENTER_X = SCREEN_SIZE_X / 2.f;
 constexpr float SCREEN_CENTER_Y = SCREEN_SIZE_Y / 2.f;
 
@@ -51,28 +51,28 @@ void DebugDrawGlowCircle(Vec2 const& center, float radius, Rgba8 const& color, f
 void DebugDrawGlowBox(Vec2 const& center, Vec2 const& dimensions, Rgba8 const& color, float glowIntensity);
 void DebugDrawBoxRing(Vec2 const& center, float radius, float thickness, Rgba8 const& color);
 
-void DrawDisc2(Vec2 const& center, float radius, Rgba8 const& color);
-void DrawDisc2(Disc2 const& disc, Rgba8 const& color);
-void DrawLineSegment2D(Vec2 const& start, Vec2 const& end, Rgba8 const& color, float thickness, bool isInfinite);
-void DrawLineSegment2D(LineSegment2 const& lineSegment, Rgba8 const& color, float thickness, bool isInfinite);
+void DrawDisc2D(Vec2 const& discCenter, float discRadius, Rgba8 const& color);
+void DrawDisc2D(Disc2 const& disc, Rgba8 const& color);
+void DrawLineSegment2D(Vec2 const& startPosition, Vec2 const& endPosition, float thickness, bool isInfinite, Rgba8 const& color);
+void DrawLineSegment2D(LineSegment2 const& lineSegment, float thickness, bool isInfinite, Rgba8 const& color);
 void DrawTriangle2D(Vec2 const& ccw0, Vec2 const& ccw1, Vec2 const& ccw2, Rgba8 const& color);
-void DrawTriangle2D(const Triangle2& triangle, Rgba8 const& color);
-void DrawAABB2D(const AABB2& aabb2, Rgba8 const& color);
-void DrawOBB2D(const OBB2& obb2, Rgba8 const& color);
+void DrawTriangle2D(Triangle2 const& triangle, Rgba8 const& color);
+void DrawAABB2D(AABB2 const& aabb2, Rgba8 const& color);
+void DrawOBB2D(OBB2 const& obb2, Rgba8 const& color);
 void DrawCapsule2D(Vec2 const& boneStart, Vec2 const& boneEnd, float radius, Rgba8 const& color);
-void DrawCapsule2D(const Capsule2& capsule, Rgba8 const& color);
+void DrawCapsule2D(Capsule2 const& capsule, Rgba8 const& color);
 void DrawArrow2D(Vec2 const& tailPos, Vec2 const& tipPos, float radius, float thickness, Rgba8 const& color);
 
 enum class GameMode
 {
-	GAME_MODE_NEAREST_POINT,
-	GAME_MODE_RAYCAST_VS_DISCS
+    GAME_MODE_NEAREST_POINT,
+    GAME_MODE_RAYCAST_VS_DISCS
 };
 
 //----------------------------------------------------------------------------------------------------
 template <typename T>
 void SafeDelete(T*& ptr)
 {
-	delete ptr;
-	ptr = nullptr;
+    delete ptr;
+    ptr = nullptr;
 }

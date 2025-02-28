@@ -18,41 +18,41 @@
 //-----------------------------------------------------------------------------------------------
 void DebugDrawRing(Vec2 const& center, const float radius, const float thickness, Rgba8 const& color)
 {
-    const float   halfThickness = 0.5f * thickness;
-    const float   innerRadius   = radius - halfThickness;
-    const float   outerRadius   = radius + halfThickness;
-    constexpr int NUM_SIDES     = 32;
-    constexpr int NUM_TRIS      = 2 * NUM_SIDES;
-    constexpr int NUM_VERTS     = 3 * NUM_TRIS;
+    float const   halfThickness = 0.5f * thickness;
+    float const   innerRadius   = radius - halfThickness;
+    float const   outerRadius   = radius + halfThickness;
+    int constexpr NUM_SIDES     = 32;
+    int constexpr NUM_TRIS      = 2 * NUM_SIDES;
+    int constexpr NUM_VERTS     = 3 * NUM_TRIS;
     Vertex_PCU    verts[NUM_VERTS];
 
-    constexpr float DEGREES_PER_SIDE = 360.f / static_cast<float>(NUM_SIDES);
+    float constexpr DEGREES_PER_SIDE = 360.f / static_cast<float>(NUM_SIDES);
 
     for (int sideNum = 0; sideNum < NUM_SIDES; ++sideNum)
     {
         // Compute angle-related terms
-        const float startDegrees = DEGREES_PER_SIDE * static_cast<float>(sideNum);
-        const float endDegrees   = DEGREES_PER_SIDE * static_cast<float>(sideNum + 1);
-        float       cosStart     = CosDegrees(startDegrees);
-        float       sinStart     = SinDegrees(startDegrees);
-        float       cosEnd       = CosDegrees(endDegrees);
-        float       sinEnd       = SinDegrees(endDegrees);
+        float const startDegrees = DEGREES_PER_SIDE * static_cast<float>(sideNum);
+        float const endDegrees   = DEGREES_PER_SIDE * static_cast<float>(sideNum + 1);
+        float const cosStart     = CosDegrees(startDegrees);
+        float const sinStart     = SinDegrees(startDegrees);
+        float const cosEnd       = CosDegrees(endDegrees);
+        float const sinEnd       = SinDegrees(endDegrees);
 
         // Compute inner & outer positions
-        Vec3 innerStartPos(center.x + innerRadius * cosStart, center.y + innerRadius * sinStart, 0.f);
-        Vec3 outerStartPos(center.x + outerRadius * cosStart, center.y + outerRadius * sinStart, 0.f);
-        Vec3 outerEndPos(center.x + outerRadius * cosEnd, center.y + outerRadius * sinEnd, 0.f);
-        Vec3 innerEndPos(center.x + innerRadius * cosEnd, center.y + innerRadius * sinEnd, 0.f);
+        Vec3 const innerStartPos(center.x + innerRadius * cosStart, center.y + innerRadius * sinStart, 0.f);
+        Vec3 const outerStartPos(center.x + outerRadius * cosStart, center.y + outerRadius * sinStart, 0.f);
+        Vec3 const outerEndPos(center.x + outerRadius * cosEnd, center.y + outerRadius * sinEnd, 0.f);
+        Vec3 const innerEndPos(center.x + innerRadius * cosEnd, center.y + innerRadius * sinEnd, 0.f);
 
         // Trapezoid is made of two triangles; ABC and DEF
         // A is inner end; B is inner start; C is outer start
         // D is inner end; E is outer start; F is outer end
-        int vertIndexA = 6 * sideNum + 0;
-        int vertIndexB = 6 * sideNum + 1;
-        int vertIndexC = 6 * sideNum + 2;
-        int vertIndexD = 6 * sideNum + 3;
-        int vertIndexE = 6 * sideNum + 4;
-        int vertIndexF = 6 * sideNum + 5;
+        int const vertIndexA = 6 * sideNum + 0;
+        int const vertIndexB = 6 * sideNum + 1;
+        int const vertIndexC = 6 * sideNum + 2;
+        int const vertIndexD = 6 * sideNum + 3;
+        int const vertIndexE = 6 * sideNum + 4;
+        int const vertIndexF = 6 * sideNum + 5;
 
         verts[vertIndexA].m_position = innerEndPos;
         verts[vertIndexB].m_position = innerStartPos;
@@ -270,82 +270,33 @@ void DebugDrawBoxRing(Vec2 const& center, float radius, float thickness, Rgba8 c
 }
 
 //-----------------------------------------------------------------------------------------------
-void DrawDisc2(Vec2 const& center, float radius, Rgba8 const& color)
+void DrawDisc2D(Vec2 const& discCenter, float const discRadius, Rgba8 const& color)
 {
     std::vector<Vertex_PCU> verts;
-    AddVertsForDisc2D(verts, center, radius, color);
+    AddVertsForDisc2D(verts, discCenter, discRadius, color);
     g_theRenderer->BindTexture(nullptr);
     g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
 
 //-----------------------------------------------------------------------------------------------
-void DrawDisc2(Disc2 const& disc, Rgba8 const& color)
+void DrawDisc2D(Disc2 const& disc, Rgba8 const& color)
 {
-    DrawDisc2(disc.m_position, disc.m_radius, color);
+    DrawDisc2D(disc.m_position, disc.m_radius, color);
 }
 
 //-----------------------------------------------------------------------------------------------
-void DrawLineSegment2D(Vec2 const& start, Vec2 const& end, Rgba8 const& color, float thickness, bool isInfinite)
+void DrawLineSegment2D(Vec2 const& startPosition, Vec2 const& endPosition, float const thickness, bool const isInfinite, Rgba8 const& color)
 {
-    Vec2 forward = end - start;
-    Vec2 normal  = forward.GetNormalized().GetRotated90Degrees();
-
-    Vec2 halfThicknessOffset = normal * (0.5f * thickness);
-
-    Vec3 vertIndexA;
-    Vec3 vertIndexB;
-    Vec3 vertIndexC;
-    Vec3 vertIndexD;
-
-    if (isInfinite)
-    {
-        // Calculate the infinite extension points
-        float extensionFactor = 10000.0f; // This value can be adjusted based on screen size
-
-        // Extend start and end points
-        Vec2 extendedStart = start - forward.GetNormalized() * extensionFactor;
-        Vec2 extendedEnd   = end + forward.GetNormalized() * extensionFactor;
-
-        vertIndexA = Vec3(extendedStart.x - halfThicknessOffset.x, extendedStart.y - halfThicknessOffset.y, 0.f);
-        vertIndexB = Vec3(extendedStart.x + halfThicknessOffset.x, extendedStart.y + halfThicknessOffset.y, 0.f);
-        vertIndexC = Vec3(extendedEnd.x + halfThicknessOffset.x, extendedEnd.y + halfThicknessOffset.y, 0.f);
-        vertIndexD = Vec3(extendedEnd.x - halfThicknessOffset.x, extendedEnd.y - halfThicknessOffset.y, 0.f);
-    }
-    else
-    {
-        vertIndexA = Vec3(start.x - halfThicknessOffset.x, start.y - halfThicknessOffset.y, 0.f);
-        vertIndexB = Vec3(start.x + halfThicknessOffset.x, start.y + halfThicknessOffset.y, 0.f);
-        vertIndexC = Vec3(end.x + halfThicknessOffset.x, end.y + halfThicknessOffset.y, 0.f);
-        vertIndexD = Vec3(end.x - halfThicknessOffset.x, end.y - halfThicknessOffset.y, 0.f);
-    }
-
-    Vertex_PCU verts[6];
-
-    // First triangle
-    verts[0].m_position = vertIndexA;
-    verts[1].m_position = vertIndexB;
-    verts[2].m_position = vertIndexC;
-    verts[0].m_color    = color;
-    verts[1].m_color    = color;
-    verts[2].m_color    = color;
-
-    // Second triangle
-    verts[3].m_position = vertIndexA;
-    verts[4].m_position = vertIndexC;
-    verts[5].m_position = vertIndexD;
-    verts[3].m_color    = color;
-    verts[4].m_color    = color;
-    verts[5].m_color    = color;
-
-    // Draw the vertex array for the line segment
+    std::vector<Vertex_PCU> verts;
+    AddVertsForLineSegment2D(verts, startPosition, endPosition, thickness, isInfinite, color);
     g_theRenderer->BindTexture(nullptr);
-    g_theRenderer->DrawVertexArray(6, verts);
+    g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
 
 //-----------------------------------------------------------------------------------------------
-void DrawLineSegment2D(LineSegment2 const& lineSegment, Rgba8 const& color, float thickness, bool isInfinite)
+void DrawLineSegment2D(LineSegment2 const& lineSegment, float const thickness, bool const isInfinite, Rgba8 const& color)
 {
-    DrawLineSegment2D(lineSegment.m_start, lineSegment.m_end, color, thickness, isInfinite);
+    DrawLineSegment2D(lineSegment.m_start, lineSegment.m_end, thickness, isInfinite, color);
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -358,7 +309,7 @@ void DrawTriangle2D(Vec2 const& ccw0, Vec2 const& ccw1, Vec2 const& ccw2, Rgba8 
 }
 
 //-----------------------------------------------------------------------------------------------
-void DrawTriangle2D(const Triangle2& triangle, Rgba8 const& color)
+void DrawTriangle2D(Triangle2 const& triangle, Rgba8 const& color)
 {
     DrawTriangle2D(triangle.m_positionCounterClockwise[0], triangle.m_positionCounterClockwise[1],
                    triangle.m_positionCounterClockwise[2], color);

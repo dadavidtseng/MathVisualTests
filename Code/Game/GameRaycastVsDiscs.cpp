@@ -141,7 +141,7 @@ void GameRaycastVsDiscs::RenderDisc2() const
 {
     for (int i = 0; i < 8; ++i)
     {
-        DrawDisc2(m_randomDisc[i].m_position, m_randomDisc[i].m_radius, Rgba8::BLUE);
+        DrawDisc2D(m_randomDisc[i].m_position, m_randomDisc[i].m_radius, Rgba8::BLUE);
     }
 }
 
@@ -162,7 +162,7 @@ void GameRaycastVsDiscs::RenderRaycastResult() const
     // If the start point is inside at least one disc, draw a white arrow and stop further checks
     if (IsTailPosInsideDisc(tailPos))
     {
-        DrawDisc2(tailPos, 5.0f, Rgba8::WHITE); // Mark the start point with a small white circle
+        DrawDisc2D(tailPos, 5.0f, Rgba8::WHITE); // Mark the start point with a small white circle
         DrawArrow2D(tailPos, tailPos + fwdNormal * maxDist, 50.f, m_lineSegment.m_thickness, Rgba8::WHITE);
     }
     else
@@ -190,7 +190,7 @@ void GameRaycastVsDiscs::RenderRaycastResult() const
         if (closestResult.m_didImpact)
         {
             // Mark the closest collision disc in blue
-            DrawDisc2(m_randomDisc[closestDiscIndex].GetCenter(),
+            DrawDisc2D(m_randomDisc[closestDiscIndex].GetCenter(),
                       m_randomDisc[closestDiscIndex].GetRadius(),
                       Rgba8::LIGHT_BLUE);
 
@@ -215,7 +215,7 @@ void GameRaycastVsDiscs::RenderRaycastResult() const
                         Rgba8::CYAN);
 
             // 4. Small white circle: represents the impact point location
-            DrawDisc2(closestResult.m_impactPos,
+            DrawDisc2D(closestResult.m_impactPos,
                       5.0f,
                       Rgba8::WHITE);
         }
@@ -241,7 +241,7 @@ bool GameRaycastVsDiscs::IsTailPosInsideDisc(Vec2 const& startPos) const
     {
         if (m_randomDisc[i].IsPointInside(startPos))
         {
-            DrawDisc2(m_randomDisc[i].GetCenter(), m_randomDisc[i].GetRadius(), Rgba8::LIGHT_BLUE);
+            DrawDisc2D(m_randomDisc[i].GetCenter(), m_randomDisc[i].GetRadius(), Rgba8::LIGHT_BLUE);
             return true;
         }
     }

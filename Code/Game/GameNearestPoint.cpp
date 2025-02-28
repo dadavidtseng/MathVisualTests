@@ -56,6 +56,10 @@ void GameNearestPoint::Render() const
 {
     g_theRenderer->BeginCamera(*m_screenCamera);
 
+    g_theRenderer->SetBlendMode(BlendMode::ALPHA);
+    g_theRenderer->SetDepthMode(DepthMode::DISABLED);
+    g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_BACK);
+    g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
     RenderShapes();
 
     std::vector<Vertex_PCU> titleVerts;
@@ -111,7 +115,7 @@ void GameNearestPoint::RenderShapes() const
 {
     RenderDisc2();
     RenderLineSegment2();
-    RenderLineInfinite2();
+    RenderLineInfinite2D();
     RenderTriangle2D();
     RenderAABB2();
     RenderOBB2();
@@ -181,17 +185,25 @@ void GameNearestPoint::GenerateRandomInfiniteLine2()
 //----------------------------------------------------------------------------------------------------
 void GameNearestPoint::GenerateRandomTriangle2D()
 {
-    const Vec2 randomA = GenerateRandomPointInScreen();
-    const Vec2 randomB = GenerateRandomPointInScreen();
-    const Vec2 randomC = GenerateRandomPointInScreen();
+    Vec2 const randomA = GenerateRandomPointInScreen();
+    Vec2 const randomB = GenerateRandomPointInScreen();
+    Vec2 const randomC = GenerateRandomPointInScreen();
 
     m_randomTriangle = Triangle2(randomA, randomB, randomC);
 
     // Ensure the triangle is valid
-    const Vec2 edge1 = randomB - randomA;
-    const Vec2 edge2 = randomC - randomA;
+    Vec2 const edgeAB = randomB - randomA;
+    Vec2 const edgeAC = randomC - randomA;
 
-    if (DotProduct2D(edge1, edge2) < 0.f)
+    // Points A, B, and C are collinear.
+    if (CrossProduct2D(edgeAB, edgeAC) == 0.f)
+    {
+        GenerateRandomTriangle2D();
+        return;
+    }
+
+    // Ensure the triangle has counter-clockwise (CCW) winding order
+    if (CrossProduct2D(edgeAB, edgeAC) < 0.f)
     {
         m_randomTriangle = Triangle2(randomA, randomC, randomB);
     }
@@ -256,67 +268,67 @@ Vec2 GameNearestPoint::ClampPointToScreen(const Vec2& point, float halfWidth, fl
 void GameNearestPoint::RenderDisc2() const
 {
     const Vec2 nearestPoint = m_randomDisc.GetNearestPoint(m_referencePoint);
-    DrawDisc2(m_randomDisc, m_randomDisc.IsPointInside(m_referencePoint) ? Rgba8::LIGHT_BLUE : Rgba8::BLUE);
-    DrawLineSegment2D(m_referencePoint, nearestPoint, Rgba8::TRANSLUCENT_WHITE, 3.0f, false);
-    DrawDisc2(nearestPoint, 5.0f, Rgba8::ORANGE);
+    DrawDisc2D(m_randomDisc, m_randomDisc.IsPointInside(m_referencePoint) ? Rgba8::LIGHT_BLUE : Rgba8::BLUE);
+    DrawLineSegment2D(m_referencePoint, nearestPoint, 3.0f, false, Rgba8::TRANSLUCENT_WHITE);
+    DrawDisc2D(nearestPoint, 5.0f, Rgba8::ORANGE);
 }
 
 //----------------------------------------------------------------------------------------------------
 void GameNearestPoint::RenderLineSegment2() const
 {
     const Vec2 nearestPoint = m_randomLineSegment.GetNearestPoint(m_referencePoint);
-    DrawLineSegment2D(m_randomLineSegment, Rgba8::BLUE, m_randomLineSegment.m_thickness, m_randomLineSegment.m_isInfinite);
-    DrawLineSegment2D(m_referencePoint, nearestPoint, Rgba8::TRANSLUCENT_WHITE, 3.0f, false);
-    DrawDisc2(nearestPoint, 5.0f, Rgba8::ORANGE);
+    DrawLineSegment2D(m_randomLineSegment, m_randomLineSegment.m_thickness, m_randomLineSegment.m_isInfinite, Rgba8::BLUE);
+    DrawLineSegment2D(m_referencePoint, nearestPoint, 3.0f, false, Rgba8::TRANSLUCENT_WHITE);
+    DrawDisc2D(nearestPoint, 5.0f, Rgba8::ORANGE);
 }
 
 //----------------------------------------------------------------------------------------------------
-void GameNearestPoint::RenderLineInfinite2() const
+void GameNearestPoint::RenderLineInfinite2D() const
 {
     const Vec2 nearestPoint = m_randomInfiniteLine.GetNearestPoint(m_referencePoint);
-    DrawLineSegment2D(m_randomInfiniteLine, Rgba8::BLUE, m_randomInfiniteLine.m_thickness, m_randomInfiniteLine.m_isInfinite);
-    DrawLineSegment2D(m_referencePoint, nearestPoint, Rgba8::TRANSLUCENT_WHITE, 3.0f, false);
-    DrawDisc2(nearestPoint, 5.0f, Rgba8::ORANGE);
+    DrawLineSegment2D(m_randomInfiniteLine, m_randomInfiniteLine.m_thickness, m_randomInfiniteLine.m_isInfinite, Rgba8::BLUE);
+    DrawLineSegment2D(m_referencePoint, nearestPoint, 3.0f, false, Rgba8::TRANSLUCENT_WHITE);
+    DrawDisc2D(nearestPoint, 5.0f, Rgba8::ORANGE);
 }
 
 //----------------------------------------------------------------------------------------------------
 void GameNearestPoint::RenderTriangle2D() const
 {
-    const Vec2 nearestPoint = m_randomTriangle.GetNearestPoint(m_referencePoint);
+    Vec2 const nearestPoint = m_randomTriangle.GetNearestPoint(m_referencePoint);
     DrawTriangle2D(m_randomTriangle, m_randomTriangle.IsPointInside(m_referencePoint) ? Rgba8::LIGHT_BLUE : Rgba8::BLUE);
-    DrawLineSegment2D(m_referencePoint, nearestPoint, Rgba8::TRANSLUCENT_WHITE, 3.0f, false);
-    DrawDisc2(nearestPoint, 5.0f, Rgba8::ORANGE);
+    DrawLineSegment2D(m_referencePoint, nearestPoint, 3.0f, false, Rgba8::TRANSLUCENT_WHITE);
+    DrawDisc2D(nearestPoint, 5.0f, Rgba8::ORANGE);
 }
 
 //----------------------------------------------------------------------------------------------------
 void GameNearestPoint::RenderAABB2() const
 {
-    const Vec2 nearestPoint = m_randomAABB2.GetNearestPoint(m_referencePoint);
+    Vec2 const nearestPoint = m_randomAABB2.GetNearestPoint(m_referencePoint);
     DrawAABB2D(m_randomAABB2, m_randomAABB2.IsPointInside(m_referencePoint) ? Rgba8::LIGHT_BLUE : Rgba8::BLUE);
-    DrawLineSegment2D(m_referencePoint, nearestPoint, Rgba8::TRANSLUCENT_WHITE, 3.0f, false);
-    DrawDisc2(nearestPoint, 5.0f, Rgba8::ORANGE);
+    DrawLineSegment2D(m_referencePoint, nearestPoint, 3.0f, false, Rgba8::TRANSLUCENT_WHITE);
+    DrawDisc2D(nearestPoint, 5.0f, Rgba8::ORANGE);
 }
 
 //----------------------------------------------------------------------------------------------------
 void GameNearestPoint::RenderOBB2() const
 {
-    const Vec2 nearestPoint = m_randomOBB2.GetNearestPoint(m_referencePoint);
+    Vec2 const nearestPoint = m_randomOBB2.GetNearestPoint(m_referencePoint);
     DrawOBB2D(m_randomOBB2, m_randomOBB2.IsPointInside(m_referencePoint) ? Rgba8::LIGHT_BLUE : Rgba8::BLUE);
-    DrawLineSegment2D(m_referencePoint, nearestPoint, Rgba8::TRANSLUCENT_WHITE, 3.0f, false);
-    DrawDisc2(nearestPoint, 5.0f, Rgba8::ORANGE);
+    DrawLineSegment2D(m_referencePoint, nearestPoint, 3.0f, false, Rgba8::TRANSLUCENT_WHITE);
+    DrawDisc2D(nearestPoint, 5.0f, Rgba8::ORANGE);
 }
 
 //----------------------------------------------------------------------------------------------------
 void GameNearestPoint::RenderCapsule2D() const
 {
-    const Vec2 nearestPoint = m_randomCapsule2.GetNearestPoint(m_referencePoint);
+    Vec2 const nearestPoint = m_randomCapsule2.GetNearestPoint(m_referencePoint);
     DrawCapsule2D(m_randomCapsule2, m_randomCapsule2.IsPointInside(m_referencePoint) ? Rgba8::LIGHT_BLUE : Rgba8::BLUE);
-    DrawLineSegment2D(m_referencePoint, nearestPoint, Rgba8::TRANSLUCENT_WHITE, 3.0f, false);
-    DrawDisc2(nearestPoint, 5.0f, Rgba8::ORANGE);
+    DrawLineSegment2D(m_referencePoint, nearestPoint, 3.0f, false, Rgba8::TRANSLUCENT_WHITE);
+    DrawDisc2D(nearestPoint, 5.0f, Rgba8::ORANGE);
 }
 
 //----------------------------------------------------------------------------------------------------
 void GameNearestPoint::RenderReferencePoint() const
 {
-    DrawDisc2(m_referencePoint, 3.f, Rgba8::WHITE);
+    DrawDisc2D(m_referencePoint, 3.f, Rgba8::WHITE);
 }
