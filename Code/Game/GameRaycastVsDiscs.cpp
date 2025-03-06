@@ -62,7 +62,6 @@ void GameRaycastVsDiscs::Render() const
     g_theRenderer->DrawVertexArray(static_cast<int>(titleVerts.size()), titleVerts.data());
 
 
-
     g_theRenderer->EndCamera(*m_screenCamera);
 }
 
@@ -112,8 +111,8 @@ void GameRaycastVsDiscs::UpdateFromController(float const deltaSeconds)
 //----------------------------------------------------------------------------------------------------
 Vec2 GameRaycastVsDiscs::GenerateRandomPointInScreen() const
 {
-    const float randomX = g_theRNG->RollRandomFloatInRange(0, SCREEN_SIZE_X);
-    const float randomY = g_theRNG->RollRandomFloatInRange(0, SCREEN_SIZE_Y);
+    float const randomX = g_theRNG->RollRandomFloatInRange(0, SCREEN_SIZE_X);
+    float const randomY = g_theRNG->RollRandomFloatInRange(0, SCREEN_SIZE_Y);
 
     return Vec2(randomX, randomY);
 }
@@ -192,8 +191,8 @@ void GameRaycastVsDiscs::RenderRaycastResult() const
         {
             // Mark the closest collision disc in blue
             DrawDisc2D(m_randomDisc[closestDiscIndex].GetCenter(),
-                      m_randomDisc[closestDiscIndex].GetRadius(),
-                      Rgba8::LIGHT_BLUE);
+                       m_randomDisc[closestDiscIndex].GetRadius(),
+                       Rgba8::LIGHT_BLUE);
 
             // 1. Dark gray arrow: represents the full ray distance
             DrawArrow2D(tailPos,
@@ -217,8 +216,8 @@ void GameRaycastVsDiscs::RenderRaycastResult() const
 
             // 4. Small white circle: represents the impact point location
             DrawDisc2D(closestResult.m_impactPos,
-                      5.0f,
-                      Rgba8::WHITE);
+                       5.0f,
+                       Rgba8::WHITE);
         }
     }
 }

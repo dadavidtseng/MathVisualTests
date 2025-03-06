@@ -5,6 +5,8 @@
 //----------------------------------------------------------------------------------------------------
 #include "Game/App.hpp"
 
+#include "GameRaycastVsAABBs.hpp"
+#include "GameRaycastVsLineSegments.hpp"
 #include "Engine/Core/Clock.hpp"
 #include "Engine/Core/DevConsole.hpp"
 #include "Engine/Core/EngineCommon.hpp"
@@ -226,15 +228,25 @@ void App::HandleKeyPressed()
         delete g_theGame; // Clean up the current game mode
 
         // Cycle through game modes
-        if (m_currentGameMode == eGameMode::NEAREST_POINT)
-        {
-            g_theGame         = new GameRaycastVsDiscs();
-            m_currentGameMode = eGameMode::RAYCAST_VS_DISCS;
-        }
-        else
+        if (m_currentGameMode == eGameMode::RAYCAST_VS_DISCS)
         {
             g_theGame         = new GameNearestPoint();
             m_currentGameMode = eGameMode::NEAREST_POINT;
+        }
+        else if (m_currentGameMode == eGameMode::NEAREST_POINT)
+        {
+            g_theGame         = new GameRaycastVsLineSegments();
+            m_currentGameMode = eGameMode::RAYCAST_VS_LINESEGMENTS;
+        }
+        else if (m_currentGameMode == eGameMode::RAYCAST_VS_LINESEGMENTS)
+        {
+            g_theGame         = new GameRaycastVsAABBs();
+            m_currentGameMode = eGameMode::RAYCAST_VS_AABBS;
+        }
+        else if (m_currentGameMode == eGameMode::RAYCAST_VS_AABBS)
+        {
+            g_theGame         = new GameRaycastVsDiscs();
+            m_currentGameMode = eGameMode::RAYCAST_VS_DISCS;
         }
     }
 }
