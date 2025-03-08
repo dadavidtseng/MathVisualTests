@@ -5,8 +5,6 @@
 //----------------------------------------------------------------------------------------------------
 #include "Game/App.hpp"
 
-#include "GameRaycastVsAABBs.hpp"
-#include "GameRaycastVsLineSegments.hpp"
 #include "Engine/Core/Clock.hpp"
 #include "Engine/Core/DevConsole.hpp"
 #include "Engine/Core/EngineCommon.hpp"
@@ -14,11 +12,14 @@
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
+#include "Engine/Renderer/DebugRenderSystem.hpp"
 #include "Engine/Renderer/Renderer.hpp"
 #include "Engine/Renderer/Window.hpp"
 #include "Game/GameCommon.hpp"
 #include "Game/GameNearestPoint.hpp"
+#include "Game/GameRaycastVsAABBs.hpp"
 #include "Game/GameRaycastVsDiscs.hpp"
+#include "Game/GameRaycastVsLineSegments.hpp"
 
 //----------------------------------------------------------------------------------------------------
 App*                   g_theApp        = nullptr;      // Created and owned by Main_Windows.cpp
@@ -29,11 +30,15 @@ RandomNumberGenerator* g_theRNG        = nullptr;      // Created and owned by t
 Window*                g_theWindow     = nullptr;      // Created and owned by the App
 
 //----------------------------------------------------------------------------------------------------
+STATIC bool App::m_isQuitting = false;
+
+//----------------------------------------------------------------------------------------------------
 void App::Startup()
 {
     EventSystemConfig eventSystemConfig;
     g_theEventSystem = new EventSystem(eventSystemConfig);
     g_theEventSystem->SubscribeEventCallbackFunction("OnCloseButtonClicked", OnCloseButtonClicked);
+    g_theEventSystem->SubscribeEventCallbackFunction("quit", OnCloseButtonClicked);
 
     InputSystemConfig inputConfig;
     g_theInput = new InputSystem(inputConfig);
@@ -61,6 +66,10 @@ void App::Startup()
     renderConfig.m_window = g_theWindow;
     g_theRenderer         = new Renderer(renderConfig);
 
+    DebugRenderConfig debugConfig;
+    debugConfig.m_renderer = g_theRenderer;
+    debugConfig.m_fontName = "SquirrelFixedFont";
+
     // Initialize devConsoleCamera
     m_devConsoleCamera = new Camera();
 
@@ -78,15 +87,18 @@ void App::Startup()
     g_theEventSystem->Startup();
     g_theWindow->Startup();
     g_theRenderer->Startup();
+    DebugRenderSystemStartup(debugConfig);
     g_theDevConsole->StartUp();
     g_theInput->Startup();
 
     g_theBitmapFont = g_theRenderer->CreateOrGetBitmapFontFromFile("Data/Fonts/SquirrelFixedFont"); // DO NOT SPECIFY FILE .EXTENSION!!  (Important later on.)
     g_theRNG        = new RandomNumberGenerator();
-    g_theGame       = new GameRaycastVsDiscs();
+    g_theGame       = new GameNearestPoint();
+
+    m_gameClock = new Clock(Clock::GetSystemClock());
 }
 
-//-----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------
 // All Destroy and ShutDown process should be reverse order of the StartUp
 //
 void App::Shutdown()
@@ -107,6 +119,7 @@ void App::Shutdown()
     delete m_devConsoleCamera;
     m_devConsoleCamera = nullptr;
 
+    DebugRenderSystemShutdown();
     g_theRenderer->Shutdown();
     g_theWindow->Shutdown();
     g_theEventSystem->Shutdown();
@@ -121,23 +134,18 @@ void App::Shutdown()
     g_theInput = nullptr;
 }
 
-//-----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------
 // One "frame" of the game.  Generally: Input, Update, Render.  We call this 60+ times per second.
 //
 void App::RunFrame()
 {
-    BeginFrame();         // Engine pre-frame stuff
-    Update(); // Game updates / moves / spawns / hurts / kills stuff
-    Render();             // Game draws current state of things
-    EndFrame();           // Engine post-frame stuff
+    BeginFrame();           // Engine pre-frame stuff
+    Update();               // Game updates / moves / spawns / hurts / kills stuff
+    Render();               // Game draws current state of things
+    EndFrame();             // Engine post-frame stuff
 }
 
-// //-----------------------------------------------------------------------------------------------
-// bool App::IsQuitting() const
-// {
-// 	return m_isQuitting;
-// }
-
+//----------------------------------------------------------------------------------------------------
 void App::RunMainLoop()
 {
     // Program main loop; keep running frames until it's time to quit
@@ -148,33 +156,43 @@ void App::RunMainLoop()
     }
 }
 
-//-----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------
+bool App::OnCloseButtonClicked(EventArgs& arg)
+{
+    UNUSED(arg)
+
+    RequestQuit();
+    return true;
+}
+
+//----------------------------------------------------------------------------------------------------
+void App::RequestQuit()
+{
+    m_isQuitting = true;
+}
+
+//----------------------------------------------------------------------------------------------------
 void App::BeginFrame() const
 {
     g_theEventSystem->BeginFrame();
     g_theWindow->BeginFrame();
     g_theRenderer->BeginFrame();
+    DebugRenderBeginFrame();
     g_theDevConsole->BeginFrame();
     g_theInput->BeginFrame();
-    // g_theNetwork->BeginFrame();
 }
 
-//-----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------
 void App::Update()
 {
     Clock::TickSystemClock();
-
     g_theInput->SetCursorMode(CursorMode::POINTER);
-    HandleKeyPressed();
-    HandleKeyReleased();
+    UpdateFromFromKeyboard();
+    UpdateFromController();
     g_theGame->Update();
-
-
-    // AdjustForPauseAndTimeDistortion();
-    // m_theGame->Update();
 }
 
-//-----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------
 // Some simple OpenGL example drawing code.
 // This is the graphical equivalent of printing "Hello, world."
 //
@@ -193,107 +211,64 @@ void App::Render() const
     g_theDevConsole->Render(box);
 }
 
-//-----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------
 void App::EndFrame() const
 {
     g_theEventSystem->EndFrame();
-    g_theInput->EndFrame();
     g_theWindow->EndFrame();
     g_theRenderer->EndFrame();
+    DebugRenderEndFrame();
     g_theDevConsole->EndFrame();
-}
-
-//-----------------------------------------------------------------------------------------------
-void App::HandleKeyPressed()
-{
-    XboxController const& controller = g_theInput->GetController(0);
-
-    if (g_theInput->WasKeyJustPressed('O'))
-    {
-        m_isPaused = true;
-        // m_theGame->Update(1.f / 60.f);
-    }
-
-    if (g_theInput->WasKeyJustPressed('T')) m_isSlowMo = true;
-
-    if (g_theInput->WasKeyJustPressed('P')) m_isPaused = !m_isPaused;
-
-    if (g_theInput->WasKeyJustPressed(KEYCODE_ESC) || controller.WasButtonJustPressed(XBOX_BUTTON_BACK))
-    {
-        m_isQuitting = true;
-    }
-
-    if (g_theInput->WasKeyJustPressed(KEYCODE_F7))
-    {
-        delete g_theGame; // Clean up the current game mode
-
-        // Cycle through game modes
-        if (m_currentGameMode == eGameMode::RAYCAST_VS_DISCS)
-        {
-            g_theGame         = new GameNearestPoint();
-            m_currentGameMode = eGameMode::NEAREST_POINT;
-        }
-        else if (m_currentGameMode == eGameMode::NEAREST_POINT)
-        {
-            g_theGame         = new GameRaycastVsLineSegments();
-            m_currentGameMode = eGameMode::RAYCAST_VS_LINESEGMENTS;
-        }
-        else if (m_currentGameMode == eGameMode::RAYCAST_VS_LINESEGMENTS)
-        {
-            g_theGame         = new GameRaycastVsAABBs();
-            m_currentGameMode = eGameMode::RAYCAST_VS_AABBS;
-        }
-        else if (m_currentGameMode == eGameMode::RAYCAST_VS_AABBS)
-        {
-            g_theGame         = new GameRaycastVsDiscs();
-            m_currentGameMode = eGameMode::RAYCAST_VS_DISCS;
-        }
-    }
-}
-
-//-----------------------------------------------------------------------------------------------
-void App::HandleKeyReleased()
-{
-    XboxController const& controller = g_theInput->GetController(0);
-
-    if (g_theInput->WasKeyJustReleased('T') ||
-        controller.WasButtonJustReleased(XBOX_BUTTON_DPAD_UP))
-        m_isSlowMo = false;
-}
-
-//-----------------------------------------------------------------------------------------------
-void App::HandleQuitRequested()
-{
-    m_isQuitting = true;
-}
-
-void App::AdjustForPauseAndTimeDistortion(float& deltaSeconds) const
-{
-    if (m_isPaused) deltaSeconds = 0.f;
-
-    if (m_isSlowMo) deltaSeconds *= 1 / 10.f;
+    g_theInput->EndFrame();
 }
 
 //----------------------------------------------------------------------------------------------------
-void App::DeleteAndCreateNewGame()
+void App::UpdateFromFromKeyboard()
 {
+    if (g_theInput->WasKeyJustPressed(KEYCODE_F7))
+    {
+        // Cycle through game modes
+        m_currentGameMode = static_cast<eGameMode>((static_cast<int>(m_currentGameMode) + 1) % 4);
+
+        if (m_currentGameMode == eGameMode::RAYCAST_VS_DISCS) DeleteAndCreateNewGame<GameRaycastVsDiscs>();
+        if (m_currentGameMode == eGameMode::NEAREST_POINT) DeleteAndCreateNewGame<GameNearestPoint>();
+        if (m_currentGameMode == eGameMode::RAYCAST_VS_LINESEGMENTS) DeleteAndCreateNewGame<GameRaycastVsLineSegments>();
+        if (m_currentGameMode == eGameMode::RAYCAST_VS_AABBS) DeleteAndCreateNewGame<GameRaycastVsAABBs>();
+    }
+}
+
+//----------------------------------------------------------------------------------------------------
+void App::UpdateFromController()
+{
+    XboxController const& controller = g_theInput->GetController(0);
+
+    UNUSED(controller)
+}
+
+//----------------------------------------------------------------------------------------------------
+template <typename T>
+void App::DeleteAndCreateNewGame() const
+{
+    static_assert(std::is_base_of_v<Game, T>, "T must be a subclass of Game");
+
     delete g_theGame;
     g_theGame = nullptr;
 
-    g_theGame = new GameNearestPoint();
-}
-
-//-----------------------------------------------------------------------------------------------
-bool OnCloseButtonClicked(EventArgs& arg)
-{
-    UNUSED(arg)
-
-    RequestQuit();
-    return true;
+    g_theGame = new T();
 }
 
 //----------------------------------------------------------------------------------------------------
-void RequestQuit()
+void App::UpdateCursorMode()
 {
-    m_isQuitting = true;
+    bool const doesWindowHasFocus   = GetActiveWindow() == g_theWindow->GetWindowHandle();
+    bool const shouldUsePointerMode = !doesWindowHasFocus || g_theDevConsole->IsOpen();
+
+    if (shouldUsePointerMode == true)
+    {
+        g_theInput->SetCursorMode(CursorMode::POINTER);
+    }
+    else
+    {
+        g_theInput->SetCursorMode(CursorMode::FPS);
+    }
 }

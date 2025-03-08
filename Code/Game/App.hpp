@@ -19,8 +19,11 @@ public:
     void Startup();
     void Shutdown();
     void RunFrame();
-
     void RunMainLoop();
+
+    static bool OnCloseButtonClicked(EventArgs& arg);
+    static void RequestQuit();
+    static bool m_isQuitting;
 
 private:
     void BeginFrame() const;
@@ -28,20 +31,14 @@ private:
     void Render() const;
     void EndFrame() const;
 
-    void HandleKeyPressed();
-    void HandleKeyReleased();
-    void HandleQuitRequested();
-    void AdjustForPauseAndTimeDistortion(float& deltaSeconds) const;
-    void DeleteAndCreateNewGame();
+    void UpdateFromFromKeyboard();
+    void UpdateFromController();
+    void UpdateCursorMode();
 
-    bool  m_isPaused           = false;
-    bool  m_isSlowMo           = false;
-    float m_timeLastFrameStart = 0.f;
-    // Game*    m_theGame            = nullptr;
-    eGameMode m_currentGameMode  = eGameMode::RAYCAST_VS_DISCS;
+    template <class T>
+    void DeleteAndCreateNewGame() const;
+
+    Clock*    m_gameClock        = nullptr;
+    eGameMode m_currentGameMode  = eGameMode::NEAREST_POINT;
     Camera*   m_devConsoleCamera = nullptr;
 };
-
-static bool OnCloseButtonClicked(EventArgs& arg);
-static void RequestQuit();
-static bool m_isQuitting;

@@ -26,7 +26,7 @@
 GameNearestPoint::GameNearestPoint()
 {
     m_screenCamera = new Camera();
-    m_screenCamera->SetOrthoGraphicView(Vec2(0.f, 0.f), Vec2(SCREEN_SIZE_X, SCREEN_SIZE_Y));
+    m_screenCamera->SetOrthoGraphicView(Vec2::ZERO, Vec2(SCREEN_SIZE_X, SCREEN_SIZE_Y));
 
     m_referencePoint = Vec2(SCREEN_SIZE_X / 2.f, SCREEN_SIZE_Y / 2.f);
 

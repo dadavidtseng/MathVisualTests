@@ -5,6 +5,7 @@
 //----------------------------------------------------------------------------------------------------
 #include "Game/GameRaycastVsDiscs.hpp"
 
+#include "App.hpp"
 #include "Engine/Core/Clock.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Input/InputSystem.hpp"
@@ -66,7 +67,7 @@ void GameRaycastVsDiscs::Render() const
 }
 
 
-//------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------
 Vec2 GameRaycastVsDiscs::GetMouseWorldPos() const
 {
     Vec2 const  mouseUV    = g_theInput->GetCursorNormalizedPosition();
@@ -79,26 +80,22 @@ Vec2 GameRaycastVsDiscs::GetMouseWorldPos() const
 //----------------------------------------------------------------------------------------------------
 void GameRaycastVsDiscs::UpdateFromKeyboard(float const deltaSeconds)
 {
+    if (g_theInput->WasKeyJustPressed('O')) m_gameClock->StepSingleFrame();
+    if (g_theInput->WasKeyJustPressed('T')) m_gameClock->SetTimeScale(0.1f);
+    if (g_theInput->WasKeyJustReleased('T')) m_gameClock->SetTimeScale(1.f);
+    if (g_theInput->WasKeyJustPressed('P')) m_gameClock->TogglePause();
+    if (g_theInput->WasKeyJustPressed(KEYCODE_ESC)) App::RequestQuit();
+
     if (g_theInput->WasKeyJustPressed(KEYCODE_F8)) GenerateRandomDiscs();
-
     if (g_theInput->IsKeyDown(KEYCODE_W)) m_lineSegment.m_start.y += m_moveSpeed * deltaSeconds;
-
     if (g_theInput->IsKeyDown(KEYCODE_S)) m_lineSegment.m_start.y -= m_moveSpeed * deltaSeconds;
-
     if (g_theInput->IsKeyDown(KEYCODE_A)) m_lineSegment.m_start.x -= m_moveSpeed * deltaSeconds;
-
     if (g_theInput->IsKeyDown(KEYCODE_D)) m_lineSegment.m_start.x += m_moveSpeed * deltaSeconds;
-
     if (g_theInput->IsKeyDown(KEYCODE_I)) m_lineSegment.m_end.y += m_moveSpeed * deltaSeconds;
-
     if (g_theInput->IsKeyDown(KEYCODE_K)) m_lineSegment.m_end.y -= m_moveSpeed * deltaSeconds;
-
     if (g_theInput->IsKeyDown(KEYCODE_J)) m_lineSegment.m_end.x -= m_moveSpeed * deltaSeconds;
-
     if (g_theInput->IsKeyDown(KEYCODE_L)) m_lineSegment.m_end.x += m_moveSpeed * deltaSeconds;
-
     if (g_theInput->IsKeyDown(KEYCODE_LEFT_MOUSE)) m_lineSegment.m_start = GetMouseWorldPos();
-
     if (g_theInput->IsKeyDown(KEYCODE_RIGHT_MOUSE)) m_lineSegment.m_end = GetMouseWorldPos();
 }
 

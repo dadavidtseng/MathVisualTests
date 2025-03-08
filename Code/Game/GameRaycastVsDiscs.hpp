@@ -11,7 +11,7 @@
 #include "Game/Game.hpp"
 
 //----------------------------------------------------------------------------------------------------
-class GameRaycastVsDiscs : public Game
+class GameRaycastVsDiscs final : public Game
 {
 public:
     GameRaycastVsDiscs();
