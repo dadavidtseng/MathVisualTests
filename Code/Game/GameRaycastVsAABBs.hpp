@@ -17,7 +17,6 @@ public:
 
     void Update() override;
     void Render() const override;
-    Vec2 GetMouseWorldPos() const;
 
 private:
     void UpdateFromKeyboard(float deltaSeconds) override;

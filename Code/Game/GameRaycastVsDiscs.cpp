@@ -20,11 +20,14 @@
 GameRaycastVsDiscs::GameRaycastVsDiscs()
 {
     m_screenCamera = new Camera();
-    m_screenCamera->SetOrthoGraphicView(Vec2::ZERO, Vec2(SCREEN_SIZE_X, SCREEN_SIZE_Y));
+
+    float const screenSizeX = g_gameConfigBlackboard.GetValue("screenSizeX", 1600.f);
+    float const screenSizeY = g_gameConfigBlackboard.GetValue("screenSizeY", 800.f);
+    m_screenCamera->SetOrthoGraphicView(Vec2::ZERO, Vec2(screenSizeX, screenSizeY));
 
     m_gameClock = new Clock(Clock::GetSystemClock());
 
-    GenerateRandomDiscs();
+    GenerateRandomDiscs2D();
     GenerateRandomLineSegmentInScreen();
 }
 
@@ -51,30 +54,9 @@ void GameRaycastVsDiscs::Render() const
 
     RenderDisc2();
     RenderRaycastResult();
-
-    std::vector<Vertex_PCU> titleVerts;
-    g_theBitmapFont->AddVertsForTextInBox2D(titleVerts,
-                                            "CURRENT MODE: RaycastVsDiscs",
-                                            AABB2(Vec2(0.f, 750.f), Vec2(1600.f, 800.f)),
-                                            10.f);
-
-    g_theRenderer->BindTexture(&g_theBitmapFont->GetTexture());
-
-    g_theRenderer->DrawVertexArray(static_cast<int>(titleVerts.size()), titleVerts.data());
-
+    RenderCurrentModeText("CurrentMode: RaycastVsDiscs");
 
     g_theRenderer->EndCamera(*m_screenCamera);
-}
-
-
-//----------------------------------------------------------------------------------------------------
-Vec2 GameRaycastVsDiscs::GetMouseWorldPos() const
-{
-    Vec2 const  mouseUV    = g_theInput->GetCursorNormalizedPosition();
-    Vec2 const  bottomLeft = m_screenCamera->GetOrthographicBottomLeft();
-    Vec2 const  topRight   = m_screenCamera->GetOrthographicTopRight();
-    AABB2 const orthoBounds(bottomLeft, topRight);
-    return orthoBounds.GetPointAtUV(mouseUV);
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -86,7 +68,7 @@ void GameRaycastVsDiscs::UpdateFromKeyboard(float const deltaSeconds)
     if (g_theInput->WasKeyJustPressed('P')) m_gameClock->TogglePause();
     if (g_theInput->WasKeyJustPressed(KEYCODE_ESC)) App::RequestQuit();
 
-    if (g_theInput->WasKeyJustPressed(KEYCODE_F8)) GenerateRandomDiscs();
+    if (g_theInput->WasKeyJustPressed(KEYCODE_F8)) GenerateRandomDiscs2D();
     if (g_theInput->IsKeyDown(KEYCODE_W)) m_lineSegment.m_start.y += m_moveSpeed * deltaSeconds;
     if (g_theInput->IsKeyDown(KEYCODE_S)) m_lineSegment.m_start.y -= m_moveSpeed * deltaSeconds;
     if (g_theInput->IsKeyDown(KEYCODE_A)) m_lineSegment.m_start.x -= m_moveSpeed * deltaSeconds;
@@ -108,8 +90,10 @@ void GameRaycastVsDiscs::UpdateFromController(float const deltaSeconds)
 //----------------------------------------------------------------------------------------------------
 Vec2 GameRaycastVsDiscs::GenerateRandomPointInScreen() const
 {
-    float const randomX = g_theRNG->RollRandomFloatInRange(0, SCREEN_SIZE_X);
-    float const randomY = g_theRNG->RollRandomFloatInRange(0, SCREEN_SIZE_Y);
+    float const screenSizeX = g_gameConfigBlackboard.GetValue("screenSizeX", 1600.f);
+    float const screenSizeY = g_gameConfigBlackboard.GetValue("screenSizeY", 800.f);
+    float const randomX     = g_theRNG->RollRandomFloatInRange(0, screenSizeX);
+    float const randomY     = g_theRNG->RollRandomFloatInRange(0, screenSizeY);
 
     return Vec2(randomX, randomY);
 }
@@ -121,7 +105,7 @@ void GameRaycastVsDiscs::GenerateRandomLineSegmentInScreen()
 }
 
 //----------------------------------------------------------------------------------------------------
-void GameRaycastVsDiscs::GenerateRandomDiscs()
+void GameRaycastVsDiscs::GenerateRandomDiscs2D()
 {
     for (int i = 0; i < 8; ++i)
     {
@@ -146,28 +130,28 @@ void GameRaycastVsDiscs::RenderDisc2() const
 void GameRaycastVsDiscs::RenderRaycastResult() const
 {
     // Ray direction and starting position
-    Vec2 const  fwdNormal = (m_lineSegment.m_end - m_lineSegment.m_start).GetNormalized();
-    Vec2 const  tailPos   = m_lineSegment.m_start;
-    float const maxDist   = m_lineSegment.GetLength();
+    Vec2 const  forwardNormal = (m_lineSegment.m_end - m_lineSegment.m_start).GetNormalized();
+    Vec2 const  tailPosition  = m_lineSegment.m_start;
+    float const maxDistance   = m_lineSegment.GetLength();
 
     // To store the closest collision result
     RaycastResult2D closestResult;
     closestResult.m_didImpact  = false;
-    closestResult.m_impactDist = maxDist;
+    closestResult.m_impactDist = maxDistance;
     int closestDiscIndex       = -1; // Index of the closest disc
 
     // If the start point is inside at least one disc, draw a white arrow and stop further checks
-    if (IsTailPosInsideDisc(tailPos))
+    if (IsTailPosInsideDisc(tailPosition))
     {
-        DrawDisc2D(tailPos, 5.0f, Rgba8::WHITE); // Mark the start point with a small white circle
-        DrawArrow2D(tailPos, tailPos + fwdNormal * maxDist, 50.f, m_lineSegment.m_thickness, Rgba8::WHITE);
+        DrawDisc2D(tailPosition, 5.0f, Rgba8::WHITE); // Mark the start point with a small white circle
+        DrawArrow2D(tailPosition, tailPosition + forwardNormal * maxDistance, 50.f, m_lineSegment.m_thickness, Rgba8::WHITE);
     }
     else
     {
         // Check collisions with all discs and find the closest one
         for (int i = 0; i < 8; ++i)
         {
-            RaycastResult2D const result = RaycastVsDisc2D(tailPos, fwdNormal, maxDist, m_randomDisc[i].GetCenter(), m_randomDisc[i].GetRadius());
+            RaycastResult2D const result = RaycastVsDisc2D(tailPosition, forwardNormal, maxDistance, m_randomDisc[i].GetCenter(), m_randomDisc[i].GetRadius());
 
             if (result.m_didImpact && result.m_impactDist < closestResult.m_impactDist)
             {
@@ -177,8 +161,8 @@ void GameRaycastVsDiscs::RenderRaycastResult() const
         }
 
         // Draw the ray as a white arrow
-        DrawArrow2D(tailPos,
-                    tailPos + fwdNormal * maxDist,
+        DrawArrow2D(tailPosition,
+                    tailPosition + forwardNormal * maxDistance,
                     50.f,
                     m_lineSegment.m_thickness,
                     Rgba8::WHITE);
@@ -192,13 +176,13 @@ void GameRaycastVsDiscs::RenderRaycastResult() const
                        Rgba8::LIGHT_BLUE);
 
             // 1. Dark gray arrow: represents the full ray distance
-            DrawArrow2D(tailPos,
-                        tailPos + fwdNormal * maxDist, 50.f,
+            DrawArrow2D(tailPosition,
+                        tailPosition + forwardNormal * maxDistance, 50.f,
                         m_lineSegment.m_thickness,
                         Rgba8::GREY);
 
             // 2. Orange arrow: represents the distance from the start to the impact point
-            DrawArrow2D(tailPos,
+            DrawArrow2D(tailPosition,
                         closestResult.m_impactPos,
                         50.f,
                         m_lineSegment.m_thickness,
@@ -220,23 +204,25 @@ void GameRaycastVsDiscs::RenderRaycastResult() const
 }
 
 //----------------------------------------------------------------------------------------------------
-Vec2 GameRaycastVsDiscs::ClampPointToScreen(Vec2 const& point,
+Vec2 GameRaycastVsDiscs::ClampPointToScreen(Vec2 const& pointPosition,
                                             float const radius) const
 {
-    Vec2 clampedPoint = point;
+    Vec2 clampedPoint = pointPosition;
 
-    clampedPoint.x = GetClamped(clampedPoint.x, radius, SCREEN_SIZE_X - radius);
-    clampedPoint.y = GetClamped(clampedPoint.y, radius, SCREEN_SIZE_Y - radius);
+    float const screenSizeX = g_gameConfigBlackboard.GetValue("screenSizeX", 1600.f);
+    float const screenSizeY = g_gameConfigBlackboard.GetValue("screenSizeY", 800.f);
+    clampedPoint.x          = GetClamped(clampedPoint.x, radius, screenSizeX - radius);
+    clampedPoint.y          = GetClamped(clampedPoint.y, radius, screenSizeY - radius);
 
     return clampedPoint;
 }
 
 //----------------------------------------------------------------------------------------------------
-bool GameRaycastVsDiscs::IsTailPosInsideDisc(Vec2 const& startPos) const
+bool GameRaycastVsDiscs::IsTailPosInsideDisc(Vec2 const& startPosition) const
 {
     for (int i = 0; i < 8; ++i)
     {
-        if (m_randomDisc[i].IsPointInside(startPos))
+        if (m_randomDisc[i].IsPointInside(startPosition))
         {
             DrawDisc2D(m_randomDisc[i].GetCenter(), m_randomDisc[i].GetRadius(), Rgba8::LIGHT_BLUE);
             return true;

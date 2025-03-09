@@ -16,21 +16,18 @@ public:
 
     void Update() override;
     void Render() const override;
-    Vec2 GetMouseWorldPos() const;
 
 private:
     void UpdateFromKeyboard(float deltaSeconds) override;
     void UpdateFromController(float deltaSeconds) override;
 
-    void RenderShapes() const;
-    void RenderLineSegment2D() const;
+    void RenderRaycastResult() const;
+    void RenderLineSegments2D() const;
 
-    void GenerateRandom();
     Vec2 GenerateRandomPointInScreen() const;
     void GenerateRandomLineSegmentInScreen();
-    void RenderRaycastResult() const;
+    void GenerateRandomLineSegment2D();
 
-
-    LineSegment2 m_lineSegment[8] = {};
-    LineSegment2 m_referenceLine;
+    LineSegment2 m_lineSegments[8] = {};
+    LineSegment2 m_lineSegment;
 };

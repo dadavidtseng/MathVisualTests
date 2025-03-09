@@ -35,6 +35,8 @@ STATIC bool App::m_isQuitting = false;
 //----------------------------------------------------------------------------------------------------
 void App::Startup()
 {
+    LoadGameConfig("Data/GameConfig.xml");
+
     EventSystemConfig eventSystemConfig;
     g_theEventSystem = new EventSystem(eventSystemConfig);
     g_theEventSystem->SubscribeEventCallbackFunction("OnCloseButtonClicked", OnCloseButtonClicked);
@@ -73,8 +75,11 @@ void App::Startup()
     // Initialize devConsoleCamera
     m_devConsoleCamera = new Camera();
 
-    Vec2 const bottomLeft     = Vec2::ZERO;
-    Vec2 const screenTopRight = Vec2(SCREEN_SIZE_X, SCREEN_SIZE_Y);
+    Vec2 const bottomLeft = Vec2::ZERO;
+
+    float const screenSizeX    = g_gameConfigBlackboard.GetValue("screenSizeX", 1600.f);
+    float const screenSizeY    = g_gameConfigBlackboard.GetValue("screenSizeY", 800.f);
+    Vec2 const  screenTopRight = Vec2(screenSizeX, screenSizeY);
 
     m_devConsoleCamera->SetOrthoGraphicView(bottomLeft, screenTopRight);
 
@@ -220,6 +225,29 @@ void App::EndFrame() const
     DebugRenderEndFrame();
     g_theDevConsole->EndFrame();
     g_theInput->EndFrame();
+}
+
+//----------------------------------------------------------------------------------------------------
+void App::LoadGameConfig(char const* gameConfigXmlFilePath)
+{
+    XmlDocument     gameConfigXml;
+    XmlResult const result = gameConfigXml.LoadFile(gameConfigXmlFilePath);
+
+    if (result == XmlResult::XML_SUCCESS)
+    {
+        if (XmlElement const* rootElement = gameConfigXml.RootElement())
+        {
+            g_gameConfigBlackboard.PopulateFromXmlElementAttributes(*rootElement);
+        }
+        else
+        {
+            printf("WARNING: game config from file \"%s\" was invalid (missing root element)\n", gameConfigXmlFilePath);
+        }
+    }
+    else
+    {
+        printf("WARNING: failed to load game config from file \"%s\"\n", gameConfigXmlFilePath);
+    }
 }
 
 //----------------------------------------------------------------------------------------------------

@@ -29,6 +29,9 @@ public:
     virtual void Render() const = 0;
 
 protected:
+    Vec2 GetMouseWorldPos() const;
+    void RenderCurrentModeText(char const* currentModeText) const;
+
     Clock*  m_gameClock     = nullptr;
     Camera* m_screenCamera  = nullptr;
     Vec2    m_baseCameraPos = Vec2::ZERO;

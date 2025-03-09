@@ -19,18 +19,20 @@ public:
 
     void Update() override;
     void Render() const override;
-    Vec2 GetMouseWorldPos() const;
 
 private:
     void UpdateFromKeyboard(float deltaSeconds) override;
     void UpdateFromController(float deltaSeconds) override;
+
     Vec2 GenerateRandomPointInScreen() const;
     void GenerateRandomLineSegmentInScreen();
-    void GenerateRandomDiscs();
+    void GenerateRandomDiscs2D();
+
     void RenderDisc2() const;
     void RenderRaycastResult() const;
-    Vec2 ClampPointToScreen(Vec2 const& point, float radius) const;
-    bool IsTailPosInsideDisc(Vec2 const& startPos) const;
+
+    Vec2 ClampPointToScreen(Vec2 const& pointPosition, float radius) const;
+    bool IsTailPosInsideDisc(Vec2 const& startPosition) const;
 
     Disc2        m_randomDisc[8] = {};
     LineSegment2 m_lineSegment;

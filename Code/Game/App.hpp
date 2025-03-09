@@ -4,11 +4,11 @@
 
 //----------------------------------------------------------------------------------------------------
 #pragma once
-#include "Game.hpp"
 #include "Engine/Core/EventSystem.hpp"
+#include "Game/Game.hpp"
 
+//-Forward-Declaration--------------------------------------------------------------------------------
 class Camera;
-//----------------------------------------------------------------------------------------------------
 
 //----------------------------------------------------------------------------------------------------
 class App
@@ -16,6 +16,7 @@ class App
 public:
     App()  = default;
     ~App() = default;
+
     void Startup();
     void Shutdown();
     void RunFrame();
@@ -31,6 +32,7 @@ private:
     void Render() const;
     void EndFrame() const;
 
+    void LoadGameConfig(char const* gameConfigXmlFilePath);
     void UpdateFromFromKeyboard();
     void UpdateFromController();
     void UpdateCursorMode();

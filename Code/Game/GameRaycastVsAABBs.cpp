@@ -5,6 +5,7 @@
 //----------------------------------------------------------------------------------------------------
 #include "Game/GameRaycastVsAABBs.hpp"
 
+#include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/Renderer.hpp"
 #include "Game/GameCommon.hpp"
@@ -12,6 +13,11 @@
 //----------------------------------------------------------------------------------------------------
 GameRaycastVsAABBs::GameRaycastVsAABBs()
 {
+    m_screenCamera = new Camera();
+
+    float const screenSizeX = g_gameConfigBlackboard.GetValue("screenSizeX", 1600.f);
+    float const screenSizeY = g_gameConfigBlackboard.GetValue("screenSizeY", 800.f);
+    m_screenCamera->SetOrthoGraphicView(Vec2::ZERO, Vec2(screenSizeX, screenSizeY));
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -25,15 +31,11 @@ void GameRaycastVsAABBs::Update()
 
 void GameRaycastVsAABBs::Render() const
 {
-    std::vector<Vertex_PCU> titleVerts;
-    g_theBitmapFont->AddVertsForTextInBox2D(titleVerts,
-                                            "CURRENT MODE: RaycastVsAABBs",
-                                            AABB2(Vec2(0.f, 750.f), Vec2(1600.f, 800.f)),
-                                            10.f);
+    g_theRenderer->BeginCamera(*m_screenCamera);
 
-    g_theRenderer->BindTexture(&g_theBitmapFont->GetTexture());
+    RenderCurrentModeText("CurrentMode: RaycastVsAABBs");
 
-    g_theRenderer->DrawVertexArray(static_cast<int>(titleVerts.size()), titleVerts.data());
+    g_theRenderer->EndCamera(*m_screenCamera);
 }
 
 void GameRaycastVsAABBs::UpdateFromKeyboard(float deltaSeconds)
