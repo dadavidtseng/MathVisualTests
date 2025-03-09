@@ -253,9 +253,20 @@ void App::LoadGameConfig(char const* gameConfigXmlFilePath)
 //----------------------------------------------------------------------------------------------------
 void App::UpdateFromFromKeyboard()
 {
+    if (g_theInput->WasKeyJustPressed(KEYCODE_F6))
+    {
+        // Cycle through game modes backward
+        m_currentGameMode = static_cast<eGameMode>((static_cast<int>(m_currentGameMode) +3) % 4);
+
+        if (m_currentGameMode == eGameMode::RAYCAST_VS_DISCS) DeleteAndCreateNewGame<GameRaycastVsDiscs>();
+        if (m_currentGameMode == eGameMode::NEAREST_POINT) DeleteAndCreateNewGame<GameNearestPoint>();
+        if (m_currentGameMode == eGameMode::RAYCAST_VS_LINESEGMENTS) DeleteAndCreateNewGame<GameRaycastVsLineSegments>();
+        if (m_currentGameMode == eGameMode::RAYCAST_VS_AABBS) DeleteAndCreateNewGame<GameRaycastVsAABBs>();
+    }
+
     if (g_theInput->WasKeyJustPressed(KEYCODE_F7))
     {
-        // Cycle through game modes
+        // Cycle through game modes forward
         m_currentGameMode = static_cast<eGameMode>((static_cast<int>(m_currentGameMode) + 1) % 4);
 
         if (m_currentGameMode == eGameMode::RAYCAST_VS_DISCS) DeleteAndCreateNewGame<GameRaycastVsDiscs>();
