@@ -118,7 +118,7 @@ void GameRaycastVsLineSegments::RenderLineSegments2D() const
 {
     for (int i = 0; i < 8; ++i)
     {
-        DrawLineSegment2D(m_lineSegments[i].m_start, m_lineSegments[i].m_end, 3.f, false, Rgba8::WHITE);
+        DrawLineSegment2D(m_lineSegments[i].m_start, m_lineSegments[i].m_end, 3.f, false,Rgba8::BLUE);
     }
 }
 
