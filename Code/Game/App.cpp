@@ -285,18 +285,6 @@ void App::UpdateFromController()
 }
 
 //----------------------------------------------------------------------------------------------------
-template <typename T>
-void App::DeleteAndCreateNewGame() const
-{
-    static_assert(std::is_base_of_v<Game, T>, "T must be a subclass of Game");
-
-    delete g_theGame;
-    g_theGame = nullptr;
-
-    g_theGame = new T();
-}
-
-//----------------------------------------------------------------------------------------------------
 void App::UpdateCursorMode()
 {
     bool const doesWindowHasFocus   = GetActiveWindow() == g_theWindow->GetWindowHandle();

@@ -19,7 +19,6 @@ class GameNearestPoint : public Game
 {
 public:
     GameNearestPoint();
-    ~GameNearestPoint() override;
 
     void Update() override;
     void Render() const override;

@@ -12,7 +12,6 @@ class GameRaycastVsLineSegments final : public Game
 {
 public:
     GameRaycastVsLineSegments();
-    ~GameRaycastVsLineSegments() override;
 
     void Update() override;
     void Render() const override;

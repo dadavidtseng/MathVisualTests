@@ -15,7 +15,6 @@ class GameRaycastVsDiscs final : public Game
 {
 public:
     GameRaycastVsDiscs();
-    ~GameRaycastVsDiscs() override;
 
     void Update() override;
     void Render() const override;

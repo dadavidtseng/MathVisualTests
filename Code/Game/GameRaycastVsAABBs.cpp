@@ -33,10 +33,6 @@ GameRaycastVsAABBs::GameRaycastVsAABBs()
 }
 
 //----------------------------------------------------------------------------------------------------
-GameRaycastVsAABBs::~GameRaycastVsAABBs()
-{
-}
-
 void GameRaycastVsAABBs::Update()
 {
     float const deltaSeconds = static_cast<float>(m_gameClock->GetDeltaSeconds());
@@ -45,6 +41,7 @@ void GameRaycastVsAABBs::Update()
     UpdateFromController(deltaSeconds);
 }
 
+//----------------------------------------------------------------------------------------------------
 void GameRaycastVsAABBs::Render() const
 {
     g_theRenderer->BeginCamera(*m_screenCamera);
@@ -56,6 +53,7 @@ void GameRaycastVsAABBs::Render() const
     g_theRenderer->EndCamera(*m_screenCamera);
 }
 
+//----------------------------------------------------------------------------------------------------
 void GameRaycastVsAABBs::UpdateFromKeyboard(float const deltaSeconds)
 {
     if (g_theInput->WasKeyJustPressed(KEYCODE_O)) m_gameClock->StepSingleFrame();
@@ -77,11 +75,16 @@ void GameRaycastVsAABBs::UpdateFromKeyboard(float const deltaSeconds)
     if (g_theInput->IsKeyDown(KEYCODE_RIGHT_MOUSE)) m_lineSegment.m_end = GetMouseWorldPos();
 }
 
+//----------------------------------------------------------------------------------------------------
 void GameRaycastVsAABBs::UpdateFromController(float const deltaSeconds)
 {
-    UNUSED(deltaSeconds)
+    XboxController const controller = g_theInput->GetController(0);
+
+    m_lineSegment.m_start += controller.GetLeftStick().GetPosition() * m_moveSpeed * deltaSeconds;
+    m_lineSegment.m_end += controller.GetRightStick().GetPosition() * m_moveSpeed * deltaSeconds;
 }
 
+//----------------------------------------------------------------------------------------------------
 void GameRaycastVsAABBs::RenderAABB2s2D() const
 {
     for (int i = 0; i < 8; ++i)
@@ -90,6 +93,7 @@ void GameRaycastVsAABBs::RenderAABB2s2D() const
     }
 }
 
+//----------------------------------------------------------------------------------------------------
 void GameRaycastVsAABBs::RenderRaycastResult() const
 {
     // Ray direction and starting position
@@ -156,11 +160,13 @@ void GameRaycastVsAABBs::RenderRaycastResult() const
     }
 }
 
+//----------------------------------------------------------------------------------------------------
 void GameRaycastVsAABBs::GenerateRandomLineSegmentInScreen()
 {
     m_lineSegment = LineSegment2(GenerateRandomPointInScreen(), GenerateRandomPointInScreen(), 2.f, false);
 }
 
+//----------------------------------------------------------------------------------------------------
 void GameRaycastVsAABBs::GenerateRandomAABB2s2D()
 {
     float const screenSizeX = g_gameConfigBlackboard.GetValue("screenSizeX", 1600.f);

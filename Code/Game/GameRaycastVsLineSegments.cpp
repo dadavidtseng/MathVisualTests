@@ -30,11 +30,6 @@ GameRaycastVsLineSegments::GameRaycastVsLineSegments()
 }
 
 //----------------------------------------------------------------------------------------------------
-GameRaycastVsLineSegments::~GameRaycastVsLineSegments()
-{
-}
-
-//----------------------------------------------------------------------------------------------------
 void GameRaycastVsLineSegments::Update()
 {
     float const deltaSeconds = static_cast<float>(m_gameClock->GetDeltaSeconds());
@@ -80,7 +75,10 @@ void GameRaycastVsLineSegments::UpdateFromKeyboard(float const deltaSeconds)
 //----------------------------------------------------------------------------------------------------
 void GameRaycastVsLineSegments::UpdateFromController(float const deltaSeconds)
 {
-    UNUSED(deltaSeconds);
+    XboxController const controller = g_theInput->GetController(0);
+
+    m_lineSegment.m_start += controller.GetLeftStick().GetPosition() * m_moveSpeed * deltaSeconds;
+    m_lineSegment.m_end += controller.GetRightStick().GetPosition() * m_moveSpeed * deltaSeconds;
 }
 
 //----------------------------------------------------------------------------------------------------

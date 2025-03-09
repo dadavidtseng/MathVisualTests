@@ -40,13 +40,6 @@ GameNearestPoint::GameNearestPoint()
 }
 
 //----------------------------------------------------------------------------------------------------
-GameNearestPoint::~GameNearestPoint()
-{
-    SafeDelete(m_screenCamera);
-    SafeDelete(m_gameClock);
-}
-
-//----------------------------------------------------------------------------------------------------
 void GameNearestPoint::Update()
 {
     float const deltaSeconds = static_cast<float>(m_gameClock->GetDeltaSeconds());
@@ -95,7 +88,9 @@ void GameNearestPoint::UpdateFromKeyboard(float const deltaSeconds)
 //----------------------------------------------------------------------------------------------------
 void GameNearestPoint::UpdateFromController(float const deltaSeconds)
 {
-    UNUSED(deltaSeconds)
+    XboxController const controller = g_theInput->GetController(0);
+
+    m_referencePoint += controller.GetLeftStick().GetPosition() * m_moveSpeed * deltaSeconds;
 }
 
 //----------------------------------------------------------------------------------------------------

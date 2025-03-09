@@ -23,7 +23,7 @@ enum class eGameMode
 class Game
 {
 public:
-    virtual ~Game() = default;
+    virtual ~Game();
 
     virtual void Update() = 0;
     virtual void Render() const = 0;

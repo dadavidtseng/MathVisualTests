@@ -6,7 +6,6 @@
 #pragma once
 #include "Engine/Renderer/Window.hpp"
 
-
 struct Capsule2;
 struct AABB2;
 struct OBB2;

@@ -5,6 +5,7 @@
 //----------------------------------------------------------------------------------------------------
 #include "Game/Game.hpp"
 
+#include "Engine/Core/Clock.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Core/VertexUtils.hpp"
 #include "Engine/Input/InputSystem.hpp"
@@ -15,6 +16,13 @@
 #include "Engine/Renderer/Camera.hpp"
 #include "Engine/Renderer/Renderer.hpp"
 #include "Game/GameCommon.hpp"
+
+//----------------------------------------------------------------------------------------------------
+Game::~Game()
+{
+    SafeDelete(m_screenCamera);
+    SafeDelete(m_gameClock);
+}
 
 //----------------------------------------------------------------------------------------------------
 Vec2 Game::GetMouseWorldPos() const

@@ -4,6 +4,7 @@
 
 //----------------------------------------------------------------------------------------------------
 #pragma once
+#include "GameCommon.hpp"
 #include "Engine/Core/EventSystem.hpp"
 #include "Game/Game.hpp"
 
@@ -37,10 +38,19 @@ private:
     void UpdateFromController();
     void UpdateCursorMode();
 
-    template <class T>
-    void DeleteAndCreateNewGame() const;
-
     Clock*    m_gameClock        = nullptr;
     eGameMode m_currentGameMode  = eGameMode::NEAREST_POINT;
     Camera*   m_devConsoleCamera = nullptr;
 };
+
+//----------------------------------------------------------------------------------------------------
+template <typename T>
+void DeleteAndCreateNewGame()
+{
+    static_assert(std::is_base_of_v<Game, T>, "T must be a subclass of Game");
+
+    delete g_theGame;
+    g_theGame = nullptr;
+
+    g_theGame = new T();
+}
