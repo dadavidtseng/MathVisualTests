@@ -78,10 +78,10 @@ void GameNearestPoint::UpdateFromKeyboard(float const deltaSeconds)
         m_referencePoint          = Vec2(screenCenterX, screenCenterY);
     }
 
-    if (g_theInput->WasKeyJustPressed('O')) m_gameClock->StepSingleFrame();
-    if (g_theInput->WasKeyJustPressed('T')) m_gameClock->SetTimeScale(0.1f);
-    if (g_theInput->WasKeyJustReleased('T')) m_gameClock->SetTimeScale(1.f);
-    if (g_theInput->WasKeyJustPressed('P')) m_gameClock->TogglePause();
+    if (g_theInput->WasKeyJustPressed(KEYCODE_O)) m_gameClock->StepSingleFrame();
+    if (g_theInput->WasKeyJustPressed(KEYCODE_T)) m_gameClock->SetTimeScale(0.1f);
+    if (g_theInput->WasKeyJustReleased(KEYCODE_T)) m_gameClock->SetTimeScale(1.f);
+    if (g_theInput->WasKeyJustPressed(KEYCODE_P)) m_gameClock->TogglePause();
     if (g_theInput->WasKeyJustPressed(KEYCODE_ESC)) App::RequestQuit();
 
     if (g_theInput->IsKeyDown(KEYCODE_W)) m_referencePoint.y += m_moveSpeed * deltaSeconds;

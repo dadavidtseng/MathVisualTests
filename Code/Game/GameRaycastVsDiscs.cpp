@@ -62,10 +62,10 @@ void GameRaycastVsDiscs::Render() const
 //----------------------------------------------------------------------------------------------------
 void GameRaycastVsDiscs::UpdateFromKeyboard(float const deltaSeconds)
 {
-    if (g_theInput->WasKeyJustPressed('O')) m_gameClock->StepSingleFrame();
-    if (g_theInput->WasKeyJustPressed('T')) m_gameClock->SetTimeScale(0.1f);
-    if (g_theInput->WasKeyJustReleased('T')) m_gameClock->SetTimeScale(1.f);
-    if (g_theInput->WasKeyJustPressed('P')) m_gameClock->TogglePause();
+    if (g_theInput->WasKeyJustPressed(KEYCODE_O)) m_gameClock->StepSingleFrame();
+    if (g_theInput->WasKeyJustPressed(KEYCODE_T)) m_gameClock->SetTimeScale(0.1f);
+    if (g_theInput->WasKeyJustReleased(KEYCODE_T)) m_gameClock->SetTimeScale(1.f);
+    if (g_theInput->WasKeyJustPressed(KEYCODE_P)) m_gameClock->TogglePause();
     if (g_theInput->WasKeyJustPressed(KEYCODE_ESC)) App::RequestQuit();
 
     if (g_theInput->WasKeyJustPressed(KEYCODE_F8)) GenerateRandomDiscs2D();

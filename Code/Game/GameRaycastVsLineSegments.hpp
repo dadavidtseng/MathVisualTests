@@ -21,8 +21,8 @@ private:
     void UpdateFromKeyboard(float deltaSeconds) override;
     void UpdateFromController(float deltaSeconds) override;
 
-    void RenderRaycastResult() const;
     void RenderLineSegments2D() const;
+    void RenderRaycastResult() const;
 
     Vec2 GenerateRandomPointInScreen() const;
     void GenerateRandomLineSegmentInScreen();

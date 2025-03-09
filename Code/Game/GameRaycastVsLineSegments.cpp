@@ -9,6 +9,7 @@
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
+#include "Engine/Math/RaycastUtils.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/Renderer.hpp"
 #include "Game/App.hpp"
@@ -58,10 +59,10 @@ void GameRaycastVsLineSegments::Render() const
 //----------------------------------------------------------------------------------------------------
 void GameRaycastVsLineSegments::UpdateFromKeyboard(float const deltaSeconds)
 {
-    if (g_theInput->WasKeyJustPressed('O')) m_gameClock->StepSingleFrame();
-    if (g_theInput->WasKeyJustPressed('T')) m_gameClock->SetTimeScale(0.1f);
-    if (g_theInput->WasKeyJustReleased('T')) m_gameClock->SetTimeScale(1.f);
-    if (g_theInput->WasKeyJustPressed('P')) m_gameClock->TogglePause();
+    if (g_theInput->WasKeyJustPressed(KEYCODE_O)) m_gameClock->StepSingleFrame();
+    if (g_theInput->WasKeyJustPressed(KEYCODE_T)) m_gameClock->SetTimeScale(0.1f);
+    if (g_theInput->WasKeyJustReleased(KEYCODE_T)) m_gameClock->SetTimeScale(1.f);
+    if (g_theInput->WasKeyJustPressed(KEYCODE_P)) m_gameClock->TogglePause();
     if (g_theInput->WasKeyJustPressed(KEYCODE_ESC)) App::RequestQuit();
 
     if (g_theInput->WasKeyJustPressed(KEYCODE_F8)) GenerateRandomLineSegment2D();
@@ -112,6 +113,16 @@ void GameRaycastVsLineSegments::GenerateRandomLineSegment2D()
     }
 }
 
+//----------------------------------------------------------------------------------------------------
+void GameRaycastVsLineSegments::RenderLineSegments2D() const
+{
+    for (int i = 0; i < 8; ++i)
+    {
+        DrawLineSegment2D(m_lineSegments[i].m_start, m_lineSegments[i].m_end, 3.f, false, Rgba8::WHITE);
+    }
+}
+
+//----------------------------------------------------------------------------------------------------
 void GameRaycastVsLineSegments::RenderRaycastResult() const
 {
     // Ray direction and starting position
@@ -119,17 +130,63 @@ void GameRaycastVsLineSegments::RenderRaycastResult() const
     Vec2 const  tailPosition  = m_lineSegment.m_start;
     float const maxDistance   = m_lineSegment.GetLength();
 
+    // To store the closest collision result
+    RaycastResult2D closestResult;
+    closestResult.m_didImpact  = false;
+    closestResult.m_impactDist = maxDistance;
+    int closestDiscIndex       = -1; // Index of the closest disc
+
+
+    // Check collisions with all discs and find the closest one
+    for (int i = 0; i < 8; ++i)
+    {
+        RaycastResult2D const result = RayCastVsLineSegment2D(tailPosition, forwardNormal, maxDistance, m_lineSegments[i].m_start,m_lineSegments[i].m_end);
+
+        if (result.m_didImpact && result.m_impactDist < closestResult.m_impactDist)
+        {
+            closestResult    = result;
+            closestDiscIndex = i;
+        }
+    }
+
+    // Draw the ray as a white arrow
     DrawArrow2D(tailPosition,
                 tailPosition + forwardNormal * maxDistance,
                 50.f,
                 m_lineSegment.m_thickness,
                 Rgba8::WHITE);
-}
 
-void GameRaycastVsLineSegments::RenderLineSegments2D() const
-{
-    for (int i = 0; i < 8; ++i)
+    // If a collision occurred, draw the closest collision result
+    if (closestResult.m_didImpact)
     {
-        DrawLineSegment2D(m_lineSegments[i].m_start, m_lineSegments[i].m_end, 3.f, false, Rgba8::WHITE);
+        // Mark the closest collision disc in blue
+        DrawLineSegment2D(m_lineSegments[closestDiscIndex].m_start,
+                   m_lineSegments[closestDiscIndex].m_end,3.f, false,
+                   Rgba8::LIGHT_BLUE);
+
+        // 1. Dark gray arrow: represents the full ray distance
+        DrawArrow2D(tailPosition,
+                    tailPosition + forwardNormal * maxDistance, 50.f,
+                    m_lineSegment.m_thickness,
+                    Rgba8::GREY);
+
+        // 2. Orange arrow: represents the distance from the start to the impact point
+        DrawArrow2D(tailPosition,
+                    closestResult.m_impactPos,
+                    50.f,
+                    m_lineSegment.m_thickness,
+                    Rgba8::ORANGE);
+
+        // 3. Cyan arrow: represents the normal vector at the impact point
+        DrawArrow2D(closestResult.m_impactPos,
+                    closestResult.m_impactPos + closestResult.m_impactNormal * 100.0f,
+                    50.f,
+                    m_lineSegment.m_thickness,
+                    Rgba8::CYAN);
+
+        // 4. Small white circle: represents the impact point location
+        DrawDisc2D(closestResult.m_impactPos,
+                   5.0f,
+                   Rgba8::WHITE);
     }
 }
