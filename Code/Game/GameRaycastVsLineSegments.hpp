@@ -8,7 +8,7 @@
 #include "Game/Game.hpp"
 
 //-----------------------------------------------------------------------------------------------
-class GameRaycastVsLineSegments : public Game
+class GameRaycastVsLineSegments final : public Game
 {
 public:
     GameRaycastVsLineSegments();
@@ -24,7 +24,6 @@ private:
     void RenderLineSegments2D() const;
     void RenderRaycastResult() const;
 
-    Vec2 GenerateRandomPointInScreen() const;
     void GenerateRandomLineSegmentInScreen();
     void GenerateRandomLineSegment2D();
 

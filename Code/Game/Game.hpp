@@ -31,6 +31,9 @@ public:
 protected:
     Vec2 GetMouseWorldPos() const;
     void RenderCurrentModeText(char const* currentModeText) const;
+    Vec2 GenerateRandomPointInScreen() const;
+    Vec2 ClampPointToScreen(Vec2 const& point, float radius) const;
+    Vec2 ClampPointToScreen(Vec2 const& point, float halfWidth, float halfHeight) const;
 
     Clock*  m_gameClock     = nullptr;
     Camera* m_screenCamera  = nullptr;

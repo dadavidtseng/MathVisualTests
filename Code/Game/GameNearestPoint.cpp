@@ -124,52 +124,40 @@ void GameNearestPoint::GenerateRandomShapes()
 }
 
 //----------------------------------------------------------------------------------------------------
-Vec2 GameNearestPoint::GenerateRandomPointInScreen() const
-{
-    float const screenSizeX = g_gameConfigBlackboard.GetValue("screenSizeX", 1600.f);
-    float const screenSizeY = g_gameConfigBlackboard.GetValue("screenSizeY", 800.f);
-    float const randomX     = g_theRNG->RollRandomFloatInRange(0, screenSizeX);
-    float const randomY     = g_theRNG->RollRandomFloatInRange(0, screenSizeY);
-
-    return Vec2(randomX, randomY);
-}
-
-//----------------------------------------------------------------------------------------------------
 void GameNearestPoint::GenerateRandomDisc2D()
 {
-    const float randomRadius = g_theRNG->RollRandomFloatInRange(10.f, 200.f);
-    Vec2        center       = GenerateRandomPointInScreen();
-    center                   = ClampPointToScreen(center, randomRadius);
+    Vec2        centerPosition = GenerateRandomPointInScreen();
+    float const randomRadius   = g_theRNG->RollRandomFloatInRange(10.f, 100.f);
 
-    m_randomDisc = Disc2(center, randomRadius);
+    centerPosition = ClampPointToScreen(centerPosition, randomRadius);
+
+    m_randomDisc = Disc2(centerPosition, randomRadius);
 }
 
 //----------------------------------------------------------------------------------------------------
 void GameNearestPoint::GenerateRandomLineSegment2D()
 {
-    Vec2        start           = GenerateRandomPointInScreen();
-    Vec2        end             = GenerateRandomPointInScreen();
+    Vec2        startPosition   = GenerateRandomPointInScreen();
+    Vec2        endPosition     = GenerateRandomPointInScreen();
     float const randomThickness = g_theRNG->RollRandomFloatInRange(1.f, 5.f);
 
-    // Ensure the line is within screen bounds
-    start = ClampPointToScreen(start, randomThickness);
-    end   = ClampPointToScreen(end, randomThickness);
+    startPosition = ClampPointToScreen(startPosition, randomThickness);
+    endPosition   = ClampPointToScreen(endPosition, randomThickness);
 
-    m_randomLineSegment = LineSegment2(start, end, randomThickness, false);
+    m_randomLineSegment = LineSegment2(startPosition, endPosition, randomThickness, false);
 }
 
 //----------------------------------------------------------------------------------------------------
 void GameNearestPoint::GenerateRandomInfiniteLine2D()
 {
-    Vec2        start        = GenerateRandomPointInScreen();
-    Vec2        end          = GenerateRandomPointInScreen();
-    float const randomRadius = g_theRNG->RollRandomFloatInRange(1.f, 5.f);
+    Vec2        startPosition   = GenerateRandomPointInScreen();
+    Vec2        endPosition     = GenerateRandomPointInScreen();
+    float const randomThickness = g_theRNG->RollRandomFloatInRange(1.f, 5.f);
 
-    // Ensure the line is within screen bounds
-    start = ClampPointToScreen(start, randomRadius);
-    end   = ClampPointToScreen(end, randomRadius);
+    startPosition = ClampPointToScreen(startPosition, randomThickness);
+    endPosition   = ClampPointToScreen(endPosition, randomThickness);
 
-    m_randomInfiniteLine = LineSegment2(start, end, randomRadius, true);
+    m_randomInfiniteLine = LineSegment2(startPosition, endPosition, randomThickness, true);
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -179,20 +167,21 @@ void GameNearestPoint::GenerateRandomTriangle2D()
     Vec2 const randomB = GenerateRandomPointInScreen();
     Vec2 const randomC = GenerateRandomPointInScreen();
 
-    m_randomTriangle = Triangle2(randomA, randomB, randomC);
-
-    // Ensure the triangle is valid
+    // Ensure the triangle is valid.
     Vec2 const edgeAB = randomB - randomA;
     Vec2 const edgeAC = randomC - randomA;
 
-    // Points A, B, and C are collinear.
-    if (CrossProduct2D(edgeAB, edgeAC) == 0.f)
+    // Points A, B, and C are collinear and the triangle's length is not too long.
+    if (CrossProduct2D(edgeAB, edgeAC) == 0.f ||
+        edgeAB.GetLengthSquared() > 100000.f ||
+        edgeAC.GetLengthSquared() > 100000.f)
     {
         GenerateRandomTriangle2D();
+
         return;
     }
 
-    // Ensure the triangle has counter-clockwise (CCW) winding order
+    // Ensure the triangle has counter-clockwise (CCW) winding order.
     if (CrossProduct2D(edgeAB, edgeAC) < 0.f)
     {
         m_randomTriangle = Triangle2(randomA, randomC, randomB);
@@ -204,12 +193,12 @@ void GameNearestPoint::GenerateRandomAABB2D()
 {
     float const screenSizeX  = g_gameConfigBlackboard.GetValue("screenSizeX", 1600.f);
     float const screenSizeY  = g_gameConfigBlackboard.GetValue("screenSizeY", 800.f);
-    float const randomWidth  = g_theRNG->RollRandomFloatInRange(0.1f, screenSizeX / 2.f);
-    float const randomHeight = g_theRNG->RollRandomFloatInRange(0.1f, screenSizeY / 2.f);
+    float const randomWidth  = g_theRNG->RollRandomFloatInRange(10.f, screenSizeX / 5.f);
+    float const randomHeight = g_theRNG->RollRandomFloatInRange(10.f, screenSizeY / 5.f);
 
-    Vec2 center     = GenerateRandomPointInScreen();
-    Vec2 randomMins = ClampPointToScreen(center - Vec2(randomWidth / 2, randomHeight / 2), randomWidth / 2, randomHeight / 2);
-    Vec2 randomMaxs = ClampPointToScreen(center + Vec2(randomWidth / 2, randomHeight / 2), randomWidth / 2, randomHeight / 2);
+    Vec2 const centerPosition = GenerateRandomPointInScreen();
+    Vec2 const randomMins     = ClampPointToScreen(centerPosition - Vec2(randomWidth / 2.f, randomHeight / 2.f), randomWidth / 2.f, randomHeight / 2.f);
+    Vec2 const randomMaxs     = ClampPointToScreen(centerPosition + Vec2(randomWidth / 2.f, randomHeight / 2.f), randomWidth / 2.f, randomHeight / 2.f);
 
     m_randomAABB2 = AABB2(randomMins, randomMaxs);
 }
@@ -219,53 +208,32 @@ void GameNearestPoint::GenerateRandomOBB2D()
 {
     float const screenSizeX    = g_gameConfigBlackboard.GetValue("screenSizeX", 1600.f);
     float const screenSizeY    = g_gameConfigBlackboard.GetValue("screenSizeY", 800.f);
+    float const randomIBasisX  = g_theRNG->RollRandomFloatZeroToOne();
+    float const randomIBasisY  = g_theRNG->RollRandomFloatZeroToOne();
     Vec2 const  center         = GenerateRandomPointInScreen();
-    Vec2 const  halfDimensions = Vec2(g_theRNG->RollRandomFloatInRange(10.f, screenSizeX / 4.f),
-                                     g_theRNG->RollRandomFloatInRange(10.f, screenSizeY / 4.f));
-    m_randomOBB2 = OBB2(center, Vec2(1.f, 0.f), halfDimensions); // Angle is set to 0 for simplicity
+    Vec2 const  halfDimensions = Vec2(g_theRNG->RollRandomFloatInRange(10.f, screenSizeX / 5.f),
+                                     g_theRNG->RollRandomFloatInRange(10.f, screenSizeY / 5.f));
+
+    m_randomOBB2 = OBB2(center, Vec2(randomIBasisX, randomIBasisY), halfDimensions);
 }
 
 //----------------------------------------------------------------------------------------------------
 void GameNearestPoint::GenerateRandomCapsule2D()
 {
-    Vec2        start        = GenerateRandomPointInScreen();
-    Vec2        end          = GenerateRandomPointInScreen();
-    const float randomRadius = g_theRNG->RollRandomFloatInRange(10.f, 200.f);
+    Vec2        startPosition = GenerateRandomPointInScreen();
+    Vec2        endPosition   = GenerateRandomPointInScreen();
+    float const randomRadius  = g_theRNG->RollRandomFloatInRange(10.f, 100.f);
 
-    start = ClampPointToScreen(start, randomRadius);
-    end   = ClampPointToScreen(end, randomRadius);
+    startPosition = ClampPointToScreen(startPosition, randomRadius);
+    endPosition   = ClampPointToScreen(endPosition, randomRadius);
 
-    m_randomCapsule2 = Capsule2(start, end, randomRadius);
-}
-
-//----------------------------------------------------------------------------------------------------
-Vec2 GameNearestPoint::ClampPointToScreen(Vec2 const& point, float const radius) const
-{
-    Vec2 clampedPoint = point;
-
-    float const screenSizeX = g_gameConfigBlackboard.GetValue("screenSizeX", 1600.f);
-    float const screenSizeY = g_gameConfigBlackboard.GetValue("screenSizeY", 800.f);
-    clampedPoint.x          = GetClamped(clampedPoint.x, radius, screenSizeX - radius);
-    clampedPoint.y          = GetClamped(clampedPoint.y, radius, screenSizeY - radius);
-    return clampedPoint;
-}
-
-//----------------------------------------------------------------------------------------------------
-Vec2 GameNearestPoint::ClampPointToScreen(Vec2 const& point, float const halfWidth, float const halfHeight) const
-{
-    Vec2 clampedPoint = point;
-
-    float const screenSizeX = g_gameConfigBlackboard.GetValue("screenSizeX", 1600.f);
-    float const screenSizeY = g_gameConfigBlackboard.GetValue("screenSizeY", 800.f);
-    clampedPoint.x          = GetClamped(clampedPoint.x, halfWidth, screenSizeX - halfWidth);
-    clampedPoint.y          = GetClamped(clampedPoint.y, halfHeight, screenSizeY - halfHeight);
-    return clampedPoint;
+    m_randomCapsule2 = Capsule2(startPosition, endPosition, randomRadius);
 }
 
 //----------------------------------------------------------------------------------------------------
 void GameNearestPoint::RenderDisc2D() const
 {
-    const Vec2 nearestPoint = m_randomDisc.GetNearestPoint(m_referencePoint);
+    Vec2 const nearestPoint = m_randomDisc.GetNearestPoint(m_referencePoint);
     DrawDisc2D(m_randomDisc, m_randomDisc.IsPointInside(m_referencePoint) ? Rgba8::LIGHT_BLUE : Rgba8::BLUE);
     DrawLineSegment2D(m_referencePoint, nearestPoint, 3.0f, false, Rgba8::TRANSLUCENT_WHITE);
     DrawDisc2D(nearestPoint, 5.0f, Rgba8::ORANGE);
@@ -274,7 +242,7 @@ void GameNearestPoint::RenderDisc2D() const
 //----------------------------------------------------------------------------------------------------
 void GameNearestPoint::RenderLineSegment2D() const
 {
-    const Vec2 nearestPoint = m_randomLineSegment.GetNearestPoint(m_referencePoint);
+    Vec2 const nearestPoint = m_randomLineSegment.GetNearestPoint(m_referencePoint);
     DrawLineSegment2D(m_randomLineSegment, m_randomLineSegment.m_thickness, m_randomLineSegment.m_isInfinite, Rgba8::BLUE);
     DrawLineSegment2D(m_referencePoint, nearestPoint, 3.0f, false, Rgba8::TRANSLUCENT_WHITE);
     DrawDisc2D(nearestPoint, 5.0f, Rgba8::ORANGE);
@@ -283,7 +251,7 @@ void GameNearestPoint::RenderLineSegment2D() const
 //----------------------------------------------------------------------------------------------------
 void GameNearestPoint::RenderLineInfinite2D() const
 {
-    const Vec2 nearestPoint = m_randomInfiniteLine.GetNearestPoint(m_referencePoint);
+    Vec2 const nearestPoint = m_randomInfiniteLine.GetNearestPoint(m_referencePoint);
     DrawLineSegment2D(m_randomInfiniteLine, m_randomInfiniteLine.m_thickness, m_randomInfiniteLine.m_isInfinite, Rgba8::BLUE);
     DrawLineSegment2D(m_referencePoint, nearestPoint, 3.0f, false, Rgba8::TRANSLUCENT_WHITE);
     DrawDisc2D(nearestPoint, 5.0f, Rgba8::ORANGE);

@@ -9,7 +9,7 @@
 #include "Game/Game.hpp"
 
 //-----------------------------------------------------------------------------------------------
-class GameRaycastVsAABBs : public Game
+class GameRaycastVsAABBs final : public Game
 {
 public:
     GameRaycastVsAABBs();
@@ -25,10 +25,8 @@ private:
     void RenderAABB2s2D() const;
     void RenderRaycastResult()const ;
 
-    Vec2 GenerateRandomPointInScreen() const;
     void GenerateRandomLineSegmentInScreen();
     void GenerateRandomAABB2s2D();
-    Vec2 ClampPointToScreen(Vec2 const& point, float halfWidth, float halfHeight) const;
 
     AABB2        m_AABB2[8] = {};
     LineSegment2 m_lineSegment;

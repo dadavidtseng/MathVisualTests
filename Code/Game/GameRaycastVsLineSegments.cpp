@@ -8,7 +8,6 @@
 #include "Engine/Core/Clock.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Input/InputSystem.hpp"
-#include "Engine/Math/RandomNumberGenerator.hpp"
 #include "Engine/Math/RaycastUtils.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/Renderer.hpp"
@@ -79,20 +78,9 @@ void GameRaycastVsLineSegments::UpdateFromKeyboard(float const deltaSeconds)
 }
 
 //----------------------------------------------------------------------------------------------------
-void GameRaycastVsLineSegments::UpdateFromController(float deltaSeconds)
+void GameRaycastVsLineSegments::UpdateFromController(float const deltaSeconds)
 {
-}
-
-
-//----------------------------------------------------------------------------------------------------
-Vec2 GameRaycastVsLineSegments::GenerateRandomPointInScreen() const
-{
-    float const screenSizeX = g_gameConfigBlackboard.GetValue("screenSizeX", 1600.f);
-    float const screenSizeY = g_gameConfigBlackboard.GetValue("screenSizeY", 800.f);
-    float const randomX     = g_theRNG->RollRandomFloatInRange(0, screenSizeX);
-    float const randomY     = g_theRNG->RollRandomFloatInRange(0, screenSizeY);
-
-    return Vec2(randomX, randomY);
+    UNUSED(deltaSeconds);
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -118,7 +106,7 @@ void GameRaycastVsLineSegments::RenderLineSegments2D() const
 {
     for (int i = 0; i < 8; ++i)
     {
-        DrawLineSegment2D(m_lineSegments[i].m_start, m_lineSegments[i].m_end, 3.f, false,Rgba8::BLUE);
+        DrawLineSegment2D(m_lineSegments[i].m_start, m_lineSegments[i].m_end, 3.f, false, Rgba8::BLUE);
     }
 }
 
@@ -140,7 +128,7 @@ void GameRaycastVsLineSegments::RenderRaycastResult() const
     // Check collisions with all discs and find the closest one
     for (int i = 0; i < 8; ++i)
     {
-        RaycastResult2D const result = RayCastVsLineSegment2D(tailPosition, forwardNormal, maxDistance, m_lineSegments[i].m_start,m_lineSegments[i].m_end);
+        RaycastResult2D const result = RayCastVsLineSegment2D(tailPosition, forwardNormal, maxDistance, m_lineSegments[i].m_start, m_lineSegments[i].m_end);
 
         if (result.m_didImpact && result.m_impactDist < closestResult.m_impactDist)
         {
@@ -161,8 +149,8 @@ void GameRaycastVsLineSegments::RenderRaycastResult() const
     {
         // Mark the closest collision disc in blue
         DrawLineSegment2D(m_lineSegments[closestDiscIndex].m_start,
-                   m_lineSegments[closestDiscIndex].m_end,3.f, false,
-                   Rgba8::LIGHT_BLUE);
+                          m_lineSegments[closestDiscIndex].m_end, 3.f, false,
+                          Rgba8::LIGHT_BLUE);
 
         // 1. Dark gray arrow: represents the full ray distance
         DrawArrow2D(tailPosition,

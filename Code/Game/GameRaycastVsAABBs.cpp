@@ -23,6 +23,7 @@ GameRaycastVsAABBs::GameRaycastVsAABBs()
 
     float const screenSizeX = g_gameConfigBlackboard.GetValue("screenSizeX", 1600.f);
     float const screenSizeY = g_gameConfigBlackboard.GetValue("screenSizeY", 800.f);
+
     m_screenCamera->SetOrthoGraphicView(Vec2::ZERO, Vec2(screenSizeX, screenSizeY));
 
     m_gameClock = new Clock(Clock::GetSystemClock());
@@ -76,8 +77,9 @@ void GameRaycastVsAABBs::UpdateFromKeyboard(float const deltaSeconds)
     if (g_theInput->IsKeyDown(KEYCODE_RIGHT_MOUSE)) m_lineSegment.m_end = GetMouseWorldPos();
 }
 
-void GameRaycastVsAABBs::UpdateFromController(float deltaSeconds)
+void GameRaycastVsAABBs::UpdateFromController(float const deltaSeconds)
 {
+    UNUSED(deltaSeconds)
 }
 
 void GameRaycastVsAABBs::RenderAABB2s2D() const
@@ -154,16 +156,6 @@ void GameRaycastVsAABBs::RenderRaycastResult() const
     }
 }
 
-Vec2 GameRaycastVsAABBs::GenerateRandomPointInScreen() const
-{
-    float const screenSizeX = g_gameConfigBlackboard.GetValue("screenSizeX", 1600.f);
-    float const screenSizeY = g_gameConfigBlackboard.GetValue("screenSizeY", 800.f);
-    float const randomX     = g_theRNG->RollRandomFloatInRange(0, screenSizeX);
-    float const randomY     = g_theRNG->RollRandomFloatInRange(0, screenSizeY);
-
-    return Vec2(randomX, randomY);
-}
-
 void GameRaycastVsAABBs::GenerateRandomLineSegmentInScreen()
 {
     m_lineSegment = LineSegment2(GenerateRandomPointInScreen(), GenerateRandomPointInScreen(), 2.f, false);
@@ -176,25 +168,13 @@ void GameRaycastVsAABBs::GenerateRandomAABB2s2D()
 
     for (int i = 0; i < 8; ++i)
     {
-        float const randomWidth  = g_theRNG->RollRandomFloatInRange(0.1f, screenSizeX / 2.f);
-        float const randomHeight = g_theRNG->RollRandomFloatInRange(0.1f, screenSizeY / 2.f);
+        float const randomWidth  = g_theRNG->RollRandomFloatInRange(10.f, screenSizeX / 5.f);
+        float const randomHeight = g_theRNG->RollRandomFloatInRange(10.f, screenSizeY / 5.f);
 
         Vec2 center     = GenerateRandomPointInScreen();
-        Vec2 randomMins = ClampPointToScreen(center - Vec2(randomWidth / 2, randomHeight / 2), randomWidth / 2, randomHeight / 2);
-        Vec2 randomMaxs = ClampPointToScreen(center + Vec2(randomWidth / 2, randomHeight / 2), randomWidth / 2, randomHeight / 2);
+        Vec2 randomMins = ClampPointToScreen(center - Vec2(randomWidth / 2.f, randomHeight / 2.f), randomWidth / 2.f, randomHeight / 2.f);
+        Vec2 randomMaxs = ClampPointToScreen(center + Vec2(randomWidth / 2.f, randomHeight / 2.f), randomWidth / 2.f, randomHeight / 2.f);
 
         m_AABB2[i] = AABB2(randomMins, randomMaxs);
     }
-}
-
-//----------------------------------------------------------------------------------------------------
-Vec2 GameRaycastVsAABBs::ClampPointToScreen(Vec2 const& point, float const halfWidth, float const halfHeight) const
-{
-    Vec2 clampedPoint = point;
-
-    float const screenSizeX = g_gameConfigBlackboard.GetValue("screenSizeX", 1600.f);
-    float const screenSizeY = g_gameConfigBlackboard.GetValue("screenSizeY", 800.f);
-    clampedPoint.x          = GetClamped(clampedPoint.x, halfWidth, screenSizeX - halfWidth);
-    clampedPoint.y          = GetClamped(clampedPoint.y, halfHeight, screenSizeY - halfHeight);
-    return clampedPoint;
 }

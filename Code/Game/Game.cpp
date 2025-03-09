@@ -5,14 +5,16 @@
 //----------------------------------------------------------------------------------------------------
 #include "Game/Game.hpp"
 
-#include "GameCommon.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Core/VertexUtils.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Math/AABB2.hpp"
+#include "Engine/Math/MathUtils.hpp"
+#include "Engine/Math/RandomNumberGenerator.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/Camera.hpp"
 #include "Engine/Renderer/Renderer.hpp"
+#include "Game/GameCommon.hpp"
 
 //----------------------------------------------------------------------------------------------------
 Vec2 Game::GetMouseWorldPos() const
@@ -44,4 +46,41 @@ void Game::RenderCurrentModeText(char const* currentModeText) const
     g_theRenderer->SetDepthMode(DepthMode::DISABLED);
     g_theRenderer->BindTexture(&g_theBitmapFont->GetTexture());
     g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+}
+
+//----------------------------------------------------------------------------------------------------
+Vec2 Game::GenerateRandomPointInScreen() const
+{
+    float const screenSizeX = g_gameConfigBlackboard.GetValue("screenSizeX", 1600.f);
+    float const screenSizeY = g_gameConfigBlackboard.GetValue("screenSizeY", 800.f);
+    float const randomX     = g_theRNG->RollRandomFloatInRange(0, screenSizeX);
+    float const randomY     = g_theRNG->RollRandomFloatInRange(0, screenSizeY);
+
+    return Vec2(randomX, randomY);
+}
+
+//----------------------------------------------------------------------------------------------------
+Vec2 Game::ClampPointToScreen(Vec2 const& point, float const radius) const
+{
+    Vec2 clampedPoint = point;
+
+    float const screenSizeX = g_gameConfigBlackboard.GetValue("screenSizeX", 1600.f);
+    float const screenSizeY = g_gameConfigBlackboard.GetValue("screenSizeY", 800.f);
+    clampedPoint.x          = GetClamped(clampedPoint.x, radius, screenSizeX - radius);
+    clampedPoint.y          = GetClamped(clampedPoint.y, radius, screenSizeY - radius);
+
+    return clampedPoint;
+}
+
+//----------------------------------------------------------------------------------------------------
+Vec2 Game::ClampPointToScreen(Vec2 const& point, float const halfWidth, float const halfHeight) const
+{
+    Vec2 clampedPoint = point;
+
+    float const screenSizeX = g_gameConfigBlackboard.GetValue("screenSizeX", 1600.f);
+    float const screenSizeY = g_gameConfigBlackboard.GetValue("screenSizeY", 800.f);
+    clampedPoint.x          = GetClamped(clampedPoint.x, halfWidth, screenSizeX - halfWidth);
+    clampedPoint.y          = GetClamped(clampedPoint.y, halfHeight, screenSizeY - halfHeight);
+
+    return clampedPoint;
 }

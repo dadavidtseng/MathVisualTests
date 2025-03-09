@@ -24,14 +24,12 @@ private:
     void UpdateFromKeyboard(float deltaSeconds) override;
     void UpdateFromController(float deltaSeconds) override;
 
-    Vec2 GenerateRandomPointInScreen() const;
     void GenerateRandomLineSegmentInScreen();
     void GenerateRandomDiscs2D();
 
     void RenderDisc2() const;
     void RenderRaycastResult() const;
 
-    Vec2 ClampPointToScreen(Vec2 const& pointPosition, float radius) const;
     bool IsTailPosInsideDisc(Vec2 const& startPosition) const;
 
     Disc2        m_randomDisc[8] = {};

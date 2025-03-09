@@ -31,7 +31,6 @@ private:
     void RenderShapes() const;
     void GenerateRandomShapes();
 
-    Vec2 GenerateRandomPointInScreen() const;
     void GenerateRandomDisc2D();
     void GenerateRandomLineSegment2D();
     void GenerateRandomInfiniteLine2D();
@@ -39,8 +38,7 @@ private:
     void GenerateRandomAABB2D();
     void GenerateRandomOBB2D();
     void GenerateRandomCapsule2D();
-    Vec2 ClampPointToScreen(Vec2 const& point, float radius) const;
-    Vec2 ClampPointToScreen(Vec2 const& point, float halfWidth, float halfHeight) const;
+
     void RenderDisc2D() const;
     void RenderLineSegment2D() const;
     void RenderLineInfinite2D() const;

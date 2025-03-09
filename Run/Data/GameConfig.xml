@@ -11,4 +11,9 @@
     <currentModeTextBoxMaxX>1600</currentModeTextBoxMaxX>
     <currentModeTextBoxMaxY>800</currentModeTextBoxMaxY>
 
+    <!-- GameNearestPoint configuration -->
+    <!-- GameRaycastVsDiscs configuration -->
+    <!-- GameRaycastVsLineSegments configuration -->
+    <!-- GameRaycastVsAABBs configuration -->
+
 </GameConfig>

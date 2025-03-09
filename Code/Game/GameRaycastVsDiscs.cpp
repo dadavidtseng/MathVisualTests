@@ -88,17 +88,6 @@ void GameRaycastVsDiscs::UpdateFromController(float const deltaSeconds)
 }
 
 //----------------------------------------------------------------------------------------------------
-Vec2 GameRaycastVsDiscs::GenerateRandomPointInScreen() const
-{
-    float const screenSizeX = g_gameConfigBlackboard.GetValue("screenSizeX", 1600.f);
-    float const screenSizeY = g_gameConfigBlackboard.GetValue("screenSizeY", 800.f);
-    float const randomX     = g_theRNG->RollRandomFloatInRange(0, screenSizeX);
-    float const randomY     = g_theRNG->RollRandomFloatInRange(0, screenSizeY);
-
-    return Vec2(randomX, randomY);
-}
-
-//----------------------------------------------------------------------------------------------------
 void GameRaycastVsDiscs::GenerateRandomLineSegmentInScreen()
 {
     m_lineSegment = LineSegment2(GenerateRandomPointInScreen(), GenerateRandomPointInScreen(), 2.f, false);
@@ -109,7 +98,7 @@ void GameRaycastVsDiscs::GenerateRandomDiscs2D()
 {
     for (int i = 0; i < 8; ++i)
     {
-        float const randomRadius = g_theRNG->RollRandomFloatInRange(10.f, 200.f);
+        float const randomRadius = g_theRNG->RollRandomFloatInRange(10.f, 100.f);
         Vec2        center       = GenerateRandomPointInScreen();
         center                   = ClampPointToScreen(center, randomRadius);
 
@@ -204,27 +193,12 @@ void GameRaycastVsDiscs::RenderRaycastResult() const
 }
 
 //----------------------------------------------------------------------------------------------------
-Vec2 GameRaycastVsDiscs::ClampPointToScreen(Vec2 const& pointPosition,
-                                            float const radius) const
-{
-    Vec2 clampedPoint = pointPosition;
-
-    float const screenSizeX = g_gameConfigBlackboard.GetValue("screenSizeX", 1600.f);
-    float const screenSizeY = g_gameConfigBlackboard.GetValue("screenSizeY", 800.f);
-    clampedPoint.x          = GetClamped(clampedPoint.x, radius, screenSizeX - radius);
-    clampedPoint.y          = GetClamped(clampedPoint.y, radius, screenSizeY - radius);
-
-    return clampedPoint;
-}
-
-//----------------------------------------------------------------------------------------------------
 bool GameRaycastVsDiscs::IsTailPosInsideDisc(Vec2 const& startPosition) const
 {
     for (int i = 0; i < 8; ++i)
     {
         if (m_randomDisc[i].IsPointInside(startPosition))
         {
-            DrawDisc2D(m_randomDisc[i].GetCenter(), m_randomDisc[i].GetRadius(), Rgba8::LIGHT_BLUE);
             return true;
         }
     }
