@@ -10,11 +10,12 @@
 #include "Engine/Renderer/Texture.hpp"
 #include "Game/Game.hpp"
 
-struct TestShapes
+//----------------------------------------------------------------------------------------------------
+struct TestShape3D
 {
-    Vec3 m_position = Vec3::ZERO;
-    Vec3 m_velocity = Vec3::ZERO;
-    EulerAngles m_orientation  = EulerAngles::ZERO;
+    Vec3        m_position        = Vec3::ZERO;
+    Vec3        m_velocity        = Vec3::ZERO;
+    EulerAngles m_orientation     = EulerAngles::ZERO;
     EulerAngles m_angularVelocity = EulerAngles::ZERO;
 };
 
@@ -31,8 +32,11 @@ private:
     void UpdateFromKeyboard(float deltaSeconds) override;
     void UpdateFromController(float deltaSeconds) override;
 
-    Camera* m_worldCamera = nullptr;
-    TestShapes m_testShapes;
-    TestShapes m_testShapes2;
-    Texture* m_texture = nullptr;
+    void RenderEntities() const;
+    void RenderPlayerBasis() const;
+
+    Camera*     m_worldCamera = nullptr;
+    Texture*    m_texture = nullptr;
+    TestShape3D m_player;
+    TestShape3D m_sphere;
 };
