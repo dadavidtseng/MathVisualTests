@@ -48,6 +48,7 @@ void GameRaycastVsDiscs::Render() const
     RenderDisc2();
     RenderRaycastResult();
     RenderCurrentModeText("CurrentMode: RaycastVsDiscs");
+    RenderControlText();
 
     g_theRenderer->EndCamera(*m_screenCamera);
 }

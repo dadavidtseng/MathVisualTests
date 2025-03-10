@@ -16,7 +16,8 @@ enum class eGameMode
     NEAREST_POINT,
     RAYCAST_VS_DISCS,
     RAYCAST_VS_LINESEGMENTS,
-    RAYCAST_VS_AABBS
+    RAYCAST_VS_AABBS,
+    SHAPES_3D,
 };
 
 //----------------------------------------------------------------------------------------------------
@@ -31,6 +32,7 @@ public:
 protected:
     Vec2 GetMouseWorldPos() const;
     void RenderCurrentModeText(char const* currentModeText) const;
+    void RenderControlText() const;
     Vec2 GenerateRandomPointInScreen() const;
     Vec2 ClampPointToScreen(Vec2 const& point, float radius) const;
     Vec2 ClampPointToScreen(Vec2 const& point, float halfWidth, float halfHeight) const;

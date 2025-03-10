@@ -49,6 +49,7 @@ void GameRaycastVsAABBs::Render() const
     RenderAABB2s2D();
     RenderRaycastResult();
     RenderCurrentModeText("CurrentMode: RaycastVsAABBs");
+    RenderControlText();
 
     g_theRenderer->EndCamera(*m_screenCamera);
 }

@@ -46,6 +46,7 @@ void GameRaycastVsLineSegments::Render() const
     RenderLineSegments2D();
     RenderRaycastResult();
     RenderCurrentModeText("CurrentMode: RaycastVsLineSegments");
+    RenderControlText();
 
     g_theRenderer->EndCamera(*m_screenCamera);
 }

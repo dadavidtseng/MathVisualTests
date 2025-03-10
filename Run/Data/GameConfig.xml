@@ -10,6 +10,10 @@
     <currentModeTextBoxMinY>780</currentModeTextBoxMinY>
     <currentModeTextBoxMaxX>1600</currentModeTextBoxMaxX>
     <currentModeTextBoxMaxY>800</currentModeTextBoxMaxY>
+    <currentControlTextBoxMinX>0</currentControlTextBoxMinX>
+    <currentControlTextBoxMinY>760</currentControlTextBoxMinY>
+    <currentControlTextBoxMaxX>1600</currentControlTextBoxMaxX>
+    <currentControlTextBoxMaxY>780</currentControlTextBoxMaxY>
 
     <!-- GameNearestPoint configuration -->
     <!-- GameRaycastVsDiscs configuration -->

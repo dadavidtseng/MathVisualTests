@@ -55,6 +55,7 @@ void GameNearestPoint::Render() const
 
     RenderShapes();
     RenderCurrentModeText("CurrentMode: NearestPoint");
+    RenderControlText();
 
     g_theRenderer->EndCamera(*m_screenCamera);
 }

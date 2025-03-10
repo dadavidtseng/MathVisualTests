@@ -46,7 +46,29 @@ void Game::RenderCurrentModeText(char const* currentModeText) const
     float const currentModeTextBoxMaxY = g_gameConfigBlackboard.GetValue("currentModeTextBoxMaxY", 800.f);
     AABB2 const currentModeTextBox(Vec2(currentModeTextBoxMinX, currentModeTextBoxMinY), Vec2(currentModeTextBoxMaxX, currentModeTextBoxMaxY));
 
-    g_theBitmapFont->AddVertsForTextInBox2D(verts, currentModeText, currentModeTextBox, 20.f);
+    g_theBitmapFont->AddVertsForTextInBox2D(verts, currentModeText, currentModeTextBox, 20.f, Rgba8::YELLOW);
+    g_theRenderer->SetModelConstants();
+    g_theRenderer->SetBlendMode(BlendMode::ALPHA);
+    g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
+    g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
+    g_theRenderer->SetDepthMode(DepthMode::DISABLED);
+    g_theRenderer->BindTexture(&g_theBitmapFont->GetTexture());
+    g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+}
+
+//----------------------------------------------------------------------------------------------------
+void Game::RenderControlText() const
+{
+    VertexList verts;
+
+    float const currentControlTextBoxMinX = g_gameConfigBlackboard.GetValue("currentControlTextBoxMinX", 0.f);
+    float const currentControlTextBoxMinY = g_gameConfigBlackboard.GetValue("currentControlTextBoxMinY", 760.f);
+    float const currentControlTextBoxMaxX = g_gameConfigBlackboard.GetValue("currentControlTextBoxMaxX", 1600.f);
+    float const currentControlTextBoxMaxY = g_gameConfigBlackboard.GetValue("currentControlTextBoxMaxY", 780.f);
+    AABB2 const currentModeTextBox(Vec2(currentControlTextBoxMinX, currentControlTextBoxMinY), Vec2(currentControlTextBoxMaxX, currentControlTextBoxMaxY));
+
+    const char* currentControlText = "F8 to randomize; LMB/RMB set ray start/end, IJKL move end, arrows move ray, hold T = slow";
+    g_theBitmapFont->AddVertsForTextInBox2D(verts, currentControlText, currentModeTextBox, 20.f, Rgba8::GREEN);
     g_theRenderer->SetModelConstants();
     g_theRenderer->SetBlendMode(BlendMode::ALPHA);
     g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
