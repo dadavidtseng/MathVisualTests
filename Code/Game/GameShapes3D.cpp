@@ -22,7 +22,7 @@ GameShapes3D::GameShapes3D()
     m_screenCamera = new Camera();
     m_worldCamera  = new Camera();
 
-    m_player.m_position    = Vec3(-2, 0.f, 0);
+    m_player.m_position    = Vec3(0, 0.f, 0);
     m_player.m_orientation = EulerAngles::ZERO;
     m_sphere.m_position    = Vec3(-2.f, 0.f, 1.f);
     m_sphere.m_orientation = EulerAngles::ZERO;
@@ -220,23 +220,18 @@ void GameShapes3D::RenderPlayerBasis() const
     VertexList verts;
 
     Vec3 forwardNormal = m_player.m_orientation.GetAsMatrix_IFwd_JLeft_KUp().GetIBasis3D().GetNormalized();
-    Vec3 leftNormal =  m_player.m_orientation.GetAsMatrix_IFwd_JLeft_KUp().GetJBasis3D().GetNormalized();
-    Vec3 upNormal =  m_player.m_orientation.GetAsMatrix_IFwd_JLeft_KUp().GetKBasis3D().GetNormalized();
+    Vec3 leftNormal    = m_player.m_orientation.GetAsMatrix_IFwd_JLeft_KUp().GetJBasis3D().GetNormalized();
+    Vec3 upNormal      = m_player.m_orientation.GetAsMatrix_IFwd_JLeft_KUp().GetKBasis3D().GetNormalized();
 
-    AddVertsForArrow3D(verts, m_player.m_position, m_player.m_position+forwardNormal*5, 0.8f, 0.03f, 0.06f, Rgba8::RED);
-    AddVertsForArrow3D(verts, m_player.m_position, m_player.m_position+leftNormal*5, 0.8f, 0.03f, 0.06f, Rgba8::GREEN);
-    AddVertsForArrow3D(verts, m_player.m_position, m_player.m_position+upNormal*5, 0.8f, 0.03f, 0.06f, Rgba8::BLUE);
+    AddVertsForArrow3D(verts, m_player.m_position, m_player.m_position + forwardNormal / 10, 0.8f, 0.001f, 0.003f, Rgba8::RED);
+    AddVertsForArrow3D(verts, m_player.m_position, m_player.m_position + leftNormal / 10, 0.8f, 0.001f, 0.003f, Rgba8::GREEN);
+    AddVertsForArrow3D(verts, m_player.m_position, m_player.m_position + upNormal / 10, 0.8f, 0.001f, 0.003f, Rgba8::BLUE);
 
-Mat44 m2w;
-    // m2w.SetIJKT3D(forwardNormal, leftNormal, upNormal, m_player.m_position);
-    m2w.SetIJKT3D(forwardNormal, leftNormal, upNormal, m_player.m_position);
+    TransformVertexArray3D(verts, m_worldCamera->GetWorldToCameraTransform());
 
-    // TransformVertexArray3D(verts, m2w);
-DebuggerPrintf("M2W: (%f, %f, %f)\n", m2w.GetTranslation3D().x, m2w.GetTranslation3D().y, m2w.GetTranslation3D().z);
-DebuggerPrintf("Player: (%f, %f, %f)\n", m_player.m_position.x, m_player.m_position.y, m_player.m_position.z);
-DebuggerPrintf("Camera: (%f, %f, %f)\n", m_worldCamera->GetPosition().x, m_worldCamera->GetPosition().y, m_worldCamera->GetPosition().z);
+    Mat44 m2w;
 
-
+    m2w.SetTranslation3D(m_player.m_position + forwardNormal);
 
     g_theRenderer->SetModelConstants(m2w);
     g_theRenderer->SetBlendMode(BlendMode::OPAQUE);
