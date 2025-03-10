@@ -7,6 +7,7 @@
 
 #include "Engine/Core/Clock.hpp"
 #include "Engine/Core/EngineCommon.hpp"
+#include "Engine/Core/ErrorWarningAssert.hpp"
 #include "Engine/Core/VertexUtils.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Math/MathUtils.hpp"
@@ -21,7 +22,7 @@ GameShapes3D::GameShapes3D()
     m_screenCamera = new Camera();
     m_worldCamera  = new Camera();
 
-    m_player.m_position    = Vec3(-2.f, 0.f, 1.f);
+    m_player.m_position    = Vec3(-2, 0.f, 0);
     m_player.m_orientation = EulerAngles::ZERO;
     m_sphere.m_position    = Vec3(-2.f, 0.f, 1.f);
     m_sphere.m_orientation = EulerAngles::ZERO;
@@ -218,19 +219,28 @@ void GameShapes3D::RenderPlayerBasis() const
 {
     VertexList verts;
 
-    AddVertsForArrow3D(verts, m_player.m_position, m_player.m_position+Vec3::X_BASIS, 0.8f, 0.03f, 0.06f, Rgba8::RED);
-    AddVertsForArrow3D(verts, m_player.m_position, m_player.m_position+Vec3::Y_BASIS, 0.8f, 0.03f, 0.06f, Rgba8::GREEN);
-    AddVertsForArrow3D(verts, m_player.m_position, m_player.m_position+Vec3::Z_BASIS, 0.8f, 0.03f, 0.06f, Rgba8::BLUE);
+    Vec3 forwardNormal = m_player.m_orientation.GetAsMatrix_IFwd_JLeft_KUp().GetIBasis3D().GetNormalized();
+    Vec3 leftNormal =  m_player.m_orientation.GetAsMatrix_IFwd_JLeft_KUp().GetJBasis3D().GetNormalized();
+    Vec3 upNormal =  m_player.m_orientation.GetAsMatrix_IFwd_JLeft_KUp().GetKBasis3D().GetNormalized();
 
-    Mat44 m2w;
+    AddVertsForArrow3D(verts, m_player.m_position, m_player.m_position+forwardNormal*5, 0.8f, 0.03f, 0.06f, Rgba8::RED);
+    AddVertsForArrow3D(verts, m_player.m_position, m_player.m_position+leftNormal*5, 0.8f, 0.03f, 0.06f, Rgba8::GREEN);
+    AddVertsForArrow3D(verts, m_player.m_position, m_player.m_position+upNormal*5, 0.8f, 0.03f, 0.06f, Rgba8::BLUE);
 
-    m2w.SetTranslation3D(m_player.m_position+Vec3::Y_BASIS*0.5f);
-    m2w.Append(m_player.m_orientation.GetAsMatrix_IFwd_JLeft_KUp());
+Mat44 m2w;
+    // m2w.SetIJKT3D(forwardNormal, leftNormal, upNormal, m_player.m_position);
+    m2w.SetIJKT3D(forwardNormal, leftNormal, upNormal, m_player.m_position);
+
+    // TransformVertexArray3D(verts, m2w);
+DebuggerPrintf("M2W: (%f, %f, %f)\n", m2w.GetTranslation3D().x, m2w.GetTranslation3D().y, m2w.GetTranslation3D().z);
+DebuggerPrintf("Player: (%f, %f, %f)\n", m_player.m_position.x, m_player.m_position.y, m_player.m_position.z);
+DebuggerPrintf("Camera: (%f, %f, %f)\n", m_worldCamera->GetPosition().x, m_worldCamera->GetPosition().y, m_worldCamera->GetPosition().z);
+
 
 
     g_theRenderer->SetModelConstants(m2w);
     g_theRenderer->SetBlendMode(BlendMode::OPAQUE);
-    g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_BACK);
+    g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
     g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
     g_theRenderer->SetDepthMode(DepthMode::READ_WRITE_LESS_EQUAL);
     g_theRenderer->BindTexture(nullptr);

@@ -39,4 +39,5 @@ private:
     Texture*    m_texture = nullptr;
     TestShape3D m_player;
     TestShape3D m_sphere;
+
 };
