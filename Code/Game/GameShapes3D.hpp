@@ -5,18 +5,31 @@
 //----------------------------------------------------------------------------------------------------
 #pragma once
 
+#include "Engine/Math/AABB3.hpp"
+#include "Engine/Math/Cylinder3.hpp"
 #include "Engine/Math/EulerAngles.hpp"
+#include "Engine/Math/Sphere3.hpp"
 #include "Engine/Math/Vec3.hpp"
 #include "Engine/Renderer/Texture.hpp"
 #include "Game/Game.hpp"
 
 //----------------------------------------------------------------------------------------------------
+enum class TestShapeType
+{
+    AABB3,
+    SPHERE3,
+    CYLINDER3,
+    PLAYER
+};
+
+//----------------------------------------------------------------------------------------------------
 struct TestShape3D
 {
-    Vec3        m_position        = Vec3::ZERO;
-    Vec3        m_velocity        = Vec3::ZERO;
-    EulerAngles m_orientation     = EulerAngles::ZERO;
-    EulerAngles m_angularVelocity = EulerAngles::ZERO;
+    TestShapeType m_type;
+    Vec3          m_position        = Vec3::ZERO;
+    Vec3          m_velocity        = Vec3::ZERO;
+    EulerAngles   m_orientation     = EulerAngles::ZERO;
+    EulerAngles   m_angularVelocity = EulerAngles::ZERO;
 };
 
 //----------------------------------------------------------------------------------------------------
@@ -35,12 +48,10 @@ private:
     void RenderShapes() const;
     void RenderPlayerBasis() const;
 
-void GenerateRandomShapes(TestShape3D* testShapes);
+    void GenerateRandomShapes();
 
     Camera*     m_worldCamera = nullptr;
-    Texture*    m_texture = nullptr;
+    Texture*    m_texture     = nullptr;
     TestShape3D m_player;
-    TestShape3D m_AABB3s[5] = {};
-    TestShape3D m_spheres[5] = {};
-    TestShape3D m_cylinders[5] = {};
+    TestShape3D m_testShapes[15] = {};
 };
