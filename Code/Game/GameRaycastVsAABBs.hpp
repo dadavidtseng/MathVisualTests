@@ -27,6 +27,6 @@ private:
     void GenerateRandomLineSegmentInScreen();
     void GenerateRandomAABB2s2D();
 
-    AABB2        m_AABB2[8] = {};
+    AABB2        m_AABB2s[8] = {};
     LineSegment2 m_lineSegment;
 };

@@ -15,7 +15,7 @@
 #include "Game/Game.hpp"
 
 //-----------------------------------------------------------------------------------------------
-class GameNearestPoint : public Game
+class GameNearestPoint final : public Game
 {
 public:
     GameNearestPoint();

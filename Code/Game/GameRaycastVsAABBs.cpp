@@ -90,7 +90,7 @@ void GameRaycastVsAABBs::RenderAABB2s2D() const
 {
     for (int i = 0; i < 8; ++i)
     {
-        DrawAABB2D(m_AABB2[i], Rgba8::BLUE);
+        DrawAABB2D(m_AABB2s[i], Rgba8::BLUE);
     }
 }
 
@@ -112,7 +112,7 @@ void GameRaycastVsAABBs::RenderRaycastResult() const
     // Check collisions with all discs and find the closest one
     for (int i = 0; i < 8; ++i)
     {
-        RaycastResult2D const result = RayCastVsAABB2D(tailPosition, forwardNormal, maxDistance, m_AABB2[i]);
+        RaycastResult2D const result = RayCastVsAABB2D(tailPosition, forwardNormal, maxDistance, m_AABB2s[i]);
 
         if (result.m_didImpact && result.m_impactDist < closestResult.m_impactDist)
         {
@@ -132,7 +132,7 @@ void GameRaycastVsAABBs::RenderRaycastResult() const
     if (closestResult.m_didImpact)
     {
         // Mark the closest collision disc in blue
-        DrawAABB2D(m_AABB2[closestDiscIndex], Rgba8::LIGHT_BLUE);
+        DrawAABB2D(m_AABB2s[closestDiscIndex], Rgba8::LIGHT_BLUE);
 
         // 1. Dark gray arrow: represents the full ray distance
         DrawArrow2D(tailPosition,
@@ -182,6 +182,6 @@ void GameRaycastVsAABBs::GenerateRandomAABB2s2D()
         Vec2 randomMins = ClampPointToScreen(center - Vec2(randomWidth / 2.f, randomHeight / 2.f), randomWidth / 2.f, randomHeight / 2.f);
         Vec2 randomMaxs = ClampPointToScreen(center + Vec2(randomWidth / 2.f, randomHeight / 2.f), randomWidth / 2.f, randomHeight / 2.f);
 
-        m_AABB2[i] = AABB2(randomMins, randomMaxs);
+        m_AABB2s[i] = AABB2(randomMins, randomMaxs);
     }
 }

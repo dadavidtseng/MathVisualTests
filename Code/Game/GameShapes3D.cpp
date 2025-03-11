@@ -11,6 +11,7 @@
 #include "Engine/Core/VertexUtils.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Math/MathUtils.hpp"
+#include "Engine/Math/RandomNumberGenerator.hpp"
 #include "Engine/Renderer/DebugRenderSystem.hpp"
 #include "Engine/Renderer/Renderer.hpp"
 #include "Game/App.hpp"
@@ -24,8 +25,8 @@ GameShapes3D::GameShapes3D()
 
     m_player.m_position    = Vec3(0, 0.f, 0);
     m_player.m_orientation = EulerAngles::ZERO;
-    m_sphere.m_position    = Vec3(-2.f, 0.f, 1.f);
-    m_sphere.m_orientation = EulerAngles::ZERO;
+    // m_sphere.m_position    = Vec3(-2.f, 0.f, 1.f);
+    // m_sphere.m_orientation = EulerAngles::ZERO;
 
     float const screenSizeX = g_gameConfigBlackboard.GetValue("screenSizeX", 1600.f);
     float const screenSizeY = g_gameConfigBlackboard.GetValue("screenSizeY", 800.f);
@@ -60,6 +61,10 @@ GameShapes3D::GameShapes3D()
 
     transform.SetIJKT3D(-Vec3::X_BASIS, Vec3::Z_BASIS, Vec3::Y_BASIS, Vec3(0.f, -0.25f, 0.25f));
     DebugAddWorldText("Z-Up", transform, 0.25f, Vec2(1.f, 0.f), -1.f, Rgba8::BLUE);
+
+    GenerateRandomShapes(m_AABB3s);
+    GenerateRandomShapes(m_spheres);
+    GenerateRandomShapes(m_cylinders);
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -78,7 +83,7 @@ void GameShapes3D::Update()
         DebugAddWorldWireCylinder(m_worldCamera->GetPosition(), m_worldCamera->GetPosition() + Vec3::Z_BASIS * 2, 1.f, 10.f, Rgba8::WHITE, Rgba8::RED);
     }
 
-    // m_worldCamera->SetPositionAndOrientation(m_testShapes.m_position-Vec3::ONE,m_testShapes.m_orientation);
+    m_worldCamera->SetPositionAndOrientation(m_player.m_position,m_player.m_orientation);
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -88,7 +93,7 @@ void GameShapes3D::Render() const
 
     g_theRenderer->BeginCamera(*m_worldCamera);
 
-    RenderEntities();
+    RenderShapes();
 
     g_theRenderer->EndCamera(*m_worldCamera);
 
@@ -191,26 +196,73 @@ void GameShapes3D::UpdateFromController(float deltaSeconds)
 }
 
 //----------------------------------------------------------------------------------------------------
-void GameShapes3D::RenderEntities() const
+void GameShapes3D::RenderShapes() const
 {
-    VertexList verts;
+    for (int i = 0; i < 5; i++)
+    {
+        VertexList verts;
 
-    AddVertsForSphere3D(verts, Vec3::ZERO, 0.3f);
+        AddVertsForSphere3D(verts, Vec3::ZERO, 0.3f);
 
-    Mat44 m2w;
+        Mat44 m2w;
 
-    m2w.SetTranslation3D(m_sphere.m_position);
-    m2w.AppendZRotation(m_sphere.m_orientation.m_yawDegrees);
-    m2w.AppendYRotation(m_sphere.m_orientation.m_pitchDegrees);
-    m2w.AppendXRotation(m_sphere.m_orientation.m_rollDegrees);
+        m2w.SetTranslation3D(m_spheres[i].m_position);
+        m2w.AppendZRotation(m_spheres[i].m_orientation.m_yawDegrees);
+        m2w.AppendYRotation(m_spheres[i].m_orientation.m_pitchDegrees);
+        m2w.AppendXRotation(m_spheres[i].m_orientation.m_rollDegrees);
 
-    g_theRenderer->SetModelConstants(m2w);
-    g_theRenderer->SetBlendMode(BlendMode::OPAQUE);
-    g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_BACK);
-    g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(DepthMode::READ_WRITE_LESS_EQUAL);
-    g_theRenderer->BindTexture(m_texture);
-    // g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+        g_theRenderer->SetModelConstants(m2w);
+        g_theRenderer->SetBlendMode(BlendMode::OPAQUE);
+        g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_BACK);
+        g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
+        g_theRenderer->SetDepthMode(DepthMode::READ_WRITE_LESS_EQUAL);
+        g_theRenderer->BindTexture(m_texture);
+        g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+    }
+
+    for (int i = 0; i < 5; i++)
+    {
+        VertexList verts;
+
+        AddVertsForAABB3D(verts, AABB3::NEG_HALF_TO_HALF);
+
+        Mat44 m2w;
+
+        m2w.SetTranslation3D(m_AABB3s[i].m_position);
+        m2w.AppendZRotation(m_AABB3s[i].m_orientation.m_yawDegrees);
+        m2w.AppendYRotation(m_AABB3s[i].m_orientation.m_pitchDegrees);
+        m2w.AppendXRotation(m_AABB3s[i].m_orientation.m_rollDegrees);
+
+        g_theRenderer->SetModelConstants(m2w);
+        g_theRenderer->SetBlendMode(BlendMode::OPAQUE);
+        g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_BACK);
+        g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
+        g_theRenderer->SetDepthMode(DepthMode::READ_WRITE_LESS_EQUAL);
+        g_theRenderer->BindTexture(m_texture);
+        g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+    }
+
+    for (int i = 0; i < 5; i++)
+    {
+        VertexList verts;
+
+        AddVertsForCylinder3D(verts,m_cylinders[i].m_position, m_cylinders[i].m_position+Vec3::Z_BASIS, 0.3f);
+
+        Mat44 m2w;
+
+        m2w.SetTranslation3D(m_cylinders[i].m_position+Vec3::Z_BASIS/2);
+        m2w.AppendZRotation(m_cylinders[i].m_orientation.m_yawDegrees);
+        m2w.AppendYRotation(m_cylinders[i].m_orientation.m_pitchDegrees);
+        m2w.AppendXRotation(m_cylinders[i].m_orientation.m_rollDegrees);
+
+        g_theRenderer->SetModelConstants(m2w);
+        g_theRenderer->SetBlendMode(BlendMode::OPAQUE);
+        g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_BACK);
+        g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
+        g_theRenderer->SetDepthMode(DepthMode::READ_WRITE_LESS_EQUAL);
+        g_theRenderer->BindTexture(m_texture);
+        g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+    }
 
     RenderPlayerBasis();
 }
@@ -219,9 +271,9 @@ void GameShapes3D::RenderPlayerBasis() const
 {
     VertexList verts;
 
-    Vec3 forwardNormal = m_player.m_orientation.GetAsMatrix_IFwd_JLeft_KUp().GetIBasis3D().GetNormalized();
-    Vec3 leftNormal    = m_player.m_orientation.GetAsMatrix_IFwd_JLeft_KUp().GetJBasis3D().GetNormalized();
-    Vec3 upNormal      = m_player.m_orientation.GetAsMatrix_IFwd_JLeft_KUp().GetKBasis3D().GetNormalized();
+    Vec3 const forwardNormal = m_player.m_orientation.GetAsMatrix_IFwd_JLeft_KUp().GetIBasis3D().GetNormalized();
+    Vec3 const leftNormal    = m_player.m_orientation.GetAsMatrix_IFwd_JLeft_KUp().GetJBasis3D().GetNormalized();
+    Vec3 const upNormal      = m_player.m_orientation.GetAsMatrix_IFwd_JLeft_KUp().GetKBasis3D().GetNormalized();
 
     AddVertsForArrow3D(verts, m_player.m_position, m_player.m_position + forwardNormal / 10, 0.8f, 0.001f, 0.003f, Rgba8::RED);
     AddVertsForArrow3D(verts, m_player.m_position, m_player.m_position + leftNormal / 10, 0.8f, 0.001f, 0.003f, Rgba8::GREEN);
@@ -240,4 +292,18 @@ void GameShapes3D::RenderPlayerBasis() const
     g_theRenderer->SetDepthMode(DepthMode::READ_WRITE_LESS_EQUAL);
     g_theRenderer->BindTexture(nullptr);
     g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+}
+
+void GameShapes3D::GenerateRandomShapes(TestShape3D* testShapes)
+{
+    for (int i = 0; i < 5; i++)
+    {
+        float const randomX = g_theRNG->RollRandomFloatInRange(-5.f, 5.f);
+        float const randomY = g_theRNG->RollRandomFloatInRange(-5.f, 5.f);
+        float const randomZ = g_theRNG->RollRandomFloatInRange(-5.f, 5.f);
+        float const randomYaw = g_theRNG->RollRandomFloatInRange(0.f, 360.f);
+
+        testShapes[i].m_position = Vec3(randomX, randomY, randomZ);
+        testShapes[i].m_orientation = EulerAngles(randomYaw, 0.f, 0.f);
+    }
 }

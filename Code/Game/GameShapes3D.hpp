@@ -32,12 +32,15 @@ private:
     void UpdateFromKeyboard(float deltaSeconds) override;
     void UpdateFromController(float deltaSeconds) override;
 
-    void RenderEntities() const;
+    void RenderShapes() const;
     void RenderPlayerBasis() const;
+
+void GenerateRandomShapes(TestShape3D* testShapes);
 
     Camera*     m_worldCamera = nullptr;
     Texture*    m_texture = nullptr;
     TestShape3D m_player;
-    TestShape3D m_sphere;
-
+    TestShape3D m_AABB3s[5] = {};
+    TestShape3D m_spheres[5] = {};
+    TestShape3D m_cylinders[5] = {};
 };
