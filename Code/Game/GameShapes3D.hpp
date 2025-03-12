@@ -26,10 +26,10 @@ enum class TestShapeType
 struct TestShape3D
 {
     TestShapeType m_type;
-    Vec3          m_position        = Vec3::ZERO;
-    Vec3          m_velocity        = Vec3::ZERO;
+    Vec3          m_startPosition   = Vec3::ZERO;
+    Vec3          m_endPosition     = Vec3::ZERO;
     EulerAngles   m_orientation     = EulerAngles::ZERO;
-    EulerAngles   m_angularVelocity = EulerAngles::ZERO;
+    float         m_radius          = 0.f;
 };
 
 //----------------------------------------------------------------------------------------------------
@@ -52,6 +52,6 @@ private:
 
     Camera*     m_worldCamera = nullptr;
     Texture*    m_texture     = nullptr;
-    TestShape3D m_player;
     TestShape3D m_testShapes[15] = {};
+    TestShape3D m_sphere;
 };

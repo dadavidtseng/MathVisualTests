@@ -23,8 +23,8 @@ GameShapes3D::GameShapes3D()
     m_screenCamera = new Camera();
     m_worldCamera  = new Camera();
 
-    m_player.m_position    = Vec3(0, 0.f, 0);
-    m_player.m_orientation = EulerAngles::ZERO;
+    // m_player.m_startPosition = Vec3(0, 0.f, 0);
+    // m_player.m_orientation   = EulerAngles::ZERO;
 
     float const screenSizeX = g_gameConfigBlackboard.GetValue("screenSizeX", 1600.f);
     float const screenSizeY = g_gameConfigBlackboard.GetValue("screenSizeY", 800.f);
@@ -63,6 +63,9 @@ GameShapes3D::GameShapes3D()
     GenerateRandomShapes();
     // GenerateRandomShapes(m_spheres);
     // GenerateRandomShapes(m_cylinders);
+
+    m_sphere               = TestShape3D();
+    // m_sphere.m_endPosition = Vec3::ONE;
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -81,7 +84,7 @@ void GameShapes3D::Update()
         DebugAddWorldWireCylinder(m_worldCamera->GetPosition(), m_worldCamera->GetPosition() + Vec3::Z_BASIS * 2, 1.f, 10.f, Rgba8::WHITE, Rgba8::RED);
     }
 
-    m_worldCamera->SetPositionAndOrientation(m_player.m_position, m_player.m_orientation);
+    // m_worldCamera->SetPositionAndOrientation(m_player.m_startPosition, m_player.m_orientation);
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -92,6 +95,8 @@ void GameShapes3D::Render() const
     g_theRenderer->BeginCamera(*m_worldCamera);
 
     RenderShapes();
+
+    RenderPlayerBasis();
 
     g_theRenderer->EndCamera(*m_worldCamera);
 
@@ -123,69 +128,62 @@ void GameShapes3D::UpdateFromKeyboard(float deltaSeconds)
 
     XboxController const& controller = g_theInput->GetController(0);
 
-    // if (g_theInput->WasKeyJustPressed(KEYCODE_H) || controller.WasButtonJustPressed(XBOX_BUTTON_START))
-    // {
-    //     if (m_game->IsAttractMode() == false)
-    //     {
-    //         m_position    = Vec3::ZERO;
-    //         m_orientation = EulerAngles::ZERO;
-    //     }
-    // }
+    if (g_theInput->WasKeyJustPressed(KEYCODE_H) || controller.WasButtonJustPressed(XBOX_BUTTON_START))
+    {
+        m_worldCamera->SetPosition(Vec3::ZERO);
+        m_worldCamera->SetOrientation(EulerAngles::ZERO);
+    }
 
     Vec3 forward;
     Vec3 left;
     Vec3 up;
-    m_player.m_orientation.GetAsVectors_IFwd_JLeft_KUp(forward, left, up);
+    m_worldCamera->GetOrientation().GetAsVectors_IFwd_JLeft_KUp(forward, left, up);
 
-    m_player.m_velocity       = Vec3::ZERO;
     float constexpr moveSpeed = 2.f;
 
     Vec2 const leftStickInput = controller.GetLeftStick().GetPosition();
-    m_player.m_velocity += Vec3(leftStickInput.y, -leftStickInput.x, 0) * moveSpeed;
-
-    if (g_theInput->IsKeyDown(KEYCODE_W)) m_player.m_velocity += forward * moveSpeed;
-    if (g_theInput->IsKeyDown(KEYCODE_S)) m_player.m_velocity -= forward * moveSpeed;
-    if (g_theInput->IsKeyDown(KEYCODE_A)) m_player.m_velocity += left * moveSpeed;
-    if (g_theInput->IsKeyDown(KEYCODE_D)) m_player.m_velocity -= left * moveSpeed;
-    if (g_theInput->IsKeyDown(KEYCODE_Z) || controller.IsButtonDown(XBOX_BUTTON_LSHOULDER)) m_player.m_velocity -= Vec3(0.f, 0.f, 1.f) * moveSpeed;
-    if (g_theInput->IsKeyDown(KEYCODE_C) || controller.IsButtonDown(XBOX_BUTTON_RSHOULDER)) m_player.m_velocity += Vec3(0.f, 0.f, 1.f) * moveSpeed;
-    if (g_theInput->IsKeyDown(KEYCODE_Z)) m_player.m_velocity -= Vec3(0.f, 0.f, 1.f) * moveSpeed;
-    if (g_theInput->IsKeyDown(KEYCODE_C)) m_player.m_velocity += Vec3(0.f, 0.f, 1.f) * moveSpeed;
+    Vec3       targetPosition = m_worldCamera->GetPosition();
 
     if (g_theInput->IsKeyDown(KEYCODE_SHIFT) || controller.IsButtonDown(XBOX_BUTTON_A)) deltaSeconds *= 10.f;
+    targetPosition += Vec3(leftStickInput.y, -leftStickInput.x, 0) * moveSpeed * deltaSeconds;
 
-    m_player.m_position += m_player.m_velocity * deltaSeconds;
+    if (g_theInput->IsKeyDown(KEYCODE_W)) targetPosition += forward * moveSpeed * deltaSeconds;
+    if (g_theInput->IsKeyDown(KEYCODE_S)) targetPosition -= forward * moveSpeed * deltaSeconds;
+    if (g_theInput->IsKeyDown(KEYCODE_A)) targetPosition += left * moveSpeed * deltaSeconds;
+    if (g_theInput->IsKeyDown(KEYCODE_D)) targetPosition -= left * moveSpeed * deltaSeconds;
+    if (g_theInput->IsKeyDown(KEYCODE_Z) || controller.IsButtonDown(XBOX_BUTTON_LSHOULDER)) targetPosition -= Vec3::Z_BASIS * moveSpeed * deltaSeconds;
+    if (g_theInput->IsKeyDown(KEYCODE_C) || controller.IsButtonDown(XBOX_BUTTON_RSHOULDER)) targetPosition += Vec3::Z_BASIS * moveSpeed * deltaSeconds;
+    if (g_theInput->IsKeyDown(KEYCODE_Z)) targetPosition -= Vec3::Z_BASIS * moveSpeed * deltaSeconds;
+    if (g_theInput->IsKeyDown(KEYCODE_C)) targetPosition += Vec3::Z_BASIS * moveSpeed * deltaSeconds;
+
 
     Vec2 const rightStickInput = controller.GetRightStick().GetPosition();
-    m_player.m_orientation.m_yawDegrees -= rightStickInput.x * 0.125f;
-    m_player.m_orientation.m_pitchDegrees -= rightStickInput.y * 0.125f;
 
-    m_player.m_orientation.m_yawDegrees -= g_theInput->GetCursorClientDelta().x * 0.125f;
-    m_player.m_orientation.m_pitchDegrees += g_theInput->GetCursorClientDelta().y * 0.125f;
-    m_player.m_orientation.m_pitchDegrees = GetClamped(m_player.m_orientation.m_pitchDegrees, -85.f, 85.f);
+    EulerAngles targetEulerAngles = m_worldCamera->GetOrientation();
 
-    m_player.m_angularVelocity.m_rollDegrees = 0.f;
+    targetEulerAngles.m_yawDegrees -= rightStickInput.x * 0.125f;
+    targetEulerAngles.m_pitchDegrees -= rightStickInput.y * 0.125f;
+
+    targetEulerAngles.m_yawDegrees -= g_theInput->GetCursorClientDelta().x * 0.125f;
+    targetEulerAngles.m_pitchDegrees += g_theInput->GetCursorClientDelta().y * 0.125f;
+    targetEulerAngles.m_pitchDegrees = GetClamped(targetEulerAngles.m_pitchDegrees, -85.f, 85.f);
 
     float const leftTriggerInput  = controller.GetLeftTrigger();
     float const rightTriggerInput = controller.GetRightTrigger();
 
-    if (leftTriggerInput != 0.f)
+    if (leftTriggerInput != 0.f || g_theInput->IsKeyDown(KEYCODE_E))
     {
-        m_player.m_angularVelocity.m_rollDegrees -= 90.f;
+        targetEulerAngles.m_rollDegrees -= 90.f * deltaSeconds;
     }
 
-    if (rightTriggerInput != 0.f)
+    if (rightTriggerInput != 0.f || g_theInput->IsKeyDown(KEYCODE_Q))
     {
-        m_player.m_angularVelocity.m_rollDegrees += 90.f;
+        targetEulerAngles.m_rollDegrees += 90.f * deltaSeconds;
     }
 
-    if (g_theInput->IsKeyDown(KEYCODE_Q)) m_player.m_angularVelocity.m_rollDegrees = 90.f;
-    if (g_theInput->IsKeyDown(KEYCODE_E)) m_player.m_angularVelocity.m_rollDegrees = -90.f;
+    targetEulerAngles.m_rollDegrees = GetClamped(targetEulerAngles.m_rollDegrees, -45.f, 45.f);
 
-    m_player.m_orientation.m_rollDegrees += m_player.m_angularVelocity.m_rollDegrees * deltaSeconds;
-    m_player.m_orientation.m_rollDegrees = GetClamped(m_player.m_orientation.m_rollDegrees, -45.f, 45.f);
-
-    m_worldCamera->SetPositionAndOrientation(m_player.m_position, m_player.m_orientation);
+    m_worldCamera->SetPositionAndOrientation(targetPosition, targetEulerAngles);
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -199,84 +197,40 @@ void GameShapes3D::RenderShapes() const
     for (int i = 0; i < 15; i++)
     {
         VertexList verts;
+        AABB3      aabb3     = AABB3(m_testShapes[i].m_startPosition - Vec3::ONE, m_testShapes[i].m_startPosition + Vec3::ONE);
+        Sphere3    sphere3   = Sphere3(m_testShapes[i].m_startPosition, m_testShapes[i].m_radius);
+        Cylinder3  cylinder3 = Cylinder3(m_testShapes[i].m_startPosition, m_testShapes[i].m_endPosition, m_testShapes[i].m_radius);
+        Vec3       nearestPoint;
 
-        switch (m_testShapes[i].m_type)
+
+        if (m_testShapes[i].m_type == TestShapeType::AABB3)
         {
-        case TestShapeType::AABB3:
-            AddVertsForAABB3D(verts, AABB3::NEG_HALF_TO_HALF);
-            break;
-
-        case TestShapeType::SPHERE3:
-            AddVertsForSphere3D(verts, Vec3::ZERO, 0.3f);
-            break;
-
-        case TestShapeType::CYLINDER3:
-            AddVertsForCylinder3D(verts, m_testShapes[i].m_position, m_testShapes[i].m_position + Vec3::Z_BASIS, 0.3f);
-            break;
+            AddVertsForAABB3D(verts, aabb3);
+            nearestPoint = aabb3.GetNearestPoint(m_worldCamera->GetPosition());
+            AddVertsForSphere3D(verts, nearestPoint, 0.1f, Rgba8::RED);
         }
 
-        // AddVertsForSphere3D(verts, Vec3::ZERO, 0.3f);
+        if (m_testShapes[i].m_type == TestShapeType::SPHERE3)
+        {
+            AddVertsForSphere3D(verts, sphere3.m_centerPosition, sphere3.m_radius);
+            nearestPoint = sphere3.GetNearestPoint(m_worldCamera->GetPosition());
+            AddVertsForSphere3D(verts, nearestPoint, 0.1f, Rgba8::RED);
+        }
+        if (m_testShapes[i].m_type == TestShapeType::CYLINDER3)
+        {
+            AddVertsForCylinder3D(verts, cylinder3.m_startPosition, cylinder3.m_endPosition, cylinder3.m_radius);
+            nearestPoint = cylinder3.GetNearestPoint(m_worldCamera->GetPosition());
+            AddVertsForSphere3D(verts, nearestPoint, 0.1f, Rgba8::RED);
+        }
 
-        Mat44 m2w;
-
-        m2w.SetTranslation3D(m_testShapes[i].m_position);
-        m2w.AppendZRotation(m_testShapes[i].m_orientation.m_yawDegrees);
-        m2w.AppendYRotation(m_testShapes[i].m_orientation.m_pitchDegrees);
-        m2w.AppendXRotation(m_testShapes[i].m_orientation.m_rollDegrees);
-
-        g_theRenderer->SetModelConstants(m2w);
+        g_theRenderer->SetModelConstants();
         g_theRenderer->SetBlendMode(BlendMode::OPAQUE);
-        g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_BACK);
+        g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
         g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
         g_theRenderer->SetDepthMode(DepthMode::READ_WRITE_LESS_EQUAL);
         g_theRenderer->BindTexture(m_texture);
         g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
     }
-
-    // for (int i = 0; i < 5; i++)
-    // {
-    //     VertexList verts;
-    //
-    //     AddVertsForAABB3D(verts, AABB3::NEG_HALF_TO_HALF);
-    //
-    //     Mat44 m2w;
-    //
-    //     m2w.SetTranslation3D(m_AABB3s[i].m_position);
-    //     m2w.AppendZRotation(m_AABB3s[i].m_orientation.m_yawDegrees);
-    //     m2w.AppendYRotation(m_AABB3s[i].m_orientation.m_pitchDegrees);
-    //     m2w.AppendXRotation(m_AABB3s[i].m_orientation.m_rollDegrees);
-    //
-    //     g_theRenderer->SetModelConstants(m2w);
-    //     g_theRenderer->SetBlendMode(BlendMode::OPAQUE);
-    //     g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_BACK);
-    //     g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
-    //     g_theRenderer->SetDepthMode(DepthMode::READ_WRITE_LESS_EQUAL);
-    //     g_theRenderer->BindTexture(m_texture);
-    //     g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
-    // }
-    //
-    // for (int i = 0; i < 5; i++)
-    // {
-    //     VertexList verts;
-    //
-    //     AddVertsForCylinder3D(verts, m_cylinders[i].m_position, m_cylinders[i].m_position + Vec3::Z_BASIS, 0.3f);
-    //
-    //     Mat44 m2w;
-    //
-    //     m2w.SetTranslation3D(m_cylinders[i].m_position + Vec3::Z_BASIS / 2);
-    //     m2w.AppendZRotation(m_cylinders[i].m_orientation.m_yawDegrees);
-    //     m2w.AppendYRotation(m_cylinders[i].m_orientation.m_pitchDegrees);
-    //     m2w.AppendXRotation(m_cylinders[i].m_orientation.m_rollDegrees);
-    //
-    //     g_theRenderer->SetModelConstants(m2w);
-    //     g_theRenderer->SetBlendMode(BlendMode::OPAQUE);
-    //     g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_BACK);
-    //     g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
-    //     g_theRenderer->SetDepthMode(DepthMode::READ_WRITE_LESS_EQUAL);
-    //     g_theRenderer->BindTexture(m_texture);
-    //     g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
-    // }
-
     RenderPlayerBasis();
 }
 
@@ -284,22 +238,17 @@ void GameShapes3D::RenderPlayerBasis() const
 {
     VertexList verts;
 
-    Vec3 const forwardNormal = m_player.m_orientation.GetAsMatrix_IFwd_JLeft_KUp().GetIBasis3D().GetNormalized();
-    Vec3 const leftNormal    = m_player.m_orientation.GetAsMatrix_IFwd_JLeft_KUp().GetJBasis3D().GetNormalized();
-    Vec3 const upNormal      = m_player.m_orientation.GetAsMatrix_IFwd_JLeft_KUp().GetKBasis3D().GetNormalized();
+    Vec3 const forwardNormal = m_worldCamera->GetOrientation().GetAsMatrix_IFwd_JLeft_KUp().GetIBasis3D().GetNormalized();
 
-    AddVertsForArrow3D(verts, m_player.m_position, m_player.m_position + forwardNormal / 10, 0.8f, 0.001f, 0.003f, Rgba8::RED);
-    AddVertsForArrow3D(verts, m_player.m_position, m_player.m_position + leftNormal / 10, 0.8f, 0.001f, 0.003f, Rgba8::GREEN);
-    AddVertsForArrow3D(verts, m_player.m_position, m_player.m_position + upNormal / 10, 0.8f, 0.001f, 0.003f, Rgba8::BLUE);
+    Vec3 const worldCameraPosition = m_worldCamera->GetPosition();
+    // Add vertices in world space.
+    AddVertsForArrow3D(verts, worldCameraPosition + forwardNormal, worldCameraPosition + forwardNormal + Vec3::X_BASIS * 0.1f, 0.8f, 0.001f, 0.003f, Rgba8::RED);
+    AddVertsForArrow3D(verts, worldCameraPosition + forwardNormal, worldCameraPosition + forwardNormal + Vec3::Y_BASIS * 0.1f, 0.8f, 0.001f, 0.003f, Rgba8::GREEN);
+    AddVertsForArrow3D(verts, worldCameraPosition + forwardNormal, worldCameraPosition + forwardNormal + Vec3::Z_BASIS * 0.1f, 0.8f, 0.001f, 0.003f, Rgba8::BLUE);
 
-    Mat44 m2w;
-
-    m2w.SetTranslation3D(m_player.m_position + forwardNormal);
-    m2w.Append(m_worldCamera->GetWorldToCameraTransform());
-
-    g_theRenderer->SetModelConstants(m2w);
+    g_theRenderer->SetModelConstants();
     g_theRenderer->SetBlendMode(BlendMode::OPAQUE);
-    g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
+    g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_BACK);
     g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
     g_theRenderer->SetDepthMode(DepthMode::READ_WRITE_LESS_EQUAL);
     g_theRenderer->BindTexture(nullptr);
@@ -310,11 +259,16 @@ void GameShapes3D::GenerateRandomShapes()
 {
     for (int i = 0; i < 15; i++)
     {
-        float const randomX   = g_theRNG->RollRandomFloatInRange(-5.f, 5.f);
-        float const randomY   = g_theRNG->RollRandomFloatInRange(-5.f, 5.f);
-        float const randomZ   = g_theRNG->RollRandomFloatInRange(-5.f, 5.f);
-        float const randomYaw = g_theRNG->RollRandomFloatInRange(0.f, 360.f);
-        int const   randomNum = g_theRNG->RollRandomIntInRange(0, 2);
+        float const randomX      = g_theRNG->RollRandomFloatInRange(-5.f, 5.f);
+        float const randomY      = g_theRNG->RollRandomFloatInRange(-5.f, 5.f);
+        float const randomZ      = g_theRNG->RollRandomFloatInRange(-5.f, 5.f);
+        float const randomYaw    = g_theRNG->RollRandomFloatInRange(0.f, 360.f);
+        int const   randomNum    = g_theRNG->RollRandomIntInRange(0, 2);
+        float const randomRadius = g_theRNG->RollRandomFloatInRange(1.f, 3.f);
+
+        m_testShapes[i].m_startPosition = Vec3(randomX, randomY, randomZ);
+        m_testShapes[i].m_orientation   = EulerAngles(randomYaw, 0.f, 0.f);
+        m_testShapes[i].m_radius        = randomRadius;
 
         switch (randomNum)
         {
@@ -332,12 +286,10 @@ void GameShapes3D::GenerateRandomShapes()
 
         case 2:
             {
-                m_testShapes[i].m_type = TestShapeType::CYLINDER3;
+                m_testShapes[i].m_type        = TestShapeType::CYLINDER3;
+                m_testShapes[i].m_endPosition = m_testShapes[i].m_startPosition + Vec3::Z_BASIS * g_theRNG->RollRandomFloatInRange(1.f, 3.f);
                 break;
             }
         }
-
-        m_testShapes[i].m_position    = Vec3(randomX, randomY, randomZ);
-        m_testShapes[i].m_orientation = EulerAngles(randomYaw, 0.f, 0.f);
     }
 }
