@@ -120,7 +120,7 @@ void GameRaycastVsLineSegments::RenderRaycastResult() const
     // To store the closest collision result
     RaycastResult2D closestResult;
     closestResult.m_didImpact  = false;
-    closestResult.m_impactDist = maxDistance;
+    closestResult.m_impactDistance = maxDistance;
     int closestDiscIndex       = -1; // Index of the closest disc
 
 
@@ -129,7 +129,7 @@ void GameRaycastVsLineSegments::RenderRaycastResult() const
     {
         RaycastResult2D const result = RayCastVsLineSegment2D(tailPosition, forwardNormal, maxDistance, m_lineSegments[i].m_start, m_lineSegments[i].m_end);
 
-        if (result.m_didImpact && result.m_impactDist < closestResult.m_impactDist)
+        if (result.m_didImpact && result.m_impactDistance < closestResult.m_impactDistance)
         {
             closestResult    = result;
             closestDiscIndex = i;
@@ -159,20 +159,20 @@ void GameRaycastVsLineSegments::RenderRaycastResult() const
 
         // 2. Orange arrow: represents the distance from the start to the impact point
         DrawArrow2D(tailPosition,
-                    closestResult.m_impactPos,
+                    closestResult.m_impactPosition,
                     50.f,
                     m_lineSegment.m_thickness,
                     Rgba8::ORANGE);
 
         // 3. Cyan arrow: represents the normal vector at the impact point
-        DrawArrow2D(closestResult.m_impactPos,
-                    closestResult.m_impactPos + closestResult.m_impactNormal * 100.0f,
+        DrawArrow2D(closestResult.m_impactPosition,
+                    closestResult.m_impactPosition + closestResult.m_impactNormalDirection * 100.0f,
                     50.f,
                     m_lineSegment.m_thickness,
                     Rgba8::CYAN);
 
         // 4. Small white circle: represents the impact point location
-        DrawDisc2D(closestResult.m_impactPos,
+        DrawDisc2D(closestResult.m_impactPosition,
                    5.0f,
                    Rgba8::WHITE);
     }

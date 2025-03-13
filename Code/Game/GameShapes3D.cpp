@@ -207,24 +207,24 @@ void GameShapes3D::RenderShapes() const
         {
             AddVertsForAABB3D(verts, aabb3);
             nearestPoint = aabb3.GetNearestPoint(m_worldCamera->GetPosition());
-            AddVertsForSphere3D(verts, nearestPoint, 0.1f, Rgba8::RED);
+            AddVertsForSphere3D(verts, nearestPoint, 0.1f, Rgba8::WHITE);
         }
 
         if (m_testShapes[i].m_type == TestShapeType::SPHERE3)
         {
             AddVertsForSphere3D(verts, sphere3.m_centerPosition, sphere3.m_radius);
             nearestPoint = sphere3.GetNearestPoint(m_worldCamera->GetPosition());
-            AddVertsForSphere3D(verts, nearestPoint, 0.1f, Rgba8::RED);
+            AddVertsForSphere3D(verts, nearestPoint, 0.1f, Rgba8::WHITE);
         }
         if (m_testShapes[i].m_type == TestShapeType::CYLINDER3)
         {
-            AddVertsForCylinder3D(verts, cylinder3.m_startPosition, cylinder3.m_endPosition, cylinder3.m_radius);
+            AddVertsForCylinder3D(verts, cylinder3.m_startPosition, cylinder3.m_endPosition, cylinder3.m_radius, Rgba8::WHITE, AABB2(Vec2::ZERO, Vec2::ONE));
             nearestPoint = cylinder3.GetNearestPoint(m_worldCamera->GetPosition());
-            AddVertsForSphere3D(verts, nearestPoint, 0.1f, Rgba8::RED);
+            AddVertsForSphere3D(verts, nearestPoint, 0.1f, Rgba8::WHITE);
         }
 
         g_theRenderer->SetModelConstants();
-        g_theRenderer->SetBlendMode(BlendMode::OPAQUE);
+        g_theRenderer->SetBlendMode(BlendMode::ALPHA);
         g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
         g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
         g_theRenderer->SetDepthMode(DepthMode::READ_WRITE_LESS_EQUAL);
