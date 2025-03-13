@@ -46,12 +46,14 @@ private:
     void UpdateFromController(float deltaSeconds) override;
 
     void RenderShapes() const;
+    void RenderTest() const;
     void RenderPlayerBasis() const;
 
     void GenerateRandomShapes();
+    void GenerateTest();
 
     Camera*     m_worldCamera = nullptr;
     Texture*    m_texture     = nullptr;
     TestShape3D m_testShapes[15] = {};
-    TestShape3D m_sphere;
+    TestShape3D m_test;
 };

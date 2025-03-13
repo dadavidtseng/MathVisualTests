@@ -12,6 +12,7 @@
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Math/MathUtils.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
+#include "Engine/Math/RaycastUtils.hpp"
 #include "Engine/Renderer/DebugRenderSystem.hpp"
 #include "Engine/Renderer/Renderer.hpp"
 #include "Game/App.hpp"
@@ -64,8 +65,8 @@ GameShapes3D::GameShapes3D()
     // GenerateRandomShapes(m_spheres);
     // GenerateRandomShapes(m_cylinders);
 
-    m_sphere               = TestShape3D();
-    // m_sphere.m_endPosition = Vec3::ONE;
+
+    GenerateTest();
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -94,9 +95,9 @@ void GameShapes3D::Render() const
 
     g_theRenderer->BeginCamera(*m_worldCamera);
 
-    RenderShapes();
-
+    // RenderShapes();
     RenderPlayerBasis();
+    RenderTest();
 
     g_theRenderer->EndCamera(*m_worldCamera);
 
@@ -202,25 +203,47 @@ void GameShapes3D::RenderShapes() const
         Cylinder3  cylinder3 = Cylinder3(m_testShapes[i].m_startPosition, m_testShapes[i].m_endPosition, m_testShapes[i].m_radius);
         Vec3       nearestPoint;
 
-
         if (m_testShapes[i].m_type == TestShapeType::AABB3)
         {
             AddVertsForAABB3D(verts, aabb3);
-            nearestPoint = aabb3.GetNearestPoint(m_worldCamera->GetPosition());
-            AddVertsForSphere3D(verts, nearestPoint, 0.1f, Rgba8::WHITE);
         }
 
         if (m_testShapes[i].m_type == TestShapeType::SPHERE3)
         {
             AddVertsForSphere3D(verts, sphere3.m_centerPosition, sphere3.m_radius);
-            nearestPoint = sphere3.GetNearestPoint(m_worldCamera->GetPosition());
-            AddVertsForSphere3D(verts, nearestPoint, 0.1f, Rgba8::WHITE);
         }
         if (m_testShapes[i].m_type == TestShapeType::CYLINDER3)
         {
             AddVertsForCylinder3D(verts, cylinder3.m_startPosition, cylinder3.m_endPosition, cylinder3.m_radius, Rgba8::WHITE, AABB2(Vec2::ZERO, Vec2::ONE));
+        }
+
+        g_theRenderer->SetModelConstants();
+        g_theRenderer->SetBlendMode(BlendMode::OPAQUE);
+        g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_BACK);
+        g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
+        g_theRenderer->SetDepthMode(DepthMode::READ_WRITE_LESS_EQUAL);
+        g_theRenderer->BindTexture(m_texture);
+        g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+
+        VertexList nearestPointVerts;
+
+        if (m_testShapes[i].m_type == TestShapeType::AABB3)
+        {
+            nearestPoint = aabb3.GetNearestPoint(m_worldCamera->GetPosition());
+            AddVertsForSphere3D(nearestPointVerts, nearestPoint, 0.1f, Rgba8::RED);
+            AddVertsForArrow3D(nearestPointVerts, nearestPoint, nearestPoint + nearestPoint - (aabb3.m_mins + aabb3.m_maxs) / 2.f, 0.5f, 0.15f, 0.3f, Rgba8::GREEN);
+        }
+
+        if (m_testShapes[i].m_type == TestShapeType::SPHERE3)
+        {
+            nearestPoint = sphere3.GetNearestPoint(m_worldCamera->GetPosition());
+            AddVertsForSphere3D(nearestPointVerts, nearestPoint, 0.1f, Rgba8::RED);
+            AddVertsForArrow3D(nearestPointVerts, nearestPoint, nearestPoint + nearestPoint - sphere3.m_centerPosition, 0.5f, 0.15f, 0.3f, Rgba8::GREEN);
+        }
+        if (m_testShapes[i].m_type == TestShapeType::CYLINDER3)
+        {
             nearestPoint = cylinder3.GetNearestPoint(m_worldCamera->GetPosition());
-            AddVertsForSphere3D(verts, nearestPoint, 0.1f, Rgba8::WHITE);
+            AddVertsForSphere3D(nearestPointVerts, nearestPoint, 0.1f, Rgba8::RED);
         }
 
         g_theRenderer->SetModelConstants();
@@ -228,19 +251,46 @@ void GameShapes3D::RenderShapes() const
         g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
         g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
         g_theRenderer->SetDepthMode(DepthMode::READ_WRITE_LESS_EQUAL);
-        g_theRenderer->BindTexture(m_texture);
-        g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+        g_theRenderer->BindTexture(nullptr);
+        g_theRenderer->DrawVertexArray(static_cast<int>(nearestPointVerts.size()), nearestPointVerts.data());
     }
-    RenderPlayerBasis();
 }
 
+void GameShapes3D::RenderTest() const
+{
+    VertexList verts;
+    Vec3       forwardNormal = m_worldCamera->GetOrientation().GetAsMatrix_IFwd_JLeft_KUp().GetIBasis3D().GetNormalized();
+    Ray3 const ray           = Ray3(m_worldCamera->GetPosition(), m_worldCamera->GetPosition() + forwardNormal * 100.f);
+
+
+
+
+AABB3 box = AABB3(m_test.m_startPosition - Vec3::ONE, m_test.m_startPosition + Vec3::ONE);
+    AddVertsForAABB3D(verts, box);
+
+    RaycastResult3D raycastResult = RaycastVsAABB3D(ray.m_startPosition, ray.m_normalDirection, ray.m_maxLength, box);
+    if (raycastResult.m_didImpact == false)
+    {
+        AddVertsForArrow3D(verts, raycastResult.m_impactPosition, raycastResult.m_impactPosition + raycastResult.m_impactNormal+Vec3::Z_BASIS*100.f, 0.5f, 0.15f, 0.3f, Rgba8::GREEN);
+    }
+    g_theRenderer->SetModelConstants();
+    g_theRenderer->SetBlendMode(BlendMode::OPAQUE);
+    g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_BACK);
+    g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
+    g_theRenderer->SetDepthMode(DepthMode::READ_WRITE_LESS_EQUAL);
+    g_theRenderer->BindTexture(m_texture);
+    g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+
+}
+
+//----------------------------------------------------------------------------------------------------
 void GameShapes3D::RenderPlayerBasis() const
 {
     VertexList verts;
 
-    Vec3 const forwardNormal = m_worldCamera->GetOrientation().GetAsMatrix_IFwd_JLeft_KUp().GetIBasis3D().GetNormalized();
-
     Vec3 const worldCameraPosition = m_worldCamera->GetPosition();
+    Vec3 const forwardNormal       = m_worldCamera->GetOrientation().GetAsMatrix_IFwd_JLeft_KUp().GetIBasis3D().GetNormalized();
+
     // Add vertices in world space.
     AddVertsForArrow3D(verts, worldCameraPosition + forwardNormal, worldCameraPosition + forwardNormal + Vec3::X_BASIS * 0.1f, 0.8f, 0.001f, 0.003f, Rgba8::RED);
     AddVertsForArrow3D(verts, worldCameraPosition + forwardNormal, worldCameraPosition + forwardNormal + Vec3::Y_BASIS * 0.1f, 0.8f, 0.001f, 0.003f, Rgba8::GREEN);
@@ -292,4 +342,9 @@ void GameShapes3D::GenerateRandomShapes()
             }
         }
     }
+}
+
+void GameShapes3D::GenerateTest()
+{
+    m_test = TestShape3D();
 }

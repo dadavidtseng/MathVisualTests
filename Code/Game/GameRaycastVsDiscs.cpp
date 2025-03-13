@@ -176,7 +176,7 @@ void GameRaycastVsDiscs::RenderRaycastResult() const
 
             // 3. Cyan arrow: represents the normal vector at the impact point
             DrawArrow2D(closestResult.m_impactPosition,
-                        closestResult.m_impactPosition + closestResult.m_impactNormalDirection * 100.0f,
+                        closestResult.m_impactPosition + closestResult.m_impactNormal * 100.0f,
                         50.f,
                         m_lineSegment.m_thickness,
                         Rgba8::CYAN);
