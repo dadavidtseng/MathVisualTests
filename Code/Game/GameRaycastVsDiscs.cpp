@@ -137,7 +137,7 @@ void GameRaycastVsDiscs::RenderRaycastResult() const
         // Check collisions with all discs and find the closest one
         for (int i = 0; i < 8; ++i)
         {
-            RaycastResult2D const result = RaycastVsDisc2D(tailPosition, forwardNormal, maxDistance, m_randomDisc[i].GetCenter(), m_randomDisc[i].GetRadius());
+            RaycastResult2D const result = RaycastVsDisc2D(tailPosition, forwardNormal, maxDistance, m_randomDisc[i].GetPosition(), m_randomDisc[i].GetRadius());
 
             if (result.m_didImpact && result.m_impactDistance < closestResult.m_impactDistance)
             {
@@ -157,7 +157,7 @@ void GameRaycastVsDiscs::RenderRaycastResult() const
         if (closestResult.m_didImpact)
         {
             // Mark the closest collision disc in blue
-            DrawDisc2D(m_randomDisc[closestDiscIndex].GetCenter(),
+            DrawDisc2D(m_randomDisc[closestDiscIndex].GetPosition(),
                        m_randomDisc[closestDiscIndex].GetRadius(),
                        Rgba8::LIGHT_BLUE);
 
