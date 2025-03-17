@@ -4,15 +4,37 @@
 
 //-----------------------------------------------------------------------------------------------
 #pragma once
-#include "Engine/Math/Vec2.hpp"
+#include <cstdint>
 
-#include "Engine/Math/AABB2.hpp"
-#include "Engine/Math/Capsule2.hpp"
-#include "Engine/Math/Disc2.hpp"
-#include "Engine/Math/LineSegment2.hpp"
-#include "Engine/Math/OBB2.hpp"
-#include "Engine/Math/Triangle2.hpp"
+#include "Engine/Math/Vec2.hpp"
 #include "Game/Game.hpp"
+
+//----------------------------------------------------------------------------------------------------
+enum class eTestShape2DType : int8_t
+{
+    DISC2,
+    LINESEGMENT2,
+    INFINITE_LINESEGMENT2,
+    TRIANGLE2,
+    AABB2,
+    OBB2,
+    CAPSULE2,
+    COUNT
+};
+
+//----------------------------------------------------------------------------------------------------
+struct TestShape2D
+{
+    eTestShape2DType m_type;
+    Vec2             m_startPosition  = Vec2::ZERO;
+    Vec2             m_endPosition    = Vec2::ZERO;
+    Vec2             m_thirdPosition  = Vec2::ZERO;
+    Vec2             m_iBasisNormal   = Vec2::ZERO;
+    Vec2             m_halfDimensions = Vec2::ZERO;
+    float            m_radius         = 0.f;
+    float            m_thickness      = 0.f;
+    bool             m_isInfinite     = false;
+};
 
 //-----------------------------------------------------------------------------------------------
 class GameNearestPoint final : public Game
@@ -30,6 +52,9 @@ private:
     void RenderShapes() const;
     void GenerateRandomShapes();
 
+    void RenderNearestPoints() const;
+    void RenderReferencePoint() const;
+
     void GenerateRandomDisc2D();
     void GenerateRandomLineSegment2D();
     void GenerateRandomInfiniteLine2D();
@@ -38,22 +63,6 @@ private:
     void GenerateRandomOBB2D();
     void GenerateRandomCapsule2D();
 
-    void RenderDisc2D() const;
-    void RenderLineSegment2D() const;
-    void RenderLineInfinite2D() const;
-    void RenderTriangle2D() const;
-    void RenderAABB2D() const;
-    void RenderOBB2D() const;
-    void RenderCapsule2D() const;
-
-    void RenderReferencePoint() const;
-
-    Vec2         m_referencePoint;
-    Disc2        m_randomDisc;
-    LineSegment2 m_randomLineSegment;
-    LineSegment2 m_randomInfiniteLine;
-    Triangle2    m_randomTriangle;
-    AABB2        m_randomAABB2;
-    OBB2         m_randomOBB2;
-    Capsule2     m_randomCapsule2;
+    Vec2        m_referencePoint = Vec2::ZERO;
+    TestShape2D m_testShapes[8]  = {};
 };

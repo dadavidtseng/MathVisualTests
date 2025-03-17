@@ -63,16 +63,16 @@ void GameRaycastVsDiscs::UpdateFromKeyboard(float const deltaSeconds)
     if (g_theInput->WasKeyJustPressed(KEYCODE_ESC)) App::RequestQuit();
 
     if (g_theInput->WasKeyJustPressed(KEYCODE_F8)) GenerateRandomDiscs2D();
-    if (g_theInput->IsKeyDown(KEYCODE_W)) m_lineSegment.m_start.y += m_moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_S)) m_lineSegment.m_start.y -= m_moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_A)) m_lineSegment.m_start.x -= m_moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_D)) m_lineSegment.m_start.x += m_moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_I)) m_lineSegment.m_end.y += m_moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_K)) m_lineSegment.m_end.y -= m_moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_J)) m_lineSegment.m_end.x -= m_moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_L)) m_lineSegment.m_end.x += m_moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_LEFT_MOUSE)) m_lineSegment.m_start = GetMouseWorldPos();
-    if (g_theInput->IsKeyDown(KEYCODE_RIGHT_MOUSE)) m_lineSegment.m_end = GetMouseWorldPos();
+    if (g_theInput->IsKeyDown(KEYCODE_W)) m_lineSegment.m_startPosition.y += m_moveSpeed * deltaSeconds;
+    if (g_theInput->IsKeyDown(KEYCODE_S)) m_lineSegment.m_startPosition.y -= m_moveSpeed * deltaSeconds;
+    if (g_theInput->IsKeyDown(KEYCODE_A)) m_lineSegment.m_startPosition.x -= m_moveSpeed * deltaSeconds;
+    if (g_theInput->IsKeyDown(KEYCODE_D)) m_lineSegment.m_startPosition.x += m_moveSpeed * deltaSeconds;
+    if (g_theInput->IsKeyDown(KEYCODE_I)) m_lineSegment.m_endPosition.y += m_moveSpeed * deltaSeconds;
+    if (g_theInput->IsKeyDown(KEYCODE_K)) m_lineSegment.m_endPosition.y -= m_moveSpeed * deltaSeconds;
+    if (g_theInput->IsKeyDown(KEYCODE_J)) m_lineSegment.m_endPosition.x -= m_moveSpeed * deltaSeconds;
+    if (g_theInput->IsKeyDown(KEYCODE_L)) m_lineSegment.m_endPosition.x += m_moveSpeed * deltaSeconds;
+    if (g_theInput->IsKeyDown(KEYCODE_LEFT_MOUSE)) m_lineSegment.m_startPosition = GetMouseWorldPos();
+    if (g_theInput->IsKeyDown(KEYCODE_RIGHT_MOUSE)) m_lineSegment.m_endPosition = GetMouseWorldPos();
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -80,8 +80,8 @@ void GameRaycastVsDiscs::UpdateFromController(float const deltaSeconds)
 {
     XboxController const controller = g_theInput->GetController(0);
 
-    m_lineSegment.m_start += controller.GetLeftStick().GetPosition() * m_moveSpeed * deltaSeconds;
-    m_lineSegment.m_end += controller.GetRightStick().GetPosition() * m_moveSpeed * deltaSeconds;
+    m_lineSegment.m_startPosition += controller.GetLeftStick().GetPosition() * m_moveSpeed * deltaSeconds;
+    m_lineSegment.m_endPosition += controller.GetRightStick().GetPosition() * m_moveSpeed * deltaSeconds;
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -116,8 +116,8 @@ void GameRaycastVsDiscs::RenderDisc2() const
 void GameRaycastVsDiscs::RenderRaycastResult() const
 {
     // Ray direction and starting position
-    Vec2 const  forwardNormal = (m_lineSegment.m_end - m_lineSegment.m_start).GetNormalized();
-    Vec2 const  tailPosition  = m_lineSegment.m_start;
+    Vec2 const  forwardNormal = (m_lineSegment.m_endPosition - m_lineSegment.m_startPosition).GetNormalized();
+    Vec2 const  tailPosition  = m_lineSegment.m_startPosition;
     float const maxDistance   = m_lineSegment.GetLength();
 
     // To store the closest collision result

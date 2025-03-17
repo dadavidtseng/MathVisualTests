@@ -8,11 +8,11 @@
 #include "Engine/Core/Rgba8.hpp"
 #include "Engine/Core/VertexUtils.hpp"
 #include "Engine/Core/Vertex_PCU.hpp"
-#include "Engine/Math/Capsule2.hpp"
+// #include "Engine/Math/Capsule2.hpp"
 #include "Engine/Math/Disc2.hpp"
 #include "Engine/Math/LineSegment2.hpp"
 #include "Engine/Math/MathUtils.hpp"
-#include "Engine/Math/Triangle2.hpp"
+// #include "Engine/Math/Triangle2.hpp"
 #include "Engine/Renderer/Renderer.hpp"
 
 //-----------------------------------------------------------------------------------------------
@@ -306,28 +306,28 @@ void DrawLineSegment2D(Vec2 const& startPosition, Vec2 const& endPosition, float
 //-----------------------------------------------------------------------------------------------
 void DrawLineSegment2D(LineSegment2 const& lineSegment, float const thickness, bool const isInfinite, Rgba8 const& color)
 {
-    DrawLineSegment2D(lineSegment.m_start, lineSegment.m_end, thickness, isInfinite, color);
+    DrawLineSegment2D(lineSegment.m_startPosition, lineSegment.m_endPosition, thickness, isInfinite, color);
 }
 
-//-----------------------------------------------------------------------------------------------
-void DrawTriangle2D(Vec2 const& ccw0, Vec2 const& ccw1, Vec2 const& ccw2, Rgba8 const& color)
-{
-    VertexList verts;
-    AddVertsForTriangle2D(verts, ccw0, ccw1, ccw2, color);
-    g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(BlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(DepthMode::DISABLED);
-    g_theRenderer->BindTexture(nullptr);
-    g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
-}
+// //-----------------------------------------------------------------------------------------------
+// void DrawTriangle2D(Vec2 const& ccw0, Vec2 const& ccw1, Vec2 const& ccw2, Rgba8 const& color)
+// {
+//     VertexList verts;
+//     AddVertsForTriangle2D(verts, ccw0, ccw1, ccw2, color);
+//     g_theRenderer->SetModelConstants();
+//     g_theRenderer->SetBlendMode(BlendMode::ALPHA);
+//     g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
+//     g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
+//     g_theRenderer->SetDepthMode(DepthMode::DISABLED);
+//     g_theRenderer->BindTexture(nullptr);
+//     g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+// }
 
-//-----------------------------------------------------------------------------------------------
-void DrawTriangle2D(Triangle2 const& triangle, Rgba8 const& color)
-{
-    DrawTriangle2D(triangle.m_positionCounterClockwise[0], triangle.m_positionCounterClockwise[1], triangle.m_positionCounterClockwise[2], color);
-}
+// //-----------------------------------------------------------------------------------------------
+// void DrawTriangle2D(Triangle2 const& triangle, Rgba8 const& color)
+// {
+//     DrawTriangle2D(triangle.m_positionCounterClockwise[0], triangle.m_positionCounterClockwise[1], triangle.m_positionCounterClockwise[2], color);
+// }
 
 //-----------------------------------------------------------------------------------------------
 void DrawAABB2D(AABB2 const& aabb2, Rgba8 const& color)
@@ -346,7 +346,7 @@ void DrawAABB2D(AABB2 const& aabb2, Rgba8 const& color)
 void DrawOBB2D(OBB2 const& obb2, Rgba8 const& color)
 {
     VertexList verts;
-    AddVertsForOBB2D(verts, obb2, color);
+    // AddVertsForOBB2D(verts, obb2, color);
     g_theRenderer->SetModelConstants();
     g_theRenderer->SetBlendMode(BlendMode::ALPHA);
     g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
@@ -369,10 +369,10 @@ void DrawCapsule2D(Vec2 const& boneStart, Vec2 const& boneEnd, float const radiu
     g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
 
-void DrawCapsule2D(Capsule2 const& capsule, Rgba8 const& color)
-{
-    DrawCapsule2D(capsule.m_start, capsule.m_end, capsule.m_radius, color);
-}
+// void DrawCapsule2D(Capsule2 const& capsule, Rgba8 const& color)
+// {
+//     DrawCapsule2D(capsule.m_startPosition, capsule.m_endPosition, capsule.m_radius, color);
+// }
 
 void DrawArrow2D(Vec2 const& tailPos, Vec2 const& tipPos, float const radius, float const thickness, Rgba8 const& color)
 {

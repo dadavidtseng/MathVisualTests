@@ -61,16 +61,16 @@ void GameRaycastVsLineSegments::UpdateFromKeyboard(float const deltaSeconds)
     if (g_theInput->WasKeyJustPressed(KEYCODE_ESC)) App::RequestQuit();
 
     if (g_theInput->WasKeyJustPressed(KEYCODE_F8)) GenerateRandomLineSegment2D();
-    if (g_theInput->IsKeyDown(KEYCODE_W)) m_lineSegment.m_start.y += m_moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_S)) m_lineSegment.m_start.y -= m_moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_A)) m_lineSegment.m_start.x -= m_moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_D)) m_lineSegment.m_start.x += m_moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_I)) m_lineSegment.m_end.y += m_moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_K)) m_lineSegment.m_end.y -= m_moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_J)) m_lineSegment.m_end.x -= m_moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_L)) m_lineSegment.m_end.x += m_moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_LEFT_MOUSE)) m_lineSegment.m_start = GetMouseWorldPos();
-    if (g_theInput->IsKeyDown(KEYCODE_RIGHT_MOUSE)) m_lineSegment.m_end = GetMouseWorldPos();
+    if (g_theInput->IsKeyDown(KEYCODE_W)) m_lineSegment.m_startPosition.y += m_moveSpeed * deltaSeconds;
+    if (g_theInput->IsKeyDown(KEYCODE_S)) m_lineSegment.m_startPosition.y -= m_moveSpeed * deltaSeconds;
+    if (g_theInput->IsKeyDown(KEYCODE_A)) m_lineSegment.m_startPosition.x -= m_moveSpeed * deltaSeconds;
+    if (g_theInput->IsKeyDown(KEYCODE_D)) m_lineSegment.m_startPosition.x += m_moveSpeed * deltaSeconds;
+    if (g_theInput->IsKeyDown(KEYCODE_I)) m_lineSegment.m_endPosition.y += m_moveSpeed * deltaSeconds;
+    if (g_theInput->IsKeyDown(KEYCODE_K)) m_lineSegment.m_endPosition.y -= m_moveSpeed * deltaSeconds;
+    if (g_theInput->IsKeyDown(KEYCODE_J)) m_lineSegment.m_endPosition.x -= m_moveSpeed * deltaSeconds;
+    if (g_theInput->IsKeyDown(KEYCODE_L)) m_lineSegment.m_endPosition.x += m_moveSpeed * deltaSeconds;
+    if (g_theInput->IsKeyDown(KEYCODE_LEFT_MOUSE)) m_lineSegment.m_startPosition = GetMouseWorldPos();
+    if (g_theInput->IsKeyDown(KEYCODE_RIGHT_MOUSE)) m_lineSegment.m_endPosition = GetMouseWorldPos();
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -78,8 +78,8 @@ void GameRaycastVsLineSegments::UpdateFromController(float const deltaSeconds)
 {
     XboxController const controller = g_theInput->GetController(0);
 
-    m_lineSegment.m_start += controller.GetLeftStick().GetPosition() * m_moveSpeed * deltaSeconds;
-    m_lineSegment.m_end += controller.GetRightStick().GetPosition() * m_moveSpeed * deltaSeconds;
+    m_lineSegment.m_startPosition += controller.GetLeftStick().GetPosition() * m_moveSpeed * deltaSeconds;
+    m_lineSegment.m_endPosition += controller.GetRightStick().GetPosition() * m_moveSpeed * deltaSeconds;
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -105,7 +105,7 @@ void GameRaycastVsLineSegments::RenderLineSegments2D() const
 {
     for (int i = 0; i < 8; ++i)
     {
-        DrawLineSegment2D(m_lineSegments[i].m_start, m_lineSegments[i].m_end, 3.f, false, Rgba8::BLUE);
+        DrawLineSegment2D(m_lineSegments[i].m_startPosition, m_lineSegments[i].m_endPosition, 3.f, false, Rgba8::BLUE);
     }
 }
 
@@ -113,8 +113,8 @@ void GameRaycastVsLineSegments::RenderLineSegments2D() const
 void GameRaycastVsLineSegments::RenderRaycastResult() const
 {
     // Ray direction and starting position
-    Vec2 const  forwardNormal = (m_lineSegment.m_end - m_lineSegment.m_start).GetNormalized();
-    Vec2 const  tailPosition  = m_lineSegment.m_start;
+    Vec2 const  forwardNormal = (m_lineSegment.m_endPosition - m_lineSegment.m_startPosition).GetNormalized();
+    Vec2 const  tailPosition  = m_lineSegment.m_startPosition;
     float const maxDistance   = m_lineSegment.GetLength();
 
     // To store the closest collision result
@@ -127,7 +127,7 @@ void GameRaycastVsLineSegments::RenderRaycastResult() const
     // Check collisions with all discs and find the closest one
     for (int i = 0; i < 8; ++i)
     {
-        RaycastResult2D const result = RayCastVsLineSegment2D(tailPosition, forwardNormal, maxDistance, m_lineSegments[i].m_start, m_lineSegments[i].m_end);
+        RaycastResult2D const result = RayCastVsLineSegment2D(tailPosition, forwardNormal, maxDistance, m_lineSegments[i].m_startPosition, m_lineSegments[i].m_endPosition);
 
         if (result.m_didImpact && result.m_impactDistance < closestResult.m_impactDistance)
         {
@@ -147,8 +147,8 @@ void GameRaycastVsLineSegments::RenderRaycastResult() const
     if (closestResult.m_didImpact)
     {
         // Mark the closest collision disc in blue
-        DrawLineSegment2D(m_lineSegments[closestDiscIndex].m_start,
-                          m_lineSegments[closestDiscIndex].m_end, 3.f, false,
+        DrawLineSegment2D(m_lineSegments[closestDiscIndex].m_startPosition,
+                          m_lineSegments[closestDiscIndex].m_endPosition, 3.f, false,
                           Rgba8::LIGHT_BLUE);
 
         // 1. Dark gray arrow: represents the full ray distance
