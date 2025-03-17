@@ -6,7 +6,6 @@
 #pragma once
 #include <cstdint>
 
-#include "Engine/Math/Vec2.hpp"
 #include "Game/Game.hpp"
 
 //----------------------------------------------------------------------------------------------------

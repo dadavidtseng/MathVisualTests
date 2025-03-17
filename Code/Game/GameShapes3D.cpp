@@ -263,16 +263,21 @@ void GameShapes3D::RenderTest() const
     Ray3 const ray           = Ray3(m_worldCamera->GetPosition(), m_worldCamera->GetPosition() + forwardNormal * 100.f);
 
 
+    // Sphere3 sphere3 = Sphere3(m_testShapes[0].m_startPosition, m_testShapes[0].m_radius);
+    // AABB3 box = AABB3(m_testShapes[0].m_startPosition - Vec3::ONE, m_testShapes[0].m_startPosition + Vec3::ONE);
+    Cylinder3 cylinder3 = Cylinder3(m_testShapes[0].m_startPosition, m_testShapes[0].m_endPosition, m_testShapes[0].m_radius);
+    // AddVertsForSphere3D(verts, sphere3.m_centerPosition, sphere3.m_radius, Rgba8::WHITE, AABB2(Vec2::ZERO, Vec2::ONE));
+// AddVertsForAABB3D(verts, box);
+    AddVertsForCylinder3D(verts, cylinder3.m_startPosition, cylinder3.m_endPosition, cylinder3.m_radius);
+    // RaycastResult3D raycastResult =RaycastVsSphere3D(ray.m_startPosition, ray.m_normalDirection, ray.m_maxLength, sphere3.m_centerPosition, sphere3.m_radius);
+    Vec3 center = (cylinder3.m_startPosition+cylinder3.m_endPosition)/2.f;
+    RaycastResult3D raycastResult =RaycastVsCylinderZ3D(ray.m_startPosition, ray.m_normalDirection, ray.m_maxLength,Vec2(center.x,center.y),cylinder3.m_startPosition.z, cylinder3.m_endPosition.z,cylinder3.m_radius);
 
-
-AABB3 box = AABB3(m_test.m_startPosition - Vec3::ONE, m_test.m_startPosition + Vec3::ONE);
-    AddVertsForAABB3D(verts, box);
-
-    RaycastResult3D raycastResult = RaycastVsAABB3D(ray.m_startPosition, ray.m_normalDirection, ray.m_maxLength, box);
-    if (raycastResult.m_didImpact == false)
+    if (raycastResult.m_didImpact == true)
     {
-        AddVertsForArrow3D(verts, raycastResult.m_impactPosition, raycastResult.m_impactPosition + raycastResult.m_impactNormal+Vec3::Z_BASIS*100.f, 0.5f, 0.15f, 0.3f, Rgba8::GREEN);
+        AddVertsForArrow3D(verts, raycastResult.m_impactPosition, raycastResult.m_impactPosition + raycastResult.m_impactNormal, 0.8f, 0.03f, 0.06f, Rgba8::YELLOW);
     }
+
     g_theRenderer->SetModelConstants();
     g_theRenderer->SetBlendMode(BlendMode::OPAQUE);
     g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_BACK);
@@ -280,7 +285,6 @@ AABB3 box = AABB3(m_test.m_startPosition - Vec3::ONE, m_test.m_startPosition + V
     g_theRenderer->SetDepthMode(DepthMode::READ_WRITE_LESS_EQUAL);
     g_theRenderer->BindTexture(m_texture);
     g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
-
 }
 
 //----------------------------------------------------------------------------------------------------

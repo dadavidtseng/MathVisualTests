@@ -14,7 +14,6 @@
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/Renderer.hpp"
 #include "Game/App.hpp"
-#include "Game/GameCommon.hpp"
 
 //----------------------------------------------------------------------------------------------------
 GameNearestPoint::GameNearestPoint()

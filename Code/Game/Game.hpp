@@ -4,6 +4,8 @@
 
 //----------------------------------------------------------------------------------------------------
 #pragma once
+#include <cstdint>
+
 #include "Engine/Math/Vec2.hpp"
 
 //-Forward-Declaration--------------------------------------------------------------------------------
@@ -11,7 +13,7 @@ class Camera;
 class Clock;
 
 //----------------------------------------------------------------------------------------------------
-enum class eGameMode
+enum class eGameMode : int8_t
 {
     NEAREST_POINT,
     RAYCAST_VS_DISCS,

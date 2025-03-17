@@ -1,22 +1,20 @@
-//-----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------
 // GameCommon.hpp
-//
+//----------------------------------------------------------------------------------------------------
 
-//-----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------
 #pragma once
 #include "Engine/Renderer/Window.hpp"
 
-// struct Capsule2;
+//-Forward-Declaration--------------------------------------------------------------------------------
 struct AABB2;
 struct OBB2;
-// struct Triangle2;
 struct LineSegment2;
 struct Disc2;
-//-----------------------------------------------------------------------------------------------
 struct Rgba8;
 struct Vec2;
 class App;
-// class AudioSystem;
+
 class BitmapFont;
 class Game;
 class Renderer;
@@ -24,8 +22,7 @@ class RandomNumberGenerator;
 class Window;
 
 // one-time declaration
-extern App* g_theApp;
-// extern AudioSystem*           g_theAudio;
+extern App*                   g_theApp;
 extern BitmapFont*            g_theBitmapFont;
 extern Game*                  g_theGame;
 extern Renderer*              g_theRenderer;
