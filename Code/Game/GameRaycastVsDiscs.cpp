@@ -123,7 +123,7 @@ void GameRaycastVsDiscs::RenderRaycastResult() const
     // To store the closest collision result
     RaycastResult2D closestResult;
     closestResult.m_didImpact  = false;
-    closestResult.m_impactDistance = maxDistance;
+    closestResult.m_impactLength = maxDistance;
     int closestDiscIndex       = -1; // Index of the closest disc
 
     // If the start point is inside at least one disc, draw a white arrow and stop further checks
@@ -139,7 +139,7 @@ void GameRaycastVsDiscs::RenderRaycastResult() const
         {
             RaycastResult2D const result = RaycastVsDisc2D(tailPosition, forwardNormal, maxDistance, m_randomDisc[i].GetPosition(), m_randomDisc[i].GetRadius());
 
-            if (result.m_didImpact && result.m_impactDistance < closestResult.m_impactDistance)
+            if (result.m_didImpact && result.m_impactLength < closestResult.m_impactLength)
             {
                 closestResult    = result;
                 closestDiscIndex = i;

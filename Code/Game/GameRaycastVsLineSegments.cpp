@@ -120,16 +120,16 @@ void GameRaycastVsLineSegments::RenderRaycastResult() const
     // To store the closest collision result
     RaycastResult2D closestResult;
     closestResult.m_didImpact  = false;
-    closestResult.m_impactDistance = maxDistance;
+    closestResult.m_impactLength = maxDistance;
     int closestDiscIndex       = -1; // Index of the closest disc
 
 
     // Check collisions with all discs and find the closest one
     for (int i = 0; i < 8; ++i)
     {
-        RaycastResult2D const result = RayCastVsLineSegment2D(tailPosition, forwardNormal, maxDistance, m_lineSegments[i].m_startPosition, m_lineSegments[i].m_endPosition);
+        RaycastResult2D const result = RaycastVsLineSegment2D(tailPosition, forwardNormal, maxDistance, m_lineSegments[i].m_startPosition, m_lineSegments[i].m_endPosition);
 
-        if (result.m_didImpact && result.m_impactDistance < closestResult.m_impactDistance)
+        if (result.m_didImpact && result.m_impactLength < closestResult.m_impactLength)
         {
             closestResult    = result;
             closestDiscIndex = i;

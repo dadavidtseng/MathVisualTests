@@ -10,6 +10,7 @@
 #include "Engine/Core/ErrorWarningAssert.hpp"
 #include "Engine/Core/VertexUtils.hpp"
 #include "Engine/Input/InputSystem.hpp"
+#include "Engine/Math/FloatRange.hpp"
 #include "Engine/Math/MathUtils.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
 #include "Engine/Math/RaycastUtils.hpp"
@@ -263,20 +264,33 @@ void GameShapes3D::RenderTest() const
     Ray3 const ray           = Ray3(m_worldCamera->GetPosition(), m_worldCamera->GetPosition() + forwardNormal * 100.f);
 
 
-    // Sphere3 sphere3 = Sphere3(m_testShapes[0].m_startPosition, m_testShapes[0].m_radius);
-    // AABB3 box = AABB3(m_testShapes[0].m_startPosition - Vec3::ONE, m_testShapes[0].m_startPosition + Vec3::ONE);
+    Sphere3   sphere3   = Sphere3(m_testShapes[2].m_startPosition, m_testShapes[2].m_radius);
+    AABB3     box       = AABB3(m_testShapes[1].m_startPosition - Vec3::ONE, m_testShapes[1].m_startPosition + Vec3::ONE);
     Cylinder3 cylinder3 = Cylinder3(m_testShapes[0].m_startPosition, m_testShapes[0].m_endPosition, m_testShapes[0].m_radius);
-    // AddVertsForSphere3D(verts, sphere3.m_centerPosition, sphere3.m_radius, Rgba8::WHITE, AABB2(Vec2::ZERO, Vec2::ONE));
-// AddVertsForAABB3D(verts, box);
+    AddVertsForSphere3D(verts, sphere3.m_centerPosition, sphere3.m_radius, Rgba8::WHITE, AABB2(Vec2::ZERO, Vec2::ONE));
+    AddVertsForAABB3D(verts, box);
     AddVertsForCylinder3D(verts, cylinder3.m_startPosition, cylinder3.m_endPosition, cylinder3.m_radius);
-    // RaycastResult3D raycastResult =RaycastVsSphere3D(ray.m_startPosition, ray.m_normalDirection, ray.m_maxLength, sphere3.m_centerPosition, sphere3.m_radius);
-    Vec3 center = (cylinder3.m_startPosition+cylinder3.m_endPosition)/2.f;
-    RaycastResult3D raycastResult =RaycastVsCylinderZ3D(ray.m_startPosition, ray.m_normalDirection, ray.m_maxLength,Vec2(center.x,center.y),cylinder3.m_startPosition.z, cylinder3.m_endPosition.z,cylinder3.m_radius);
+    RaycastResult3D raycastResult  = RaycastVsSphere3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, sphere3.m_centerPosition, sphere3.m_radius);
+    RaycastResult3D raycastResult3 = RaycastVsAABB3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, box);
+    Vec3            center         = (cylinder3.m_startPosition + cylinder3.m_endPosition) / 2.f;
+    FloatRange cylinderRange = FloatRange( cylinder3.m_startPosition.z, cylinder3.m_endPosition.z);
+    RaycastResult3D raycastResult2 = RaycastVsCylinderZ3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, Vec2(center.x, center.y),cylinderRange, cylinder3.m_radius);
 
     if (raycastResult.m_didImpact == true)
     {
         AddVertsForArrow3D(verts, raycastResult.m_impactPosition, raycastResult.m_impactPosition + raycastResult.m_impactNormal, 0.8f, 0.03f, 0.06f, Rgba8::YELLOW);
     }
+
+    if (raycastResult2.m_didImpact == true)
+    {
+        AddVertsForArrow3D(verts, raycastResult2.m_impactPosition, raycastResult2.m_impactPosition + raycastResult2.m_impactNormal, 0.8f, 0.03f, 0.06f, Rgba8::YELLOW);
+    }
+
+    if (raycastResult3.m_didImpact == true)
+    {
+        AddVertsForArrow3D(verts, raycastResult3.m_impactPosition, raycastResult3.m_impactPosition + raycastResult3.m_impactNormal, 0.8f, 0.03f, 0.06f, Rgba8::YELLOW);
+    }
+
 
     g_theRenderer->SetModelConstants();
     g_theRenderer->SetBlendMode(BlendMode::OPAQUE);
@@ -350,5 +364,9 @@ void GameShapes3D::GenerateRandomShapes()
 
 void GameShapes3D::GenerateTest()
 {
-    m_test = TestShape3D();
+    m_test                 = TestShape3D();
+    m_test.m_startPosition = Vec3::ZERO;
+    m_test.m_endPosition   = Vec3::Z_BASIS;
+    m_test.m_orientation   = EulerAngles::ZERO;
+    m_test.m_radius        = 3.f;
 }

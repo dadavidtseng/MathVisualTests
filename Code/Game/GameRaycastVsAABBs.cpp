@@ -105,16 +105,16 @@ void GameRaycastVsAABBs::RenderRaycastResult() const
     // To store the closest collision result
     RaycastResult2D closestResult;
     closestResult.m_didImpact  = false;
-    closestResult.m_impactDistance = maxDistance;
+    closestResult.m_impactLength = maxDistance;
     int closestDiscIndex       = -1; // Index of the closest disc
 
 
     // Check collisions with all discs and find the closest one
     for (int i = 0; i < 8; ++i)
     {
-        RaycastResult2D const result = RayCastVsAABB2D(tailPosition, forwardNormal, maxDistance, m_AABB2s[i]);
+        RaycastResult2D const result = RaycastVsAABB2D(tailPosition, forwardNormal, maxDistance, m_AABB2s[i].m_mins, m_AABB2s[i].m_maxs);
 
-        if (result.m_didImpact && result.m_impactDistance < closestResult.m_impactDistance)
+        if (result.m_didImpact && result.m_impactLength < closestResult.m_impactLength)
         {
             closestResult    = result;
             closestDiscIndex = i;
