@@ -10,10 +10,13 @@
 #include "Engine/Core/ErrorWarningAssert.hpp"
 #include "Engine/Core/VertexUtils.hpp"
 #include "Engine/Input/InputSystem.hpp"
+#include "Engine/Math/AABB3.hpp"
+#include "Engine/Math/Cylinder3.hpp"
 #include "Engine/Math/FloatRange.hpp"
 #include "Engine/Math/MathUtils.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
 #include "Engine/Math/RaycastUtils.hpp"
+#include "Engine/Math/Sphere3.hpp"
 #include "Engine/Renderer/DebugRenderSystem.hpp"
 #include "Engine/Renderer/Renderer.hpp"
 #include "Game/App.hpp"
@@ -86,6 +89,7 @@ void GameShapes3D::Update()
         DebugAddWorldWireCylinder(m_worldCamera->GetPosition(), m_worldCamera->GetPosition() + Vec3::Z_BASIS * 2, 1.f, 10.f, Rgba8::WHITE, Rgba8::RED);
     }
 
+    UpdateShapes(deltaSeconds);
     // m_worldCamera->SetPositionAndOrientation(m_player.m_startPosition, m_player.m_orientation);
 }
 
@@ -96,9 +100,9 @@ void GameShapes3D::Render() const
 
     g_theRenderer->BeginCamera(*m_worldCamera);
 
-    // RenderShapes();
+    RenderShapes();
     RenderPlayerBasis();
-    RenderTest();
+    // RenderTest();
 
     g_theRenderer->EndCamera(*m_worldCamera);
 
@@ -193,6 +197,122 @@ void GameShapes3D::UpdateFromController(float deltaSeconds)
 {
 }
 
+void GameShapes3D::UpdateShapes(float const deltaSeconds)
+{
+    for (int i = 0; i < 15; i++)
+    {
+        for (int j = i + 1; j < 15; j++)
+        {
+            bool         isOverlapping = false;
+            TestShape3D& shapeA        = m_testShapes[i];
+            TestShape3D& shapeB        = m_testShapes[j];
+
+            AABB3 aabb3A = AABB3(shapeA.m_startPosition - Vec3::ONE, shapeA.m_startPosition + Vec3::ONE);
+            AABB3 aabb3B = AABB3(shapeB.m_startPosition - Vec3::ONE, shapeB.m_startPosition + Vec3::ONE);
+
+            // AABB3 vs. AABB3
+            if (shapeA.m_type == eTestShapeType::AABB3 &&
+                shapeB.m_type == eTestShapeType::AABB3)
+            {
+                isOverlapping = DoAABB3sOverlap3D(aabb3A, aabb3B);
+            }
+
+            // Sphere3 vs. Sphere3
+            if (shapeA.m_type == eTestShapeType::SPHERE3 &&
+                shapeB.m_type == eTestShapeType::SPHERE3)
+            {
+                isOverlapping = DoSpheresOverlap3D(shapeA.m_startPosition, shapeA.m_radius, shapeB.m_startPosition, shapeB.m_radius);
+            }
+
+            // Cylinder3 vs. Cylinder3
+            if (shapeA.m_type == eTestShapeType::CYLINDER3 &&
+                shapeB.m_type == eTestShapeType::CYLINDER3)
+            {
+                Vec3 const       cylinderACenter   = Vec3(shapeA.m_startPosition + shapeA.m_endPosition) / 2.f;
+                Vec3 const       cylinderBCenter   = Vec3(shapeB.m_startPosition + shapeB.m_endPosition) / 2.f;
+                Vec2 const       cylinderACenterXY = Vec2(cylinderACenter.x, cylinderACenter.y);
+                Vec2 const       cylinderBCenterXY = Vec2(cylinderBCenter.x, cylinderBCenter.y);
+                FloatRange const cylinderAMinMaxZ  = FloatRange(shapeA.m_startPosition.z, shapeA.m_endPosition.z);
+                FloatRange const cylinderBMinMaxZ  = FloatRange(shapeB.m_startPosition.z, shapeB.m_endPosition.z);
+
+                isOverlapping = DoZCylindersOverlap3D(cylinderACenterXY, shapeA.m_radius, cylinderAMinMaxZ, cylinderBCenterXY, shapeB.m_radius, cylinderBMinMaxZ);
+            }
+
+            // Sphere3 vs. AABB3
+            if (shapeA.m_type == eTestShapeType::SPHERE3 &&
+                shapeB.m_type == eTestShapeType::AABB3)
+            {
+                isOverlapping = DoSphereAndAABB3Overlap3D(shapeA.m_startPosition, shapeA.m_radius, aabb3B);
+            }
+
+            // Sphere3 vs. Cylinder3
+            if (shapeA.m_type == eTestShapeType::SPHERE3 &&
+                shapeB.m_type == eTestShapeType::CYLINDER3)
+            {
+                Vec3 const       cylinderCenter   = Vec3(shapeB.m_startPosition + shapeB.m_endPosition) / 2.f;
+                Vec2 const       cylinderCenterXY = Vec2(cylinderCenter.x, cylinderCenter.y);
+                FloatRange const cylinderMinMaxZ  = FloatRange(shapeB.m_startPosition.z, shapeB.m_endPosition.z);
+
+                isOverlapping = DoSphereAndZCylinderOverlap3D(shapeA.m_startPosition, shapeA.m_radius, cylinderCenterXY, shapeB.m_radius, cylinderMinMaxZ);
+            }
+
+            // // AABB3 vs. Sphere3
+            // if (shapeA.m_type == TestShapeType::AABB3 &&
+            //     shapeB.m_type == TestShapeType::SPHERE3)
+            // {
+            //     isOverlapping = DoSphereAndAABB3Overlap3D(shapeB.m_startPosition, shapeB.m_radius, aabb3A);
+            // }
+
+            // AABB3 vs. Cylinder3
+            if (shapeA.m_type == eTestShapeType::AABB3 &&
+                shapeB.m_type == eTestShapeType::CYLINDER3)
+            {
+                Vec3 const       cylinderCenter   = Vec3(shapeB.m_startPosition + shapeB.m_endPosition) / 2.f;
+                Vec2 const       cylinderCenterXY = Vec2(cylinderCenter.x, cylinderCenter.y);
+                FloatRange const cylinderMinMaxZ  = FloatRange(shapeB.m_startPosition.z, shapeB.m_endPosition.z);
+
+                isOverlapping = DoAABB3AndZCylinderOverlap3D(aabb3A, cylinderCenterXY, shapeB.m_radius, cylinderMinMaxZ);
+            }
+
+            // // Cylinder3 vs. Sphere3
+            // if (shapeA.m_type == TestShapeType::CYLINDER3 &&
+            //     shapeB.m_type == TestShapeType::SPHERE3)
+            // {
+            //     Vec3 const       cylinderCenter   = Vec3(shapeA.m_startPosition + shapeA.m_endPosition) / 2.f;
+            //     Vec2 const       cylinderCenterXY = Vec2(cylinderCenter.x, cylinderCenter.y);
+            //     FloatRange const cylinderMinMaxZ  = FloatRange(shapeA.m_startPosition.z, shapeA.m_endPosition.z);
+            //
+            //     isOverlapping = DoSphereAndZCylinderOverlap3D(shapeB.m_startPosition, shapeB.m_radius, cylinderCenterXY, shapeA.m_radius, cylinderMinMaxZ);
+            // }
+            //
+            // // Cylinder3 vs. AABB3
+            // if (shapeA.m_type == TestShapeType::CYLINDER3 &&
+            //     shapeB.m_type == TestShapeType::AABB3)
+            // {
+            //     Vec3 const       cylinderCenter   = Vec3(shapeA.m_startPosition + shapeA.m_endPosition) / 2.f;
+            //     Vec2 const       cylinderCenterXY = Vec2(cylinderCenter.x, cylinderCenter.y);
+            //     FloatRange const cylinderMinMaxZ  = FloatRange(shapeA.m_startPosition.z, shapeA.m_endPosition.z);
+            //
+            //     isOverlapping = DoAABB3AndZCylinderOverlap3D(aabb3B, cylinderCenterXY, shapeA.m_radius, cylinderMinMaxZ);
+            // }
+
+            if (isOverlapping == true)
+            {
+                float const time       = static_cast<float>(m_gameClock->GetTotalSeconds());
+                float const colorValue = (sinf(time) + 1.0f) * 0.5f * 255.0f;
+
+                shapeA.m_color.r = static_cast<unsigned char>(colorValue);
+                shapeA.m_color.g = static_cast<unsigned char>(colorValue);
+                shapeA.m_color.b = static_cast<unsigned char>(colorValue);
+
+                shapeB.m_color.r = static_cast<unsigned char>(colorValue);
+                shapeB.m_color.g = static_cast<unsigned char>(colorValue);
+                shapeB.m_color.b = static_cast<unsigned char>(colorValue);
+            }
+        }
+    }
+}
+
 //----------------------------------------------------------------------------------------------------
 void GameShapes3D::RenderShapes() const
 {
@@ -204,18 +324,18 @@ void GameShapes3D::RenderShapes() const
         Cylinder3  cylinder3 = Cylinder3(m_testShapes[i].m_startPosition, m_testShapes[i].m_endPosition, m_testShapes[i].m_radius);
         Vec3       nearestPoint;
 
-        if (m_testShapes[i].m_type == TestShapeType::AABB3)
+        if (m_testShapes[i].m_type == eTestShapeType::AABB3)
         {
-            AddVertsForAABB3D(verts, aabb3);
+            AddVertsForAABB3D(verts, aabb3, m_testShapes[i].m_color);
         }
 
-        if (m_testShapes[i].m_type == TestShapeType::SPHERE3)
+        if (m_testShapes[i].m_type == eTestShapeType::SPHERE3)
         {
-            AddVertsForSphere3D(verts, sphere3.m_centerPosition, sphere3.m_radius);
+            AddVertsForSphere3D(verts, sphere3.m_centerPosition, sphere3.m_radius, m_testShapes[i].m_color);
         }
-        if (m_testShapes[i].m_type == TestShapeType::CYLINDER3)
+        if (m_testShapes[i].m_type == eTestShapeType::CYLINDER3)
         {
-            AddVertsForCylinder3D(verts, cylinder3.m_startPosition, cylinder3.m_endPosition, cylinder3.m_radius, Rgba8::WHITE, AABB2(Vec2::ZERO, Vec2::ONE));
+            AddVertsForCylinder3D(verts, cylinder3.m_startPosition, cylinder3.m_endPosition, cylinder3.m_radius, m_testShapes[i].m_color, AABB2(Vec2::ZERO, Vec2::ONE));
         }
 
         g_theRenderer->SetModelConstants();
@@ -227,24 +347,46 @@ void GameShapes3D::RenderShapes() const
         g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 
         VertexList nearestPointVerts;
+        VertexList raycastResultVerts;
+        Vec3       forwardNormal = m_worldCamera->GetOrientation().GetAsMatrix_IFwd_JLeft_KUp().GetIBasis3D().GetNormalized();
+        Ray3       ray           = Ray3(m_worldCamera->GetPosition(), m_worldCamera->GetPosition() + forwardNormal * 100.f);
 
-        if (m_testShapes[i].m_type == TestShapeType::AABB3)
+        if (m_testShapes[i].m_type == eTestShapeType::AABB3)
         {
             nearestPoint = aabb3.GetNearestPoint(m_worldCamera->GetPosition());
             AddVertsForSphere3D(nearestPointVerts, nearestPoint, 0.1f, Rgba8::RED);
-            AddVertsForArrow3D(nearestPointVerts, nearestPoint, nearestPoint + nearestPoint - (aabb3.m_mins + aabb3.m_maxs) / 2.f, 0.5f, 0.15f, 0.3f, Rgba8::GREEN);
+
+            RaycastResult3D result = RaycastVsAABB3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, aabb3.m_mins, aabb3.m_maxs);
+
+            if (result.m_didImpact == true)
+            {
+                AddVertsForArrow3D(raycastResultVerts, result.m_impactPosition, result.m_impactPosition + result.m_impactNormal, 0.8f, 0.03f, 0.06f, Rgba8::YELLOW);
+            }
         }
 
-        if (m_testShapes[i].m_type == TestShapeType::SPHERE3)
+        if (m_testShapes[i].m_type == eTestShapeType::SPHERE3)
         {
             nearestPoint = sphere3.GetNearestPoint(m_worldCamera->GetPosition());
             AddVertsForSphere3D(nearestPointVerts, nearestPoint, 0.1f, Rgba8::RED);
-            AddVertsForArrow3D(nearestPointVerts, nearestPoint, nearestPoint + nearestPoint - sphere3.m_centerPosition, 0.5f, 0.15f, 0.3f, Rgba8::GREEN);
+
+            RaycastResult3D result = RaycastVsSphere3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, sphere3.m_centerPosition, sphere3.m_radius);
+
+            if (result.m_didImpact == true)
+            {
+                AddVertsForArrow3D(raycastResultVerts, result.m_impactPosition, result.m_impactPosition + result.m_impactNormal, 0.8f, 0.03f, 0.06f, Rgba8::YELLOW);
+            }
         }
-        if (m_testShapes[i].m_type == TestShapeType::CYLINDER3)
+        if (m_testShapes[i].m_type == eTestShapeType::CYLINDER3)
         {
             nearestPoint = cylinder3.GetNearestPoint(m_worldCamera->GetPosition());
             AddVertsForSphere3D(nearestPointVerts, nearestPoint, 0.1f, Rgba8::RED);
+
+            RaycastResult3D result = RaycastVsCylinderZ3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, cylinder3.GetCenterPositionXY(), cylinder3.GetFloatRange(), cylinder3.m_radius);
+
+            if (result.m_didImpact == true)
+            {
+                AddVertsForArrow3D(raycastResultVerts, result.m_impactPosition, result.m_impactPosition + result.m_impactNormal, 0.8f, 0.03f, 0.06f, Rgba8::YELLOW);
+            }
         }
 
         g_theRenderer->SetModelConstants();
@@ -254,6 +396,7 @@ void GameShapes3D::RenderShapes() const
         g_theRenderer->SetDepthMode(DepthMode::READ_WRITE_LESS_EQUAL);
         g_theRenderer->BindTexture(nullptr);
         g_theRenderer->DrawVertexArray(static_cast<int>(nearestPointVerts.size()), nearestPointVerts.data());
+        g_theRenderer->DrawVertexArray(static_cast<int>(raycastResultVerts.size()), raycastResultVerts.data());
     }
 }
 
@@ -273,8 +416,8 @@ void GameShapes3D::RenderTest() const
     RaycastResult3D raycastResult  = RaycastVsSphere3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, sphere3.m_centerPosition, sphere3.m_radius);
     RaycastResult3D raycastResult3 = RaycastVsAABB3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, box.m_mins, box.m_maxs);
     Vec3            center         = (cylinder3.m_startPosition + cylinder3.m_endPosition) / 2.f;
-    FloatRange cylinderRange = FloatRange( cylinder3.m_startPosition.z, cylinder3.m_endPosition.z);
-    RaycastResult3D raycastResult2 = RaycastVsCylinderZ3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, Vec2(center.x, center.y),cylinderRange, cylinder3.m_radius);
+    FloatRange      cylinderRange  = FloatRange(cylinder3.m_startPosition.z, cylinder3.m_endPosition.z);
+    RaycastResult3D raycastResult2 = RaycastVsCylinderZ3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, Vec2(center.x, center.y), cylinderRange, cylinder3.m_radius);
 
     if (raycastResult.m_didImpact == true)
     {
@@ -290,7 +433,6 @@ void GameShapes3D::RenderTest() const
     {
         AddVertsForArrow3D(verts, raycastResult3.m_impactPosition, raycastResult3.m_impactPosition + raycastResult3.m_impactNormal, 0.8f, 0.03f, 0.06f, Rgba8::YELLOW);
     }
-
 
     g_theRenderer->SetModelConstants();
     g_theRenderer->SetBlendMode(BlendMode::OPAQUE);
@@ -342,19 +484,19 @@ void GameShapes3D::GenerateRandomShapes()
         {
         case 0:
             {
-                m_testShapes[i].m_type = TestShapeType::AABB3;
+                m_testShapes[i].m_type = eTestShapeType::AABB3;
                 break;
             }
 
         case 1:
             {
-                m_testShapes[i].m_type = TestShapeType::SPHERE3;
+                m_testShapes[i].m_type = eTestShapeType::SPHERE3;
                 break;
             }
 
         case 2:
             {
-                m_testShapes[i].m_type        = TestShapeType::CYLINDER3;
+                m_testShapes[i].m_type        = eTestShapeType::CYLINDER3;
                 m_testShapes[i].m_endPosition = m_testShapes[i].m_startPosition + Vec3::Z_BASIS * g_theRNG->RollRandomFloatInRange(1.f, 3.f);
                 break;
             }

@@ -110,7 +110,7 @@ void GameNearestPoint::RenderShapes() const
 
         if (m_testShapes[i].m_type == eTestShape2DType::TRIANGLE2)
         {
-            bool const isPointInside = IsPointInsideTriangle(m_referencePoint, m_testShapes[i].m_startPosition, m_testShapes[i].m_endPosition, m_testShapes[i].m_thirdPosition);
+            bool const isPointInside = IsPointInsideTriangle2D(m_referencePoint, m_testShapes[i].m_startPosition, m_testShapes[i].m_endPosition, m_testShapes[i].m_thirdPosition);
             AddVertsForTriangle2D(verts, m_testShapes[i].m_startPosition, m_testShapes[i].m_endPosition, m_testShapes[i].m_thirdPosition, isPointInside ? Rgba8::LIGHT_BLUE : Rgba8::BLUE);
         }
 
@@ -128,7 +128,7 @@ void GameNearestPoint::RenderShapes() const
 
         if (m_testShapes[i].m_type == eTestShape2DType::CAPSULE2)
         {
-            bool const isPointInside = IsPointInsideCapsule(m_referencePoint, m_testShapes[i].m_startPosition, m_testShapes[i].m_endPosition, m_testShapes[i].m_radius);
+            bool const isPointInside = IsPointInsideCapsule2D(m_referencePoint, m_testShapes[i].m_startPosition, m_testShapes[i].m_endPosition, m_testShapes[i].m_radius);
             AddVertsForCapsule2D(verts, m_testShapes[i].m_startPosition, m_testShapes[i].m_endPosition, m_testShapes[i].m_radius, isPointInside ? Rgba8::LIGHT_BLUE : Rgba8::BLUE);
         }
     }

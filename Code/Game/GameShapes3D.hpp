@@ -5,17 +5,18 @@
 //----------------------------------------------------------------------------------------------------
 #pragma once
 
-#include "Engine/Math/AABB3.hpp"
-#include "Engine/Math/Cylinder3.hpp"
+#include "Engine/Core/Rgba8.hpp"
 #include "Engine/Math/EulerAngles.hpp"
-#include "Engine/Math/Sphere3.hpp"
 #include "Engine/Math/Vec3.hpp"
 #include "Engine/Renderer/Texture.hpp"
 #include "Game/Game.hpp"
 
+struct Rgba8;
+
 //----------------------------------------------------------------------------------------------------
-enum class TestShapeType
+enum class eTestShapeType : int8_t
 {
+    NONE = -1,
     AABB3,
     SPHERE3,
     CYLINDER3,
@@ -23,13 +24,22 @@ enum class TestShapeType
 };
 
 //----------------------------------------------------------------------------------------------------
+enum class eTestShapeState : int8_t
+{
+    IDLE,
+    GRABBED
+};
+
+//----------------------------------------------------------------------------------------------------
 struct TestShape3D
 {
-    TestShapeType m_type;
-    Vec3          m_startPosition   = Vec3::ZERO;
-    Vec3          m_endPosition     = Vec3::ZERO;
-    EulerAngles   m_orientation     = EulerAngles::ZERO;
-    float         m_radius          = 0.f;
+    eTestShapeType  m_type          = eTestShapeType::NONE;
+    eTestShapeState m_state         = eTestShapeState::IDLE;
+    Vec3            m_startPosition = Vec3::ZERO;
+    Vec3            m_endPosition   = Vec3::ZERO;
+    EulerAngles     m_orientation   = EulerAngles::ZERO;
+    float           m_radius        = 0.f;
+    Rgba8           m_color         = Rgba8::WHITE;
 };
 
 //----------------------------------------------------------------------------------------------------
@@ -44,6 +54,7 @@ public:
 private:
     void UpdateFromKeyboard(float deltaSeconds) override;
     void UpdateFromController(float deltaSeconds) override;
+    void UpdateShapes(float deltaSeconds);
 
     void RenderShapes() const;
     void RenderTest() const;
@@ -52,8 +63,8 @@ private:
     void GenerateRandomShapes();
     void GenerateTest();
 
-    Camera*     m_worldCamera = nullptr;
-    Texture*    m_texture     = nullptr;
+    Camera*     m_worldCamera    = nullptr;
+    Texture*    m_texture        = nullptr;
     TestShape3D m_testShapes[15] = {};
     TestShape3D m_test;
 };
