@@ -271,7 +271,7 @@ void GameShapes3D::RenderTest() const
     AddVertsForAABB3D(verts, box);
     AddVertsForCylinder3D(verts, cylinder3.m_startPosition, cylinder3.m_endPosition, cylinder3.m_radius);
     RaycastResult3D raycastResult  = RaycastVsSphere3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, sphere3.m_centerPosition, sphere3.m_radius);
-    RaycastResult3D raycastResult3 = RaycastVsAABB3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, box);
+    RaycastResult3D raycastResult3 = RaycastVsAABB3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, box.m_mins, box.m_maxs);
     Vec3            center         = (cylinder3.m_startPosition + cylinder3.m_endPosition) / 2.f;
     FloatRange cylinderRange = FloatRange( cylinder3.m_startPosition.z, cylinder3.m_endPosition.z);
     RaycastResult3D raycastResult2 = RaycastVsCylinderZ3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, Vec2(center.x, center.y),cylinderRange, cylinder3.m_radius);
