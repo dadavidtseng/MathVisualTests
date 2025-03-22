@@ -413,16 +413,19 @@ void GameShapes3D::RenderShapes() const
 
         if (m_testShapes[i].m_type == eTestShapeType::AABB3)
         {
-            AddVertsForAABB3D(verts, aabb3, m_testShapes[i].m_currentColor);
+            // AddVertsForAABB3D(verts, aabb3, m_testShapes[i].m_currentColor);
+            AddVertsForWireframeAABB3D(verts, aabb3,0.05f, m_testShapes[i].m_currentColor);
         }
 
         if (m_testShapes[i].m_type == eTestShapeType::SPHERE3)
         {
-            AddVertsForSphere3D(verts, sphere3.m_centerPosition, sphere3.m_radius, m_testShapes[i].m_currentColor);
+            // AddVertsForSphere3D(verts, sphere3.m_centerPosition, sphere3.m_radius, m_testShapes[i].m_currentColor);
+            AddVertsForWireframeSphere3D(verts, sphere3.m_centerPosition, sphere3.m_radius, 0.05f,m_testShapes[i].m_currentColor);
         }
         if (m_testShapes[i].m_type == eTestShapeType::CYLINDER3)
         {
-            AddVertsForCylinder3D(verts, cylinder3.m_startPosition, cylinder3.m_endPosition, cylinder3.m_radius, m_testShapes[i].m_currentColor, AABB2(Vec2::ZERO, Vec2::ONE));
+            // AddVertsForCylinder3D(verts, cylinder3.m_startPosition, cylinder3.m_endPosition, cylinder3.m_radius, m_testShapes[i].m_currentColor, AABB2(Vec2::ZERO, Vec2::ONE));
+            AddVertsForWireframeCylinder3D(verts, cylinder3.m_startPosition, cylinder3.m_endPosition, cylinder3.m_radius, 0.05f,m_testShapes[i].m_currentColor, AABB2(Vec2::ZERO, Vec2::ONE));
         }
 
         g_theRenderer->SetModelConstants();
