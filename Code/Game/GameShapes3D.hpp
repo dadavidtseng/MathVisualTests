@@ -57,6 +57,9 @@ private:
     void UpdateFromController(float deltaSeconds) override;
     void UpdateShapes(float deltaSeconds);
 
+    void RenderRaycastResult() const;
+    void RenderNearestPoint() const;
+    void RenderStoredRaycastResult() const;
     void RenderShapes() const;
     void RenderTest() const;
     void RenderPlayerBasis() const;

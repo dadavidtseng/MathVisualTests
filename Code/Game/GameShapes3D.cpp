@@ -299,7 +299,6 @@ void GameShapes3D::UpdateShapes(float const deltaSeconds)
 
     std::vector isOverlappingArray(15, false);
 
-
     for (int i = 0; i < 15; i++)
     {
         for (int j = 0; j < 15; j++)
@@ -380,6 +379,7 @@ void GameShapes3D::UpdateShapes(float const deltaSeconds)
     for (int i = 0; i < 15; i++)
     {
         TestShape3D& shape = m_testShapes[i];
+
         if (isOverlappingArray[i])
         {
             float const time         = static_cast<float>(m_gameClock->GetTotalSeconds());
@@ -395,102 +395,73 @@ void GameShapes3D::UpdateShapes(float const deltaSeconds)
             shape.m_currentColor = shape.m_targetColor;
         }
     }
+
+    Vec3       forwardNormal = m_worldCamera->GetOrientation().GetAsMatrix_IFwd_JLeft_KUp().GetIBasis3D().GetNormalized();
+    Ray3 const ray           = Ray3(m_worldCamera->GetPosition(), m_worldCamera->GetPosition() + forwardNormal * 20.f);
+
+    std::vector isHoveringArray(15, false);
+
+    for (int i = 0; i < 15; i++)
+    {
+        AABB3     aabb3     = AABB3(m_testShapes[i].m_centerPosition - Vec3::ONE, m_testShapes[i].m_centerPosition + Vec3::ONE);
+        Sphere3   sphere3   = Sphere3(m_testShapes[i].m_centerPosition, m_testShapes[i].m_radius);
+        Cylinder3 cylinder3 = Cylinder3(m_testShapes[i].m_centerPosition - Vec3::Z_BASIS, m_testShapes[i].m_centerPosition + Vec3::Z_BASIS, m_testShapes[i].m_radius);
+
+        if (m_storedRay != nullptr)
+        {
+            continue;
+        }
+
+        RaycastResult3D result;
+
+        if (m_testShapes[i].m_type == eTestShapeType::AABB3)
+        {
+            result = RaycastVsAABB3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, aabb3.m_mins, aabb3.m_maxs);
+        }
+        else if (m_testShapes[i].m_type == eTestShapeType::SPHERE3)
+        {
+            result = RaycastVsSphere3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, sphere3.m_centerPosition, sphere3.m_radius);
+        }
+        else if (m_testShapes[i].m_type == eTestShapeType::CYLINDER3)
+        {
+            result = RaycastVsCylinderZ3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, cylinder3.GetCenterPositionXY(), cylinder3.GetFloatRange(), cylinder3.m_radius);
+        }
+
+        if (result.m_didImpact == true)
+        {
+            isHoveringArray[i] = true;
+
+            if (m_testShapes[i].m_state == eTestShapeState::GRABBED)
+            {
+                m_testShapes[i].m_targetColor = Rgba8::RED;
+            }
+            else
+            {
+                m_testShapes[i].m_targetColor = Rgba8::BLUE;
+            }
+        }
+    }
+
+    for (int i = 0; i < 15; i++)
+    {
+        if (isHoveringArray[i] == false)
+        {
+            m_testShapes[i].m_targetColor = Rgba8::WHITE;
+        }
+    }
 }
 
-//----------------------------------------------------------------------------------------------------
-void GameShapes3D::RenderShapes() const
+void GameShapes3D::RenderRaycastResult() const
 {
+    VertexList raycastResultVerts;
     Vec3       forwardNormal = m_worldCamera->GetOrientation().GetAsMatrix_IFwd_JLeft_KUp().GetIBasis3D().GetNormalized();
     Ray3 const ray           = Ray3(m_worldCamera->GetPosition(), m_worldCamera->GetPosition() + forwardNormal * 20.f);
 
     for (int i = 0; i < 15; i++)
     {
-        VertexList outsideVerts;
-        VertexList insideVerts;
-        AABB3      aabb3     = AABB3(m_testShapes[i].m_centerPosition - Vec3::ONE, m_testShapes[i].m_centerPosition + Vec3::ONE);
-        Sphere3    sphere3   = Sphere3(m_testShapes[i].m_centerPosition, m_testShapes[i].m_radius);
-        Cylinder3  cylinder3 = Cylinder3(m_testShapes[i].m_centerPosition - Vec3::Z_BASIS, m_testShapes[i].m_centerPosition + Vec3::Z_BASIS, m_testShapes[i].m_radius);
-        Vec3       nearestPoint;
-
-        if (m_testShapes[i].m_type == eTestShapeType::AABB3)
-        {
-            if (IsPointInsideAABB3D(m_worldCamera->GetPosition(), aabb3.m_mins, aabb3.m_maxs))
-            {
-                AddVertsForWireframeAABB3D(insideVerts, aabb3, 0.05f, m_testShapes[i].m_currentColor);
-            }
-            else
-            {
-                AddVertsForAABB3D(outsideVerts, aabb3, m_testShapes[i].m_currentColor);
-            }
-        }
-
-        if (m_testShapes[i].m_type == eTestShapeType::SPHERE3)
-        {
-            if (IsPointInsideSphere3D(m_worldCamera->GetPosition(), sphere3.m_centerPosition, sphere3.m_radius))
-            {
-                AddVertsForWireframeSphere3D(insideVerts, sphere3.m_centerPosition, sphere3.m_radius, 0.05f, m_testShapes[i].m_currentColor);
-            }
-            else
-            {
-                AddVertsForSphere3D(outsideVerts, sphere3.m_centerPosition, sphere3.m_radius, m_testShapes[i].m_currentColor);
-            }
-        }
-
-        if (m_testShapes[i].m_type == eTestShapeType::CYLINDER3)
-        {
-            if (IsPointInsideZCylinder3D(m_worldCamera->GetPosition(), cylinder3.m_startPosition, cylinder3.m_endPosition, cylinder3.m_radius))
-            {
-                AddVertsForWireframeCylinder3D(insideVerts, cylinder3.m_startPosition, cylinder3.m_endPosition, cylinder3.m_radius, 0.05f, m_testShapes[i].m_currentColor, AABB2(Vec2::ZERO, Vec2::ONE));
-            }
-            else
-            {
-                AddVertsForCylinder3D(outsideVerts, cylinder3.m_startPosition, cylinder3.m_endPosition, cylinder3.m_radius, m_testShapes[i].m_currentColor, AABB2(Vec2::ZERO, Vec2::ONE));
-            }
-        }
-
-        g_theRenderer->SetModelConstants();
-        g_theRenderer->SetBlendMode(BlendMode::OPAQUE);
-        g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_BACK);
-        g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
-        g_theRenderer->SetDepthMode(DepthMode::READ_WRITE_LESS_EQUAL);
-        g_theRenderer->BindTexture(m_texture);
-        g_theRenderer->DrawVertexArray(static_cast<int>(outsideVerts.size()), outsideVerts.data());
-
-        g_theRenderer->SetModelConstants();
-        g_theRenderer->SetBlendMode(BlendMode::OPAQUE);
-        g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
-        g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
-        g_theRenderer->SetDepthMode(DepthMode::READ_WRITE_LESS_EQUAL);
-        g_theRenderer->BindTexture(nullptr);
-        g_theRenderer->DrawVertexArray(static_cast<int>(insideVerts.size()), insideVerts.data());
-
-        VertexList nearestPointVerts;
-
-        if (m_testShapes[i].m_type == eTestShapeType::AABB3)
-        {
-            nearestPoint = aabb3.GetNearestPoint(m_worldCamera->GetPosition());
-            AddVertsForSphere3D(nearestPointVerts, nearestPoint, 0.1f, Rgba8::RED);
-        }
-        else if (m_testShapes[i].m_type == eTestShapeType::SPHERE3)
-        {
-            nearestPoint = sphere3.GetNearestPoint(m_worldCamera->GetPosition());
-            AddVertsForSphere3D(nearestPointVerts, nearestPoint, 0.1f, Rgba8::RED);
-        }
-        else if (m_testShapes[i].m_type == eTestShapeType::CYLINDER3)
-        {
-            nearestPoint = cylinder3.GetNearestPoint(m_worldCamera->GetPosition());
-            AddVertsForSphere3D(nearestPointVerts, nearestPoint, 0.1f, Rgba8::RED);
-        }
-
-        g_theRenderer->SetModelConstants();
-        g_theRenderer->SetBlendMode(BlendMode::ALPHA);
-        g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
-        g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
-        g_theRenderer->SetDepthMode(DepthMode::READ_WRITE_LESS_EQUAL);
-        g_theRenderer->BindTexture(nullptr);
-        g_theRenderer->DrawVertexArray(static_cast<int>(nearestPointVerts.size()), nearestPointVerts.data());
-
-        VertexList raycastResultVerts;
+        AABB3     aabb3     = AABB3(m_testShapes[i].m_centerPosition - Vec3::ONE, m_testShapes[i].m_centerPosition + Vec3::ONE);
+        Sphere3   sphere3   = Sphere3(m_testShapes[i].m_centerPosition, m_testShapes[i].m_radius);
+        Cylinder3 cylinder3 = Cylinder3(m_testShapes[i].m_centerPosition - Vec3::Z_BASIS, m_testShapes[i].m_centerPosition + Vec3::Z_BASIS, m_testShapes[i].m_radius);
 
         if (m_storedRay != nullptr)
         {
@@ -536,7 +507,49 @@ void GameShapes3D::RenderShapes() const
         g_theRenderer->BindTexture(nullptr);
         g_theRenderer->DrawVertexArray(static_cast<int>(raycastResultVerts.size()), raycastResultVerts.data());
     }
+}
 
+void GameShapes3D::RenderNearestPoint() const
+{
+    VertexList nearestPointVerts;
+    Vec3       nearestPoint;
+
+
+    for (int i = 0; i < 15; i++)
+    {
+        AABB3     aabb3     = AABB3(m_testShapes[i].m_centerPosition - Vec3::ONE, m_testShapes[i].m_centerPosition + Vec3::ONE);
+        Sphere3   sphere3   = Sphere3(m_testShapes[i].m_centerPosition, m_testShapes[i].m_radius);
+        Cylinder3 cylinder3 = Cylinder3(m_testShapes[i].m_centerPosition - Vec3::Z_BASIS, m_testShapes[i].m_centerPosition + Vec3::Z_BASIS, m_testShapes[i].m_radius);
+
+
+        if (m_testShapes[i].m_type == eTestShapeType::AABB3)
+        {
+            nearestPoint = aabb3.GetNearestPoint(m_worldCamera->GetPosition());
+            AddVertsForSphere3D(nearestPointVerts, nearestPoint, 0.1f, Rgba8::RED);
+        }
+        else if (m_testShapes[i].m_type == eTestShapeType::SPHERE3)
+        {
+            nearestPoint = sphere3.GetNearestPoint(m_worldCamera->GetPosition());
+            AddVertsForSphere3D(nearestPointVerts, nearestPoint, 0.1f, Rgba8::RED);
+        }
+        else if (m_testShapes[i].m_type == eTestShapeType::CYLINDER3)
+        {
+            nearestPoint = cylinder3.GetNearestPoint(m_worldCamera->GetPosition());
+            AddVertsForSphere3D(nearestPointVerts, nearestPoint, 0.1f, Rgba8::RED);
+        }
+
+        g_theRenderer->SetModelConstants();
+        g_theRenderer->SetBlendMode(BlendMode::ALPHA);
+        g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
+        g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
+        g_theRenderer->SetDepthMode(DepthMode::READ_WRITE_LESS_EQUAL);
+        g_theRenderer->BindTexture(nullptr);
+        g_theRenderer->DrawVertexArray(static_cast<int>(nearestPointVerts.size()), nearestPointVerts.data());
+    }
+}
+
+void GameShapes3D::RenderStoredRaycastResult() const
+{
     VertexList storedRaycastResultVerts;
     bool       isStoredRayImpact = false;
 
@@ -602,6 +615,69 @@ void GameShapes3D::RenderShapes() const
     g_theRenderer->SetDepthMode(DepthMode::READ_WRITE_LESS_EQUAL);
     g_theRenderer->BindTexture(nullptr);
     g_theRenderer->DrawVertexArray(static_cast<int>(storedRaycastResultVerts.size()), storedRaycastResultVerts.data());
+}
+
+//----------------------------------------------------------------------------------------------------
+void GameShapes3D::RenderShapes() const
+{
+    RenderRaycastResult();
+    RenderNearestPoint();
+    RenderStoredRaycastResult();
+    VertexList outsideVerts;
+    VertexList insideVerts;
+
+    for (int i = 0; i < 15; i++)
+    {
+        AABB3     aabb3     = AABB3(m_testShapes[i].m_centerPosition - Vec3::ONE, m_testShapes[i].m_centerPosition + Vec3::ONE);
+        Sphere3   sphere3   = Sphere3(m_testShapes[i].m_centerPosition, m_testShapes[i].m_radius);
+        Cylinder3 cylinder3 = Cylinder3(m_testShapes[i].m_centerPosition - Vec3::Z_BASIS, m_testShapes[i].m_centerPosition + Vec3::Z_BASIS, m_testShapes[i].m_radius);
+
+        if (m_testShapes[i].m_type == eTestShapeType::AABB3)
+        {
+            if (IsPointInsideAABB3D(m_worldCamera->GetPosition(), aabb3.m_mins, aabb3.m_maxs))
+            {
+                AddVertsForWireframeAABB3D(insideVerts, aabb3, 0.05f, m_testShapes[i].m_currentColor);
+            }
+            else
+            {
+                AddVertsForAABB3D(outsideVerts, aabb3, m_testShapes[i].m_currentColor);
+            }
+        }
+
+        if (m_testShapes[i].m_type == eTestShapeType::SPHERE3)
+        {
+            if (IsPointInsideSphere3D(m_worldCamera->GetPosition(), sphere3.m_centerPosition, sphere3.m_radius))
+            {
+                AddVertsForWireframeSphere3D(insideVerts, sphere3.m_centerPosition, sphere3.m_radius, 0.05f, m_testShapes[i].m_currentColor);
+            }
+            else
+            {
+                AddVertsForSphere3D(outsideVerts, sphere3.m_centerPosition, sphere3.m_radius, m_testShapes[i].m_currentColor);
+            }
+        }
+
+        if (m_testShapes[i].m_type == eTestShapeType::CYLINDER3)
+        {
+            if (IsPointInsideZCylinder3D(m_worldCamera->GetPosition(), cylinder3.m_startPosition, cylinder3.m_endPosition, cylinder3.m_radius))
+            {
+                AddVertsForWireframeCylinder3D(insideVerts, cylinder3.m_startPosition, cylinder3.m_endPosition, cylinder3.m_radius, 0.05f, m_testShapes[i].m_currentColor, AABB2(Vec2::ZERO, Vec2::ONE));
+            }
+            else
+            {
+                AddVertsForCylinder3D(outsideVerts, cylinder3.m_startPosition, cylinder3.m_endPosition, cylinder3.m_radius, m_testShapes[i].m_currentColor, AABB2(Vec2::ZERO, Vec2::ONE));
+            }
+        }
+
+        g_theRenderer->SetBlendMode(BlendMode::OPAQUE);
+        g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_BACK);
+        g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
+        g_theRenderer->SetDepthMode(DepthMode::READ_WRITE_LESS_EQUAL);
+        g_theRenderer->BindTexture(m_texture);
+        g_theRenderer->DrawVertexArray(static_cast<int>(outsideVerts.size()), outsideVerts.data());
+
+        g_theRenderer->BindTexture(nullptr);
+        g_theRenderer->DrawVertexArray(static_cast<int>(insideVerts.size()), insideVerts.data());
+    }
 }
 
 void GameShapes3D::RenderTest() const
