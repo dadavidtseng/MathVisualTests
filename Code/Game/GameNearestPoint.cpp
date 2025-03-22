@@ -92,7 +92,7 @@ void GameNearestPoint::UpdateFromController(float const deltaSeconds)
 //----------------------------------------------------------------------------------------------------
 void GameNearestPoint::RenderShapes() const
 {
-    VertexList verts;
+    VertexList_PCU verts;
 
     for (int i = 0; i < static_cast<int>(eTestShape2DType::COUNT); ++i)
     {
@@ -134,10 +134,10 @@ void GameNearestPoint::RenderShapes() const
     }
 
     g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(BlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(DepthMode::DISABLED);
+    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
+    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
     g_theRenderer->BindTexture(nullptr);
     g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
@@ -157,7 +157,7 @@ void GameNearestPoint::GenerateRandomShapes()
 //----------------------------------------------------------------------------------------------------
 void GameNearestPoint::RenderNearestPoints() const
 {
-    VertexList verts;
+    VertexList_PCU verts;
     Vec2       nearestPoint;
     Vec2       closestNearestPoint;
     float      minLengthSquared = FLOAT_MAX;
@@ -211,10 +211,10 @@ void GameNearestPoint::RenderNearestPoints() const
     AddVertsForDisc2D(verts, closestNearestPoint, 5.f, Rgba8::GREEN);
 
     g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(BlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(DepthMode::DISABLED);
+    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
+    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
     g_theRenderer->BindTexture(nullptr);
     g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }

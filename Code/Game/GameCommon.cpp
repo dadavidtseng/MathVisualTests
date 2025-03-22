@@ -272,13 +272,13 @@ void DebugDrawBoxRing(Vec2 const& center, float radius, float thickness, Rgba8 c
 //-----------------------------------------------------------------------------------------------
 void DrawDisc2D(Vec2 const& discCenter, float const discRadius, Rgba8 const& color)
 {
-    VertexList verts;
+    VertexList_PCU verts;
     AddVertsForDisc2D(verts, discCenter, discRadius, color);
     g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(BlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(DepthMode::DISABLED);
+    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
+    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
     g_theRenderer->BindTexture(nullptr);
     g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
@@ -292,13 +292,13 @@ void DrawDisc2D(Disc2 const& disc, Rgba8 const& color)
 //-----------------------------------------------------------------------------------------------
 void DrawLineSegment2D(Vec2 const& startPosition, Vec2 const& endPosition, float const thickness, bool const isInfinite, Rgba8 const& color)
 {
-    VertexList verts;
+    VertexList_PCU verts;
     AddVertsForLineSegment2D(verts, startPosition, endPosition, thickness, isInfinite, color);
     g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(BlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(DepthMode::DISABLED);
+    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
+    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
     g_theRenderer->BindTexture(nullptr);
     g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
@@ -332,42 +332,42 @@ void DrawLineSegment2D(LineSegment2 const& lineSegment, float const thickness, b
 //-----------------------------------------------------------------------------------------------
 void DrawAABB2D(AABB2 const& aabb2, Rgba8 const& color)
 {
-    VertexList verts;
+    VertexList_PCU verts;
     AddVertsForAABB2D(verts, aabb2, color);
     g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(BlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(DepthMode::DISABLED);
+    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
+    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
     g_theRenderer->BindTexture(nullptr);
     g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
 
-void DrawOBB2D(OBB2 const& obb2, Rgba8 const& color)
-{
-    VertexList verts;
-    // AddVertsForOBB2D(verts, obb2, color);
-    g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(BlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(DepthMode::DISABLED);
-    g_theRenderer->BindTexture(nullptr);
-    g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
-}
+// void DrawOBB2D(OBB2 const& obb2, Rgba8 const& color)
+// {
+//     VertexList verts;
+//     // AddVertsForOBB2D(verts, obb2, color);
+//     g_theRenderer->SetModelConstants();
+//     g_theRenderer->SetBlendMode(BlendMode::ALPHA);
+//     g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
+//     g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
+//     g_theRenderer->SetDepthMode(DepthMode::DISABLED);
+//     g_theRenderer->BindTexture(nullptr);
+//     g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+// }
 
-void DrawCapsule2D(Vec2 const& boneStart, Vec2 const& boneEnd, float const radius, Rgba8 const& color)
-{
-    VertexList verts;
-    AddVertsForCapsule2D(verts, boneStart, boneEnd, radius, color);
-    g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(BlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(DepthMode::DISABLED);
-    g_theRenderer->BindTexture(nullptr);
-    g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
-}
+// void DrawCapsule2D(Vec2 const& boneStart, Vec2 const& boneEnd, float const radius, Rgba8 const& color)
+// {
+//     VertexList verts;
+//     AddVertsForCapsule2D(verts, boneStart, boneEnd, radius, color);
+//     g_theRenderer->SetModelConstants();
+//     g_theRenderer->SetBlendMode(BlendMode::ALPHA);
+//     g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
+//     g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
+//     g_theRenderer->SetDepthMode(DepthMode::DISABLED);
+//     g_theRenderer->BindTexture(nullptr);
+//     g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+// }
 
 // void DrawCapsule2D(Capsule2 const& capsule, Rgba8 const& color)
 // {
@@ -376,13 +376,13 @@ void DrawCapsule2D(Vec2 const& boneStart, Vec2 const& boneEnd, float const radiu
 
 void DrawArrow2D(Vec2 const& tailPos, Vec2 const& tipPos, float const radius, float const thickness, Rgba8 const& color)
 {
-    VertexList verts;
+    VertexList_PCU verts;
     AddVertsForArrow2D(verts, tailPos, tipPos, radius, thickness, color);
     g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(BlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(DepthMode::DISABLED);
+    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
+    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
     g_theRenderer->BindTexture(nullptr);
     g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }

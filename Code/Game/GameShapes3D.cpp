@@ -399,6 +399,9 @@ void GameShapes3D::UpdateShapes(float const deltaSeconds)
     Vec3       forwardNormal = m_worldCamera->GetOrientation().GetAsMatrix_IFwd_JLeft_KUp().GetIBasis3D().GetNormalized();
     Ray3 const ray           = Ray3(m_worldCamera->GetPosition(), m_worldCamera->GetPosition() + forwardNormal * 20.f);
 
+float closestDistance = FLOAT_MAX;
+    int closestIndex = -1;
+
     std::vector isHoveringArray(15, false);
 
     for (int i = 0; i < 15; i++)
@@ -427,10 +430,27 @@ void GameShapes3D::UpdateShapes(float const deltaSeconds)
             result = RaycastVsCylinderZ3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, cylinder3.GetCenterPositionXY(), cylinder3.GetFloatRange(), cylinder3.m_radius);
         }
 
-        if (result.m_didImpact == true)
-        {
-            isHoveringArray[i] = true;
 
+        if (result.m_didImpact == true&& result.m_impactLength < closestDistance)
+        {
+            closestDistance = result.m_impactLength;
+            closestIndex    = i;
+        }
+    }
+
+    if (closestIndex!=-1)
+    {
+        isHoveringArray[closestIndex] = true;
+    }
+
+    for (int i = 0; i < 15; i++)
+    {
+        if (isHoveringArray[i] == false)
+        {
+            m_testShapes[i].m_targetColor = Rgba8::WHITE;
+        }
+        else
+        {
             if (m_testShapes[i].m_state == eTestShapeState::GRABBED)
             {
                 m_testShapes[i].m_targetColor = Rgba8::RED;
@@ -441,19 +461,11 @@ void GameShapes3D::UpdateShapes(float const deltaSeconds)
             }
         }
     }
-
-    for (int i = 0; i < 15; i++)
-    {
-        if (isHoveringArray[i] == false)
-        {
-            m_testShapes[i].m_targetColor = Rgba8::WHITE;
-        }
-    }
 }
 
 void GameShapes3D::RenderRaycastResult() const
 {
-    VertexList raycastResultVerts;
+    VertexList_PCU raycastResultVerts;
     Vec3       forwardNormal = m_worldCamera->GetOrientation().GetAsMatrix_IFwd_JLeft_KUp().GetIBasis3D().GetNormalized();
     Ray3 const ray           = Ray3(m_worldCamera->GetPosition(), m_worldCamera->GetPosition() + forwardNormal * 20.f);
 
@@ -500,10 +512,10 @@ void GameShapes3D::RenderRaycastResult() const
         }
 
         g_theRenderer->SetModelConstants();
-        g_theRenderer->SetBlendMode(BlendMode::ALPHA);
-        g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
-        g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
-        g_theRenderer->SetDepthMode(DepthMode::READ_WRITE_LESS_EQUAL);
+        g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
+        g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+        g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+        g_theRenderer->SetDepthMode(eDepthMode::READ_WRITE_LESS_EQUAL);
         g_theRenderer->BindTexture(nullptr);
         g_theRenderer->DrawVertexArray(static_cast<int>(raycastResultVerts.size()), raycastResultVerts.data());
     }
@@ -511,7 +523,7 @@ void GameShapes3D::RenderRaycastResult() const
 
 void GameShapes3D::RenderNearestPoint() const
 {
-    VertexList nearestPointVerts;
+    VertexList_PCU nearestPointVerts;
     Vec3       nearestPoint;
 
 
@@ -539,10 +551,10 @@ void GameShapes3D::RenderNearestPoint() const
         }
 
         g_theRenderer->SetModelConstants();
-        g_theRenderer->SetBlendMode(BlendMode::ALPHA);
-        g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
-        g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
-        g_theRenderer->SetDepthMode(DepthMode::READ_WRITE_LESS_EQUAL);
+        g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
+        g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+        g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+        g_theRenderer->SetDepthMode(eDepthMode::READ_WRITE_LESS_EQUAL);
         g_theRenderer->BindTexture(nullptr);
         g_theRenderer->DrawVertexArray(static_cast<int>(nearestPointVerts.size()), nearestPointVerts.data());
     }
@@ -550,7 +562,7 @@ void GameShapes3D::RenderNearestPoint() const
 
 void GameShapes3D::RenderStoredRaycastResult() const
 {
-    VertexList storedRaycastResultVerts;
+    VertexList_PCU storedRaycastResultVerts;
     bool       isStoredRayImpact = false;
 
     for (int i = 0; i < 15; i++)
@@ -609,10 +621,10 @@ void GameShapes3D::RenderStoredRaycastResult() const
     }
 
     g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(BlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(DepthMode::READ_WRITE_LESS_EQUAL);
+    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
+    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_theRenderer->SetDepthMode(eDepthMode::READ_WRITE_LESS_EQUAL);
     g_theRenderer->BindTexture(nullptr);
     g_theRenderer->DrawVertexArray(static_cast<int>(storedRaycastResultVerts.size()), storedRaycastResultVerts.data());
 }
@@ -623,8 +635,8 @@ void GameShapes3D::RenderShapes() const
     RenderRaycastResult();
     RenderNearestPoint();
     RenderStoredRaycastResult();
-    VertexList outsideVerts;
-    VertexList insideVerts;
+    VertexList_PCU outsideVerts;
+    VertexList_PCU insideVerts;
 
     for (int i = 0; i < 15; i++)
     {
@@ -648,7 +660,8 @@ void GameShapes3D::RenderShapes() const
         {
             if (IsPointInsideSphere3D(m_worldCamera->GetPosition(), sphere3.m_centerPosition, sphere3.m_radius))
             {
-                AddVertsForWireframeSphere3D(insideVerts, sphere3.m_centerPosition, sphere3.m_radius, 0.05f, m_testShapes[i].m_currentColor);
+                Rgba8 color = Rgba8(0,0,m_testShapes[i].m_currentColor.b, m_testShapes[i].m_currentColor.a);
+                AddVertsForWireframeSphere3D(insideVerts, sphere3.m_centerPosition, sphere3.m_radius, 0.05f, color);
             }
             else
             {
@@ -668,10 +681,10 @@ void GameShapes3D::RenderShapes() const
             }
         }
 
-        g_theRenderer->SetBlendMode(BlendMode::OPAQUE);
-        g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_BACK);
-        g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
-        g_theRenderer->SetDepthMode(DepthMode::READ_WRITE_LESS_EQUAL);
+        g_theRenderer->SetBlendMode(eBlendMode::OPAQUE);
+        g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_BACK);
+        g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+        g_theRenderer->SetDepthMode(eDepthMode::READ_WRITE_LESS_EQUAL);
         g_theRenderer->BindTexture(m_texture);
         g_theRenderer->DrawVertexArray(static_cast<int>(outsideVerts.size()), outsideVerts.data());
 
@@ -682,7 +695,7 @@ void GameShapes3D::RenderShapes() const
 
 void GameShapes3D::RenderTest() const
 {
-    VertexList verts;
+    VertexList_PCU verts;
     Vec3       forwardNormal = m_worldCamera->GetOrientation().GetAsMatrix_IFwd_JLeft_KUp().GetIBasis3D().GetNormalized();
     Ray3 const ray           = Ray3(m_worldCamera->GetPosition(), m_worldCamera->GetPosition() + forwardNormal * 100.f);
 
@@ -715,10 +728,10 @@ void GameShapes3D::RenderTest() const
     }
 
     g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(BlendMode::OPAQUE);
-    g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_BACK);
-    g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(DepthMode::READ_WRITE_LESS_EQUAL);
+    g_theRenderer->SetBlendMode(eBlendMode::OPAQUE);
+    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_BACK);
+    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_theRenderer->SetDepthMode(eDepthMode::READ_WRITE_LESS_EQUAL);
     g_theRenderer->BindTexture(m_texture);
     g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
@@ -726,7 +739,7 @@ void GameShapes3D::RenderTest() const
 //----------------------------------------------------------------------------------------------------
 void GameShapes3D::RenderPlayerBasis() const
 {
-    VertexList verts;
+    VertexList_PCU verts;
 
     Vec3 const worldCameraPosition = m_worldCamera->GetPosition();
     Vec3 const forwardNormal       = m_worldCamera->GetOrientation().GetAsMatrix_IFwd_JLeft_KUp().GetIBasis3D().GetNormalized();
@@ -737,10 +750,10 @@ void GameShapes3D::RenderPlayerBasis() const
     AddVertsForArrow3D(verts, worldCameraPosition + forwardNormal, worldCameraPosition + forwardNormal + Vec3::Z_BASIS * 0.1f, 0.8f, 0.001f, 0.003f, Rgba8::BLUE);
 
     g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(BlendMode::OPAQUE);
-    g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_BACK);
-    g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(DepthMode::READ_WRITE_LESS_EQUAL);
+    g_theRenderer->SetBlendMode(eBlendMode::OPAQUE);
+    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_BACK);
+    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_theRenderer->SetDepthMode(eDepthMode::READ_WRITE_LESS_EQUAL);
     g_theRenderer->BindTexture(nullptr);
     g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
@@ -805,6 +818,6 @@ void GameShapes3D::ToggleTestShapeState(TestShape3D& testShape, int index)
     {
         testShape.m_state       = eTestShapeState::IDLE;
         testShape.m_targetColor = Rgba8::WHITE;
-        m_grabbedShapeIndex     = -1;
+        m_grabbedShapeIndex =-1;
     }
 }

@@ -38,7 +38,7 @@ Vec2 Game::GetMouseWorldPos() const
 //----------------------------------------------------------------------------------------------------
 void Game::RenderCurrentModeText(char const* currentModeText) const
 {
-    VertexList verts;
+    VertexList_PCU verts;
 
     float const currentModeTextBoxMinX = g_gameConfigBlackboard.GetValue("currentModeTextBoxMinX", 0.f);
     float const currentModeTextBoxMinY = g_gameConfigBlackboard.GetValue("currentModeTextBoxMinY", 780.f);
@@ -48,10 +48,10 @@ void Game::RenderCurrentModeText(char const* currentModeText) const
 
     g_theBitmapFont->AddVertsForTextInBox2D(verts, currentModeText, currentModeTextBox, 20.f, Rgba8::YELLOW);
     g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(BlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(DepthMode::DISABLED);
+    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
+    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
     g_theRenderer->BindTexture(&g_theBitmapFont->GetTexture());
     g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
@@ -59,7 +59,7 @@ void Game::RenderCurrentModeText(char const* currentModeText) const
 //----------------------------------------------------------------------------------------------------
 void Game::RenderControlText() const
 {
-    VertexList verts;
+    VertexList_PCU verts;
 
     float const currentControlTextBoxMinX = g_gameConfigBlackboard.GetValue("currentControlTextBoxMinX", 0.f);
     float const currentControlTextBoxMinY = g_gameConfigBlackboard.GetValue("currentControlTextBoxMinY", 760.f);
@@ -70,10 +70,10 @@ void Game::RenderControlText() const
     const char* currentControlText = "F8 to randomize; LMB/RMB set ray start/end, IJKL move end, arrows move ray, hold T = slow";
     g_theBitmapFont->AddVertsForTextInBox2D(verts, currentControlText, currentModeTextBox, 20.f, Rgba8::GREEN);
     g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(BlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(DepthMode::DISABLED);
+    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
+    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
     g_theRenderer->BindTexture(&g_theBitmapFont->GetTexture());
     g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
