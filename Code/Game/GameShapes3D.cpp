@@ -246,8 +246,8 @@ void GameShapes3D::UpdateFromKeyboard(float deltaSeconds)
             }
         }
 
-        if (m_grabbedShapeIndex != -1&&
-            m_grabbedShapeIndex!=closestIndex)
+        if (m_grabbedShapeIndex != -1 &&
+            m_grabbedShapeIndex != closestIndex)
         {
             if (m_testShapes[m_grabbedShapeIndex].m_state == eTestShapeState::IDLE)
             {
@@ -405,7 +405,8 @@ void GameShapes3D::RenderShapes() const
 
     for (int i = 0; i < 15; i++)
     {
-        VertexList verts;
+        VertexList outsideVerts;
+        VertexList insideVerts;
         AABB3      aabb3     = AABB3(m_testShapes[i].m_centerPosition - Vec3::ONE, m_testShapes[i].m_centerPosition + Vec3::ONE);
         Sphere3    sphere3   = Sphere3(m_testShapes[i].m_centerPosition, m_testShapes[i].m_radius);
         Cylinder3  cylinder3 = Cylinder3(m_testShapes[i].m_centerPosition - Vec3::Z_BASIS, m_testShapes[i].m_centerPosition + Vec3::Z_BASIS, m_testShapes[i].m_radius);
@@ -413,19 +414,38 @@ void GameShapes3D::RenderShapes() const
 
         if (m_testShapes[i].m_type == eTestShapeType::AABB3)
         {
-            // AddVertsForAABB3D(verts, aabb3, m_testShapes[i].m_currentColor);
-            AddVertsForWireframeAABB3D(verts, aabb3,0.05f, m_testShapes[i].m_currentColor);
+            if (IsPointInsideAABB3D(m_worldCamera->GetPosition(), aabb3.m_mins, aabb3.m_maxs))
+            {
+                AddVertsForWireframeAABB3D(insideVerts, aabb3, 0.05f, m_testShapes[i].m_currentColor);
+            }
+            else
+            {
+                AddVertsForAABB3D(outsideVerts, aabb3, m_testShapes[i].m_currentColor);
+            }
         }
 
         if (m_testShapes[i].m_type == eTestShapeType::SPHERE3)
         {
-            // AddVertsForSphere3D(verts, sphere3.m_centerPosition, sphere3.m_radius, m_testShapes[i].m_currentColor);
-            AddVertsForWireframeSphere3D(verts, sphere3.m_centerPosition, sphere3.m_radius, 0.05f,m_testShapes[i].m_currentColor);
+            if (IsPointInsideSphere3D(m_worldCamera->GetPosition(), sphere3.m_centerPosition, sphere3.m_radius))
+            {
+                AddVertsForWireframeSphere3D(insideVerts, sphere3.m_centerPosition, sphere3.m_radius, 0.05f, m_testShapes[i].m_currentColor);
+            }
+            else
+            {
+                AddVertsForSphere3D(outsideVerts, sphere3.m_centerPosition, sphere3.m_radius, m_testShapes[i].m_currentColor);
+            }
         }
+
         if (m_testShapes[i].m_type == eTestShapeType::CYLINDER3)
         {
-            // AddVertsForCylinder3D(verts, cylinder3.m_startPosition, cylinder3.m_endPosition, cylinder3.m_radius, m_testShapes[i].m_currentColor, AABB2(Vec2::ZERO, Vec2::ONE));
-            AddVertsForWireframeCylinder3D(verts, cylinder3.m_startPosition, cylinder3.m_endPosition, cylinder3.m_radius, 0.05f,m_testShapes[i].m_currentColor, AABB2(Vec2::ZERO, Vec2::ONE));
+            if (IsPointInsideZCylinder3D(m_worldCamera->GetPosition(), cylinder3.m_startPosition, cylinder3.m_endPosition, cylinder3.m_radius))
+            {
+                AddVertsForWireframeCylinder3D(insideVerts, cylinder3.m_startPosition, cylinder3.m_endPosition, cylinder3.m_radius, 0.05f, m_testShapes[i].m_currentColor, AABB2(Vec2::ZERO, Vec2::ONE));
+            }
+            else
+            {
+                AddVertsForCylinder3D(outsideVerts, cylinder3.m_startPosition, cylinder3.m_endPosition, cylinder3.m_radius, m_testShapes[i].m_currentColor, AABB2(Vec2::ZERO, Vec2::ONE));
+            }
         }
 
         g_theRenderer->SetModelConstants();
@@ -434,7 +454,15 @@ void GameShapes3D::RenderShapes() const
         g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
         g_theRenderer->SetDepthMode(DepthMode::READ_WRITE_LESS_EQUAL);
         g_theRenderer->BindTexture(m_texture);
-        g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+        g_theRenderer->DrawVertexArray(static_cast<int>(outsideVerts.size()), outsideVerts.data());
+
+        g_theRenderer->SetModelConstants();
+        g_theRenderer->SetBlendMode(BlendMode::OPAQUE);
+        g_theRenderer->SetRasterizerMode(RasterizerMode::SOLID_CULL_NONE);
+        g_theRenderer->SetSamplerMode(SamplerMode::POINT_CLAMP);
+        g_theRenderer->SetDepthMode(DepthMode::READ_WRITE_LESS_EQUAL);
+        g_theRenderer->BindTexture(nullptr);
+        g_theRenderer->DrawVertexArray(static_cast<int>(insideVerts.size()), insideVerts.data());
 
         VertexList nearestPointVerts;
 
