@@ -1,8 +1,8 @@
-# MP2 Assignment 3: 2D Ray vs. Segments and AABBs
+# MP2 Assignment 4: 3D Shapes & Queries
 
 ## C34 Yu-Wei Tseng
 
-Implementation of RayCastVsLineSegment2D and RayCastVsAABB2D
+Implementation of 3D Shapes & Queries
 
 ## How to Use
 
@@ -11,7 +11,8 @@ Implementation of RayCastVsLineSegment2D and RayCastVsAABB2D
 - **F6:** Cycle through the game modes backward.
 - **F7:** Cycle through the game modes forward.
 - **F8:** Restart the game and randomize shapes in the current game mode.
-- **WASD:** Move the point or the tail of the arrow.
+- **WASD:** Move the point or the tail of the arrow. / Fly for 3D mode.
+- **ZC** Fly vertically for 3D mode.
 - **IJKL:** Move the tip of the arrow.
 - **P:** Toggle pause.
 - **ESC:** Quit the game.
@@ -30,10 +31,9 @@ Implementation of RayCastVsLineSegment2D and RayCastVsAABB2D
 
 ## Deep Learning
 
-The functions I had to implement were not that difficult.
-Most of my time was spent writing clean and maintainable code.
-As the assignment progressed, it became a valuable visual test to verify the correctness of my 2D and 3D rendering
-pipeline.
+I spent a lot of time refactoring my code in VertexUtils and MathUtils to improve readability.
+This project is becoming really useful, making it a great time to debug my code.
+I will continue refactoring and improving it.
 
 
 
