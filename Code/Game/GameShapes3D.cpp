@@ -85,7 +85,7 @@ void GameShapes3D::Update()
         DebugAddWorldWireCylinder(m_worldCamera->GetPosition(), m_worldCamera->GetPosition() + Vec3::Z_BASIS * 2, 1.f, 10.f, Rgba8::WHITE, Rgba8::RED);
     }
 
-    UpdateShapes(deltaSeconds);
+    UpdateShapes();
     // m_worldCamera->SetPositionAndOrientation(m_player.m_startPosition, m_player.m_orientation);
 }
 
@@ -303,8 +303,9 @@ void GameShapes3D::UpdateFromKeyboard(float deltaSeconds)
 }
 
 //----------------------------------------------------------------------------------------------------
-void GameShapes3D::UpdateFromController(float deltaSeconds)
+void GameShapes3D::UpdateFromController(float const deltaSeconds)
 {
+    UNUSED(deltaSeconds)
 }
 
 void GameShapes3D::UpdateShapes()
