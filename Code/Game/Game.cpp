@@ -67,7 +67,7 @@ void Game::RenderControlText() const
     float const currentControlTextBoxMaxY = g_gameConfigBlackboard.GetValue("currentControlTextBoxMaxY", 780.f);
     AABB2 const currentModeTextBox(Vec2(currentControlTextBoxMinX, currentControlTextBoxMinY), Vec2(currentControlTextBoxMaxX, currentControlTextBoxMaxY));
 
-    const char* currentControlText = "F8 to randomize; LMB/RMB set ray start/end, IJKL move end, arrows move ray, hold T = slow";
+    const char* currentControlText = "F8 to randomize; LMB/RMB set ray start/end, IJKL move end, arrows move ray, hold T=slow";
     g_theBitmapFont->AddVertsForTextInBox2D(verts, currentControlText, currentModeTextBox, 20.f, Rgba8::GREEN);
     g_theRenderer->SetModelConstants();
     g_theRenderer->SetBlendMode(eBlendMode::ALPHA);

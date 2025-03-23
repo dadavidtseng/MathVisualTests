@@ -55,26 +55,25 @@ public:
 private:
     void UpdateFromKeyboard(float deltaSeconds) override;
     void UpdateFromController(float deltaSeconds) override;
-    void UpdateShapes(float deltaSeconds);
+    void UpdateShapes();
 
     void RenderRaycastResult() const;
     void RenderNearestPoint() const;
     void RenderStoredRaycastResult() const;
     void RenderShapes() const;
-    void RenderTest() const;
     void RenderPlayerBasis() const;
 
     void GenerateRandomShapes();
-    void GenerateTest();
 
     void ToggleTestShapeState(TestShape3D& testShape, int index);
 
     Camera*     m_worldCamera    = nullptr;
     Texture*    m_texture        = nullptr;
     TestShape3D m_testShapes[15] = {};
-    TestShape3D m_test;
 
-    int   m_grabbedShapeIndex                    = -1;
-    Vec3  m_grabbedShapeCameraSpaceStartPosition = Vec3::ZERO;
-    Ray3* m_storedRay                            = nullptr;
+    int    m_grabbedShapeIndex                    = -1;
+    Vec3   m_grabbedShapeCameraSpaceStartPosition = Vec3::ZERO;
+    Ray3*  m_storedRay                            = nullptr;
+    String m_raycastResultText                    = "space=lock raycast; ";
+    String m_grabbedShapeText;
 };

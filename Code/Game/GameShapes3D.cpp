@@ -17,6 +17,7 @@
 #include "Engine/Math/RandomNumberGenerator.hpp"
 #include "Engine/Math/RaycastUtils.hpp"
 #include "Engine/Math/Sphere3.hpp"
+#include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/DebugRenderSystem.hpp"
 #include "Engine/Renderer/Renderer.hpp"
 #include "Game/App.hpp"
@@ -36,7 +37,7 @@ GameShapes3D::GameShapes3D()
 
     m_screenCamera->SetOrthoGraphicView(Vec2::ZERO, Vec2(screenSizeX, screenSizeY));
     m_worldCamera->SetPerspectiveGraphicView(2.f, 60.f, 0.1f, 100.f);
-    m_worldCamera->SetPosition(Vec3(-2, 0, 1.f));
+    m_worldCamera->SetPosition(Vec3(-2.f, 0.f, 1.f));
 
     m_texture = g_theRenderer->CreateOrGetTextureFromFile("Data/Images/Test_StbiFlippedAndOpenGL.png");
     Mat44 c2r;
@@ -66,11 +67,6 @@ GameShapes3D::GameShapes3D()
     DebugAddWorldText("Z-Up", transform, 0.25f, Vec2(1.f, 0.f), -1.f, Rgba8::BLUE);
 
     GenerateRandomShapes();
-    // GenerateRandomShapes(m_spheres);
-    // GenerateRandomShapes(m_cylinders);
-
-
-    GenerateTest();
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -116,6 +112,25 @@ void GameShapes3D::Render() const
 
     RenderCurrentModeText("CurrentMode: 3D Shapes");
 
+    VertexList_PCU verts;
+
+    float const currentControlTextBoxMinX = g_gameConfigBlackboard.GetValue("currentControlTextBoxMinX", 0.f);
+    float const currentControlTextBoxMinY = g_gameConfigBlackboard.GetValue("currentControlTextBoxMinY", 760.f);
+    float const currentControlTextBoxMaxX = g_gameConfigBlackboard.GetValue("currentControlTextBoxMaxX", 1600.f);
+    float const currentControlTextBoxMaxY = g_gameConfigBlackboard.GetValue("currentControlTextBoxMaxY", 780.f);
+    AABB2 const currentModeTextBox(Vec2(currentControlTextBoxMinX, currentControlTextBoxMinY), Vec2(currentControlTextBoxMaxX, currentControlTextBoxMaxY));
+
+    String const currentControlText = "F8 to randomize; WASD:fly, ZC:fly vertical, hold T=slow";
+    g_theBitmapFont->AddVertsForTextInBox2D(verts, currentControlText, currentModeTextBox, 20.f, Rgba8::GREEN);
+    g_theBitmapFont->AddVertsForTextInBox2D(verts, m_raycastResultText + m_grabbedShapeText, AABB2(Vec2(currentModeTextBox.m_mins.x, currentModeTextBox.m_mins.y - 20.f), Vec2(currentModeTextBox.m_maxs.x, currentModeTextBox.m_maxs.y - 20.f)), 20.f, Rgba8::GREEN);
+    g_theRenderer->SetModelConstants();
+    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
+    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
+    g_theRenderer->BindTexture(&g_theBitmapFont->GetTexture());
+    g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+
     g_theRenderer->EndCamera(*m_screenCamera);
 
     //-End-of-Screen-Camera---------------------------------------------------------------------------
@@ -131,6 +146,7 @@ void GameShapes3D::UpdateFromKeyboard(float deltaSeconds)
     if (g_theInput->WasKeyJustReleased(KEYCODE_T)) m_gameClock->SetTimeScale(1.f);
     if (g_theInput->WasKeyJustPressed(KEYCODE_P)) m_gameClock->TogglePause();
     if (g_theInput->WasKeyJustPressed(KEYCODE_ESC)) App::RequestQuit();
+    if (g_theInput->WasKeyJustPressed(KEYCODE_F8)) GenerateRandomShapes();
 
     XboxController const& controller = g_theInput->GetController(0);
 
@@ -151,7 +167,7 @@ void GameShapes3D::UpdateFromKeyboard(float deltaSeconds)
     Vec3       targetPosition = m_worldCamera->GetPosition();
 
     if (g_theInput->IsKeyDown(KEYCODE_SHIFT) || controller.IsButtonDown(XBOX_BUTTON_A)) deltaSeconds *= 10.f;
-    targetPosition += Vec3(leftStickInput.y, -leftStickInput.x, 0) * moveSpeed * deltaSeconds;
+    targetPosition += Vec3(leftStickInput.y, -leftStickInput.x, 0.f) * moveSpeed * deltaSeconds;
 
     if (g_theInput->IsKeyDown(KEYCODE_W)) targetPosition += forward * moveSpeed * deltaSeconds;
     if (g_theInput->IsKeyDown(KEYCODE_S)) targetPosition -= forward * moveSpeed * deltaSeconds;
@@ -237,12 +253,14 @@ void GameShapes3D::UpdateFromKeyboard(float deltaSeconds)
                 m_testShapes[closestIndex].m_state       = eTestShapeState::GRABBED;
                 m_testShapes[closestIndex].m_targetColor = Rgba8::RED;
                 m_grabbedShapeIndex                      = closestIndex;
+                m_grabbedShapeText                       = "LMB=release object";
             }
             else if (m_testShapes[closestIndex].m_state == eTestShapeState::GRABBED)
             {
                 m_testShapes[closestIndex].m_state       = eTestShapeState::IDLE;
                 m_testShapes[closestIndex].m_targetColor = Rgba8::WHITE;
                 m_grabbedShapeIndex                      = -1;
+                m_grabbedShapeText                       = "LMB=grab object";
             }
         }
 
@@ -254,12 +272,14 @@ void GameShapes3D::UpdateFromKeyboard(float deltaSeconds)
                 m_testShapes[m_grabbedShapeIndex].m_state       = eTestShapeState::GRABBED;
                 m_testShapes[m_grabbedShapeIndex].m_targetColor = Rgba8::RED;
                 // m_grabbedShapeIndex     = closestIndex;
+                m_grabbedShapeText = "LMB=release object";
             }
             else if (m_testShapes[m_grabbedShapeIndex].m_state == eTestShapeState::GRABBED)
             {
                 m_testShapes[m_grabbedShapeIndex].m_state       = eTestShapeState::IDLE;
                 m_testShapes[m_grabbedShapeIndex].m_targetColor = Rgba8::WHITE;
                 m_grabbedShapeIndex                             = -1;
+                m_grabbedShapeText                              = "LMB=grab object";
             }
         }
 
@@ -271,11 +291,13 @@ void GameShapes3D::UpdateFromKeyboard(float deltaSeconds)
     {
         if (m_storedRay == nullptr)
         {
-            m_storedRay = new Ray3(m_worldCamera->GetPosition(), m_worldCamera->GetPosition() + forwardNormal * 20.f);
+            m_storedRay         = new Ray3(m_worldCamera->GetPosition(), m_worldCamera->GetPosition() + forwardNormal * 20.f);
+            m_raycastResultText = "space=unlock raycast; ";
         }
         else
         {
             SafeDelete(m_storedRay);
+            m_raycastResultText = "space=lock raycast; ";
         }
     }
 }
@@ -285,7 +307,7 @@ void GameShapes3D::UpdateFromController(float deltaSeconds)
 {
 }
 
-void GameShapes3D::UpdateShapes(float const deltaSeconds)
+void GameShapes3D::UpdateShapes()
 {
     for (int i = 0; i < 15; i++)
     {
@@ -399,8 +421,8 @@ void GameShapes3D::UpdateShapes(float const deltaSeconds)
     Vec3       forwardNormal = m_worldCamera->GetOrientation().GetAsMatrix_IFwd_JLeft_KUp().GetIBasis3D().GetNormalized();
     Ray3 const ray           = Ray3(m_worldCamera->GetPosition(), m_worldCamera->GetPosition() + forwardNormal * 20.f);
 
-float closestDistance = FLOAT_MAX;
-    int closestIndex = -1;
+    float closestDistance = FLOAT_MAX;
+    int   closestIndex    = -1;
 
     std::vector isHoveringArray(15, false);
 
@@ -430,26 +452,27 @@ float closestDistance = FLOAT_MAX;
             result = RaycastVsCylinderZ3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, cylinder3.GetCenterPositionXY(), cylinder3.GetFloatRange(), cylinder3.m_radius);
         }
 
-
-        if (result.m_didImpact == true&& result.m_impactLength < closestDistance)
+        if (result.m_didImpact == true && result.m_impactLength < closestDistance)
         {
             closestDistance = result.m_impactLength;
             closestIndex    = i;
         }
     }
 
-    if (closestIndex!=-1)
+    if (closestIndex != -1)
     {
         isHoveringArray[closestIndex] = true;
+    }
+
+    if (m_grabbedShapeIndex == -1 &&
+        closestIndex == -1)
+    {
+        m_grabbedShapeText = "";
     }
 
     for (int i = 0; i < 15; i++)
     {
         if (isHoveringArray[i] == false)
-        {
-            m_testShapes[i].m_targetColor = Rgba8::WHITE;
-        }
-        else
         {
             if (m_testShapes[i].m_state == eTestShapeState::GRABBED)
             {
@@ -457,7 +480,19 @@ float closestDistance = FLOAT_MAX;
             }
             else
             {
+                m_testShapes[i].m_targetColor = Rgba8::WHITE;
+            }
+        }
+        else
+        {
+            if (m_testShapes[i].m_state == eTestShapeState::GRABBED)
+            {
+                m_testShapes[i].m_targetColor = Rgba8::RED;
+            }
+            else if (m_grabbedShapeIndex == -1)
+            {
                 m_testShapes[i].m_targetColor = Rgba8::BLUE;
+                m_grabbedShapeText            = "LMB=grab object";
             }
         }
     }
@@ -466,8 +501,8 @@ float closestDistance = FLOAT_MAX;
 void GameShapes3D::RenderRaycastResult() const
 {
     VertexList_PCU raycastResultVerts;
-    Vec3       forwardNormal = m_worldCamera->GetOrientation().GetAsMatrix_IFwd_JLeft_KUp().GetIBasis3D().GetNormalized();
-    Ray3 const ray           = Ray3(m_worldCamera->GetPosition(), m_worldCamera->GetPosition() + forwardNormal * 20.f);
+    Vec3           forwardNormal = m_worldCamera->GetOrientation().GetAsMatrix_IFwd_JLeft_KUp().GetIBasis3D().GetNormalized();
+    Ray3 const     ray           = Ray3(m_worldCamera->GetPosition(), m_worldCamera->GetPosition() + forwardNormal * 20.f);
 
     for (int i = 0; i < 15; i++)
     {
@@ -524,7 +559,7 @@ void GameShapes3D::RenderRaycastResult() const
 void GameShapes3D::RenderNearestPoint() const
 {
     VertexList_PCU nearestPointVerts;
-    Vec3       nearestPoint;
+    Vec3           nearestPoint;
 
 
     for (int i = 0; i < 15; i++)
@@ -563,7 +598,7 @@ void GameShapes3D::RenderNearestPoint() const
 void GameShapes3D::RenderStoredRaycastResult() const
 {
     VertexList_PCU storedRaycastResultVerts;
-    bool       isStoredRayImpact = false;
+    bool           isStoredRayImpact = false;
 
     for (int i = 0; i < 15; i++)
     {
@@ -660,7 +695,7 @@ void GameShapes3D::RenderShapes() const
         {
             if (IsPointInsideSphere3D(m_worldCamera->GetPosition(), sphere3.m_centerPosition, sphere3.m_radius))
             {
-                Rgba8 color = Rgba8(0,0,m_testShapes[i].m_currentColor.b, m_testShapes[i].m_currentColor.a);
+                Rgba8 color = Rgba8(0, 0, m_testShapes[i].m_currentColor.b, m_testShapes[i].m_currentColor.a);
                 AddVertsForWireframeSphere3D(insideVerts, sphere3.m_centerPosition, sphere3.m_radius, 0.05f, color);
             }
             else
@@ -691,49 +726,6 @@ void GameShapes3D::RenderShapes() const
         g_theRenderer->BindTexture(nullptr);
         g_theRenderer->DrawVertexArray(static_cast<int>(insideVerts.size()), insideVerts.data());
     }
-}
-
-void GameShapes3D::RenderTest() const
-{
-    VertexList_PCU verts;
-    Vec3       forwardNormal = m_worldCamera->GetOrientation().GetAsMatrix_IFwd_JLeft_KUp().GetIBasis3D().GetNormalized();
-    Ray3 const ray           = Ray3(m_worldCamera->GetPosition(), m_worldCamera->GetPosition() + forwardNormal * 100.f);
-
-
-    Sphere3   sphere3   = Sphere3(m_testShapes[2].m_centerPosition, m_testShapes[2].m_radius);
-    AABB3     box       = AABB3(m_testShapes[1].m_centerPosition - Vec3::ONE, m_testShapes[1].m_centerPosition + Vec3::ONE);
-    Cylinder3 cylinder3 = Cylinder3(m_testShapes[0].m_centerPosition - Vec3::Z_BASIS, m_testShapes[0].m_centerPosition + Vec3::Z_BASIS, m_testShapes[0].m_radius);
-    AddVertsForSphere3D(verts, sphere3.m_centerPosition, sphere3.m_radius, Rgba8::WHITE, AABB2(Vec2::ZERO, Vec2::ONE));
-    AddVertsForAABB3D(verts, box);
-    AddVertsForCylinder3D(verts, cylinder3.m_startPosition, cylinder3.m_endPosition, cylinder3.m_radius);
-    RaycastResult3D raycastResult  = RaycastVsSphere3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, sphere3.m_centerPosition, sphere3.m_radius);
-    RaycastResult3D raycastResult3 = RaycastVsAABB3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, box.m_mins, box.m_maxs);
-    Vec3            center         = (cylinder3.m_startPosition + cylinder3.m_endPosition) / 2.f;
-    FloatRange      cylinderRange  = FloatRange(cylinder3.m_startPosition.z, cylinder3.m_endPosition.z);
-    RaycastResult3D raycastResult2 = RaycastVsCylinderZ3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, Vec2(center.x, center.y), cylinderRange, cylinder3.m_radius);
-
-    if (raycastResult.m_didImpact == true)
-    {
-        AddVertsForArrow3D(verts, raycastResult.m_impactPosition, raycastResult.m_impactPosition + raycastResult.m_impactNormal, 0.8f, 0.03f, 0.06f, Rgba8::YELLOW);
-    }
-
-    if (raycastResult2.m_didImpact == true)
-    {
-        AddVertsForArrow3D(verts, raycastResult2.m_impactPosition, raycastResult2.m_impactPosition + raycastResult2.m_impactNormal, 0.8f, 0.03f, 0.06f, Rgba8::YELLOW);
-    }
-
-    if (raycastResult3.m_didImpact == true)
-    {
-        AddVertsForArrow3D(verts, raycastResult3.m_impactPosition, raycastResult3.m_impactPosition + raycastResult3.m_impactNormal, 0.8f, 0.03f, 0.06f, Rgba8::YELLOW);
-    }
-
-    g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(eBlendMode::OPAQUE);
-    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_BACK);
-    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(eDepthMode::READ_WRITE_LESS_EQUAL);
-    g_theRenderer->BindTexture(m_texture);
-    g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -797,15 +789,6 @@ void GameShapes3D::GenerateRandomShapes()
     }
 }
 
-void GameShapes3D::GenerateTest()
-{
-    m_test                  = TestShape3D();
-    m_test.m_centerPosition = Vec3::ZERO;
-    // m_test.m_endPosition   = Vec3::Z_BASIS;
-    m_test.m_orientation = EulerAngles::ZERO;
-    m_test.m_radius      = 3.f;
-}
-
 void GameShapes3D::ToggleTestShapeState(TestShape3D& testShape, int index)
 {
     if (testShape.m_state == eTestShapeState::IDLE)
@@ -818,6 +801,6 @@ void GameShapes3D::ToggleTestShapeState(TestShape3D& testShape, int index)
     {
         testShape.m_state       = eTestShapeState::IDLE;
         testShape.m_targetColor = Rgba8::WHITE;
-        m_grabbedShapeIndex =-1;
+        m_grabbedShapeIndex     = -1;
     }
 }
