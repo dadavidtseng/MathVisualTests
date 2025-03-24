@@ -98,7 +98,6 @@ void GameShapes3D::Render() const
 
     RenderShapes();
     RenderPlayerBasis();
-    // RenderTest();
 
     g_theRenderer->EndCamera(*m_worldCamera);
 
@@ -188,7 +187,7 @@ void GameShapes3D::UpdateFromKeyboard(float deltaSeconds)
 
     targetEulerAngles.m_yawDegrees -= g_theInput->GetCursorClientDelta().x * 0.125f;
     targetEulerAngles.m_pitchDegrees += g_theInput->GetCursorClientDelta().y * 0.125f;
-    targetEulerAngles.m_pitchDegrees = GetClamped(targetEulerAngles.m_pitchDegrees, -85.f, 85.f);
+    targetEulerAngles.m_pitchDegrees = GetClamped(targetEulerAngles.m_pitchDegrees, -89.9f, 89.9f);
 
     float const leftTriggerInput  = controller.GetLeftTrigger();
     float const rightTriggerInput = controller.GetRightTrigger();
@@ -561,7 +560,8 @@ void GameShapes3D::RenderNearestPoint() const
 {
     VertexList_PCU nearestPointVerts;
     Vec3           nearestPoint;
-
+    Vec3           closestNearestPoint;
+    float          minLengthSquared = FLOAT_MAX;
 
     for (int i = 0; i < 15; i++)
     {
@@ -569,31 +569,39 @@ void GameShapes3D::RenderNearestPoint() const
         Sphere3   sphere3   = Sphere3(m_testShapes[i].m_centerPosition, m_testShapes[i].m_radius);
         Cylinder3 cylinder3 = Cylinder3(m_testShapes[i].m_centerPosition - Vec3::Z_BASIS, m_testShapes[i].m_centerPosition + Vec3::Z_BASIS, m_testShapes[i].m_radius);
 
-
         if (m_testShapes[i].m_type == eTestShapeType::AABB3)
         {
             nearestPoint = aabb3.GetNearestPoint(m_worldCamera->GetPosition());
-            AddVertsForSphere3D(nearestPointVerts, nearestPoint, 0.1f, Rgba8::RED);
         }
         else if (m_testShapes[i].m_type == eTestShapeType::SPHERE3)
         {
             nearestPoint = sphere3.GetNearestPoint(m_worldCamera->GetPosition());
-            AddVertsForSphere3D(nearestPointVerts, nearestPoint, 0.1f, Rgba8::RED);
         }
         else if (m_testShapes[i].m_type == eTestShapeType::CYLINDER3)
         {
             nearestPoint = cylinder3.GetNearestPoint(m_worldCamera->GetPosition());
-            AddVertsForSphere3D(nearestPointVerts, nearestPoint, 0.1f, Rgba8::RED);
         }
 
-        g_theRenderer->SetModelConstants();
-        g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
-        g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
-        g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
-        g_theRenderer->SetDepthMode(eDepthMode::READ_WRITE_LESS_EQUAL);
-        g_theRenderer->BindTexture(nullptr);
-        g_theRenderer->DrawVertexArray(static_cast<int>(nearestPointVerts.size()), nearestPointVerts.data());
+        float const lengthSquared = (nearestPoint - m_worldCamera->GetPosition()).GetLengthSquared();
+
+        if (lengthSquared < minLengthSquared)
+        {
+            minLengthSquared    = lengthSquared;
+            closestNearestPoint = nearestPoint;
+        }
+
+        AddVertsForSphere3D(nearestPointVerts, nearestPoint, 0.1f, Rgba8::ORANGE);
     }
+
+    AddVertsForSphere3D(nearestPointVerts, closestNearestPoint, 0.1f, Rgba8::GREEN);
+
+    g_theRenderer->SetModelConstants();
+    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
+    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_theRenderer->SetDepthMode(eDepthMode::READ_WRITE_LESS_EQUAL);
+    g_theRenderer->BindTexture(nullptr);
+    g_theRenderer->DrawVertexArray(static_cast<int>(nearestPointVerts.size()), nearestPointVerts.data());
 }
 
 void GameShapes3D::RenderStoredRaycastResult() const
