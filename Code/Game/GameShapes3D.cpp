@@ -501,7 +501,7 @@ void GameShapes3D::UpdateShapes()
 void GameShapes3D::RenderRaycastResult() const
 {
     VertexList_PCU raycastResultVerts;
-    Vec3           forwardNormal = m_worldCamera->GetOrientation().GetAsMatrix_IFwd_JLeft_KUp().GetIBasis3D().GetNormalized();
+    Vec3 const     forwardNormal = m_worldCamera->GetOrientation().GetAsMatrix_IFwd_JLeft_KUp().GetIBasis3D().GetNormalized();
     Ray3 const     ray           = Ray3(m_worldCamera->GetPosition(), m_worldCamera->GetPosition() + forwardNormal * 20.f);
 
     for (int i = 0; i < 15; i++)
@@ -515,45 +515,35 @@ void GameShapes3D::RenderRaycastResult() const
             continue;
         }
 
+        RaycastResult3D result;
+
         if (m_testShapes[i].m_type == eTestShapeType::AABB3)
         {
-            RaycastResult3D result = RaycastVsAABB3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, aabb3.m_mins, aabb3.m_maxs);
-
-            if (result.m_didImpact == true)
-            {
-                AddVertsForArrow3D(raycastResultVerts, result.m_impactPosition, result.m_impactPosition + result.m_impactNormal, 0.8f, 0.03f, 0.06f, Rgba8::YELLOW);
-                AddVertsForSphere3D(raycastResultVerts, result.m_impactPosition, 0.1f);
-            }
+            result = RaycastVsAABB3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, aabb3.m_mins, aabb3.m_maxs);
         }
         else if (m_testShapes[i].m_type == eTestShapeType::SPHERE3)
         {
-            RaycastResult3D result = RaycastVsSphere3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, sphere3.m_centerPosition, sphere3.m_radius);
-
-            if (result.m_didImpact == true)
-            {
-                AddVertsForArrow3D(raycastResultVerts, result.m_impactPosition, result.m_impactPosition + result.m_impactNormal, 0.8f, 0.03f, 0.06f, Rgba8::YELLOW);
-                AddVertsForSphere3D(raycastResultVerts, result.m_impactPosition, 0.1f);
-            }
+            result = RaycastVsSphere3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, sphere3.m_centerPosition, sphere3.m_radius);
         }
         else if (m_testShapes[i].m_type == eTestShapeType::CYLINDER3)
         {
-            RaycastResult3D result = RaycastVsCylinderZ3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, cylinder3.GetCenterPositionXY(), cylinder3.GetFloatRange(), cylinder3.m_radius);
-
-            if (result.m_didImpact == true)
-            {
-                AddVertsForArrow3D(raycastResultVerts, result.m_impactPosition, result.m_impactPosition + result.m_impactNormal, 0.8f, 0.03f, 0.06f, Rgba8::YELLOW);
-                AddVertsForSphere3D(raycastResultVerts, result.m_impactPosition, 0.1f);
-            }
+            result = RaycastVsCylinderZ3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, cylinder3.GetCenterPositionXY(), cylinder3.GetFloatRange(), cylinder3.m_radius);
         }
 
-        g_theRenderer->SetModelConstants();
-        g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
-        g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
-        g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
-        g_theRenderer->SetDepthMode(eDepthMode::READ_WRITE_LESS_EQUAL);
-        g_theRenderer->BindTexture(nullptr);
-        g_theRenderer->DrawVertexArray(static_cast<int>(raycastResultVerts.size()), raycastResultVerts.data());
+        if (result.m_didImpact == true)
+        {
+            AddVertsForArrow3D(raycastResultVerts, result.m_impactPosition, result.m_impactPosition + result.m_impactNormal, 0.8f, 0.03f, 0.06f, Rgba8::YELLOW);
+            AddVertsForSphere3D(raycastResultVerts, result.m_impactPosition, 0.1f);
+        }
     }
+
+    g_theRenderer->SetModelConstants();
+    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
+    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_theRenderer->SetDepthMode(eDepthMode::READ_WRITE_LESS_EQUAL);
+    g_theRenderer->BindTexture(nullptr);
+    g_theRenderer->DrawVertexArray(static_cast<int>(raycastResultVerts.size()), raycastResultVerts.data());
 }
 
 void GameShapes3D::RenderNearestPoint() const
@@ -620,41 +610,28 @@ void GameShapes3D::RenderStoredRaycastResult() const
             continue;
         }
 
+        RaycastResult3D result;
+
         if (m_testShapes[i].m_type == eTestShapeType::AABB3)
         {
-            RaycastResult3D result = RaycastVsAABB3D(m_storedRay->m_startPosition, m_storedRay->m_forwardNormal, m_storedRay->m_maxLength, aabb3.m_mins, aabb3.m_maxs);
-
-            if (result.m_didImpact == true)
-            {
-                isStoredRayImpact = true;
-                AddVertsForArrow3D(storedRaycastResultVerts, m_storedRay->m_startPosition, result.m_impactPosition, 0.8f, 0.03f, 0.06f, Rgba8::RED);
-                AddVertsForArrow3D(storedRaycastResultVerts, result.m_impactPosition, result.m_impactPosition + result.m_impactNormal, 0.8f, 0.03f, 0.06f, Rgba8::YELLOW);
-                AddVertsForSphere3D(storedRaycastResultVerts, result.m_impactPosition, 0.1f);
-            }
+            result = RaycastVsAABB3D(m_storedRay->m_startPosition, m_storedRay->m_forwardNormal, m_storedRay->m_maxLength, aabb3.m_mins, aabb3.m_maxs);
         }
         else if (m_testShapes[i].m_type == eTestShapeType::SPHERE3)
         {
-            RaycastResult3D result = RaycastVsSphere3D(m_storedRay->m_startPosition, m_storedRay->m_forwardNormal, m_storedRay->m_maxLength, sphere3.m_centerPosition, sphere3.m_radius);
-
-            if (result.m_didImpact == true)
-            {
-                isStoredRayImpact = true;
-                AddVertsForArrow3D(storedRaycastResultVerts, m_storedRay->m_startPosition, result.m_impactPosition, 0.8f, 0.03f, 0.06f, Rgba8::RED);
-                AddVertsForArrow3D(storedRaycastResultVerts, result.m_impactPosition, result.m_impactPosition + result.m_impactNormal, 0.8f, 0.03f, 0.06f, Rgba8::YELLOW);
-                AddVertsForSphere3D(storedRaycastResultVerts, result.m_impactPosition, 0.1f);
-            }
+            result = RaycastVsSphere3D(m_storedRay->m_startPosition, m_storedRay->m_forwardNormal, m_storedRay->m_maxLength, sphere3.m_centerPosition, sphere3.m_radius);
         }
         else if (m_testShapes[i].m_type == eTestShapeType::CYLINDER3)
         {
-            RaycastResult3D result = RaycastVsCylinderZ3D(m_storedRay->m_startPosition, m_storedRay->m_forwardNormal, m_storedRay->m_maxLength, cylinder3.GetCenterPositionXY(), cylinder3.GetFloatRange(), cylinder3.m_radius);
+            result = RaycastVsCylinderZ3D(m_storedRay->m_startPosition, m_storedRay->m_forwardNormal, m_storedRay->m_maxLength, cylinder3.GetCenterPositionXY(), cylinder3.GetFloatRange(), cylinder3.m_radius);
+        }
 
-            if (result.m_didImpact == true)
-            {
-                isStoredRayImpact = true;
-                AddVertsForArrow3D(storedRaycastResultVerts, m_storedRay->m_startPosition, result.m_impactPosition, 0.8f, 0.03f, 0.06f, Rgba8::RED);
-                AddVertsForArrow3D(storedRaycastResultVerts, result.m_impactPosition, result.m_impactPosition + result.m_impactNormal, 0.8f, 0.03f, 0.06f, Rgba8::YELLOW);
-                AddVertsForSphere3D(storedRaycastResultVerts, result.m_impactPosition, 0.1f);
-            }
+        if (result.m_didImpact == true)
+        {
+            isStoredRayImpact = true;
+            AddVertsForArrow3D(storedRaycastResultVerts, m_storedRay->m_startPosition, result.m_impactPosition, 0.8f, 0.03f, 0.06f, Rgba8::RED);
+            AddVertsForArrow3D(storedRaycastResultVerts, result.m_impactPosition, result.m_impactPosition + result.m_impactNormal, 0.8f, 0.03f, 0.06f, Rgba8::YELLOW);
+            AddVertsForArrow3D(storedRaycastResultVerts, result.m_impactPosition, m_storedRay->m_startPosition + m_storedRay->m_forwardNormal * m_storedRay->m_maxLength, 0.8f, 0.03f, 0.06f, Rgba8::GREY);
+            AddVertsForSphere3D(storedRaycastResultVerts, result.m_impactPosition, 0.1f);
         }
     }
 
