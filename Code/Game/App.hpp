@@ -34,6 +34,7 @@ public:
     static bool OnCloseButtonClicked(EventArgs& arg);
     static void RequestQuit();
     static bool m_isQuitting;
+    static std::function<void()> gameModeConstructors[];
 
 private:
     void BeginFrame() const;
@@ -50,7 +51,6 @@ private:
     eGameMode             m_currentGameMode      = eGameMode::NEAREST_POINT;
     Camera*               m_devConsoleCamera     = nullptr;
     // std::function<void()> gameModeConstructors[];
-
 };
 
 

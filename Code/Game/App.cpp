@@ -34,7 +34,8 @@ Window*                g_theWindow     = nullptr;      // Created and owned by t
 //----------------------------------------------------------------------------------------------------
 STATIC bool App::m_isQuitting = false;
 
-std::function<void()> gameModeConstructors[] =
+//----------------------------------------------------------------------------------------------------
+STATIC std::function<void()> App::gameModeConstructors[] =
 {
     [] { DeleteAndCreateNewGame<GameRaycastVsDiscs>(); },
     [] { DeleteAndCreateNewGame<GameNearestPoint>(); },
@@ -253,43 +254,19 @@ void App::LoadGameConfig(char const* gameConfigXmlFilePath)
 //----------------------------------------------------------------------------------------------------
 void App::UpdateFromFromKeyboard()
 {
-    // if (g_theInput->WasKeyJustPressed(KEYCODE_F6))
-    // {
-    //     // Cycle through game modes backward
-    //     m_currentGameMode = static_cast<eGameMode>((static_cast<int>(m_currentGameMode) + 5) % 6);
-    //
-    //     if (m_currentGameMode == eGameMode::RAYCAST_VS_DISCS) DeleteAndCreateNewGame<GameRaycastVsDiscs>();
-    //     if (m_currentGameMode == eGameMode::NEAREST_POINT) DeleteAndCreateNewGame<GameNearestPoint>();
-    //     if (m_currentGameMode == eGameMode::RAYCAST_VS_LINESEGMENTS) DeleteAndCreateNewGame<GameRaycastVsLineSegments>();
-    //     if (m_currentGameMode == eGameMode::RAYCAST_VS_AABBS) DeleteAndCreateNewGame<GameRaycastVsAABBs>();
-    //     if (m_currentGameMode == eGameMode::SHAPES_3D) DeleteAndCreateNewGame<GameShapes3D>();
-    //     if (m_currentGameMode == eGameMode::CURVES_2D) DeleteAndCreateNewGame<GameCurves2D>();
-    // }
-    //
-    // if (g_theInput->WasKeyJustPressed(KEYCODE_F7))
-    // {
-    //     // Cycle through game modes forward
-    //     m_currentGameMode = static_cast<eGameMode>((static_cast<int>(m_currentGameMode) + 1) % 6);
-    //
-    //     if (m_currentGameMode == eGameMode::RAYCAST_VS_DISCS) DeleteAndCreateNewGame<GameRaycastVsDiscs>();
-    //     if (m_currentGameMode == eGameMode::NEAREST_POINT) DeleteAndCreateNewGame<GameNearestPoint>();
-    //     if (m_currentGameMode == eGameMode::RAYCAST_VS_LINESEGMENTS) DeleteAndCreateNewGame<GameRaycastVsLineSegments>();
-    //     if (m_currentGameMode == eGameMode::RAYCAST_VS_AABBS) DeleteAndCreateNewGame<GameRaycastVsAABBs>();
-    //     if (m_currentGameMode == eGameMode::SHAPES_3D) DeleteAndCreateNewGame<GameShapes3D>();
-    //     if (m_currentGameMode == eGameMode::CURVES_2D) DeleteAndCreateNewGame<GameCurves2D>();
-    // }
+    int constexpr gameModeCount = static_cast<int>(eGameMode::COUNT);
 
     if (g_theInput->WasKeyJustPressed(KEYCODE_F6))
     {
         // Backward
-        m_currentGameMode = static_cast<eGameMode>((static_cast<int>(m_currentGameMode) + 5) % 6);
+        m_currentGameMode = static_cast<eGameMode>((static_cast<int>(m_currentGameMode) + gameModeCount - 1) % gameModeCount);
         gameModeConstructors[static_cast<int>(m_currentGameMode)]();
     }
 
     if (g_theInput->WasKeyJustPressed(KEYCODE_F7))
     {
         // Forward
-        m_currentGameMode = static_cast<eGameMode>((static_cast<int>(m_currentGameMode) + 1) % 6);
+        m_currentGameMode = static_cast<eGameMode>((static_cast<int>(m_currentGameMode) + 1) % gameModeCount);
         gameModeConstructors[static_cast<int>(m_currentGameMode)]();
     }
 }
