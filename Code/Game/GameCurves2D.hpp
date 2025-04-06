@@ -5,11 +5,6 @@
 //----------------------------------------------------------------------------------------------------
 #pragma once
 
-#include "Engine/Core/Rgba8.hpp"
-#include "Engine/Math/EulerAngles.hpp"
-#include "Engine/Math/RaycastUtils.hpp"
-#include "Engine/Math/Vec3.hpp"
-#include "Engine/Renderer/Texture.hpp"
 #include "Game/Game.hpp"
 
 struct Rgba8;
