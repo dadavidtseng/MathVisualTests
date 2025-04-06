@@ -4,10 +4,18 @@
 
 //----------------------------------------------------------------------------------------------------
 #pragma once
+#include <functional>
+
 #include "GameCommon.hpp"
 #include "Engine/Core/EventSystem.hpp"
 #include "Game/Game.hpp"
 
+class GameCurves2D;
+class GameShapes3D;
+class GameRaycastVsAABBs;
+class GameRaycastVsLineSegments;
+class GameNearestPoint;
+class GameRaycastVsDiscs;
 //-Forward-Declaration--------------------------------------------------------------------------------
 class Camera;
 
@@ -38,10 +46,14 @@ private:
     void UpdateFromController();
     void UpdateCursorMode();
 
-    Clock*    m_gameClock        = nullptr;
-    eGameMode m_currentGameMode  = eGameMode::NEAREST_POINT;
-    Camera*   m_devConsoleCamera = nullptr;
+    Clock*                m_gameClock            = nullptr;
+    eGameMode             m_currentGameMode      = eGameMode::NEAREST_POINT;
+    Camera*               m_devConsoleCamera     = nullptr;
+    // std::function<void()> gameModeConstructors[];
+
 };
+
+
 
 //----------------------------------------------------------------------------------------------------
 template <typename T>
@@ -54,3 +66,5 @@ void DeleteAndCreateNewGame()
 
     g_theGame = new T();
 }
+
+

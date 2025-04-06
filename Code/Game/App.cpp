@@ -34,6 +34,16 @@ Window*                g_theWindow     = nullptr;      // Created and owned by t
 //----------------------------------------------------------------------------------------------------
 STATIC bool App::m_isQuitting = false;
 
+std::function<void()> gameModeConstructors[] =
+{
+    [] { DeleteAndCreateNewGame<GameRaycastVsDiscs>(); },
+    [] { DeleteAndCreateNewGame<GameNearestPoint>(); },
+    [] { DeleteAndCreateNewGame<GameRaycastVsLineSegments>(); },
+    [] { DeleteAndCreateNewGame<GameRaycastVsAABBs>(); },
+    [] { DeleteAndCreateNewGame<GameShapes3D>(); },
+    [] { DeleteAndCreateNewGame<GameCurves2D>(); }
+};
+
 //----------------------------------------------------------------------------------------------------
 void App::Startup()
 {
@@ -173,10 +183,7 @@ bool App::OnCloseButtonClicked(EventArgs& arg)
 }
 
 //----------------------------------------------------------------------------------------------------
-void App::RequestQuit()
-{
-    m_isQuitting = true;
-}
+void App::RequestQuit() { m_isQuitting = true; }
 
 //----------------------------------------------------------------------------------------------------
 void App::BeginFrame() const
@@ -237,48 +244,53 @@ void App::LoadGameConfig(char const* gameConfigXmlFilePath)
 
     if (result == XmlResult::XML_SUCCESS)
     {
-        if (XmlElement const* rootElement = gameConfigXml.RootElement())
-        {
-            g_gameConfigBlackboard.PopulateFromXmlElementAttributes(*rootElement);
-        }
-        else
-        {
-            printf("WARNING: game config from file \"%s\" was invalid (missing root element)\n", gameConfigXmlFilePath);
-        }
+        if (XmlElement const* rootElement = gameConfigXml.RootElement()) { g_gameConfigBlackboard.PopulateFromXmlElementAttributes(*rootElement); }
+        else { printf("WARNING: game config from file \"%s\" was invalid (missing root element)\n", gameConfigXmlFilePath); }
     }
-    else
-    {
-        printf("WARNING: failed to load game config from file \"%s\"\n", gameConfigXmlFilePath);
-    }
+    else { printf("WARNING: failed to load game config from file \"%s\"\n", gameConfigXmlFilePath); }
 }
 
 //----------------------------------------------------------------------------------------------------
 void App::UpdateFromFromKeyboard()
 {
+    // if (g_theInput->WasKeyJustPressed(KEYCODE_F6))
+    // {
+    //     // Cycle through game modes backward
+    //     m_currentGameMode = static_cast<eGameMode>((static_cast<int>(m_currentGameMode) + 5) % 6);
+    //
+    //     if (m_currentGameMode == eGameMode::RAYCAST_VS_DISCS) DeleteAndCreateNewGame<GameRaycastVsDiscs>();
+    //     if (m_currentGameMode == eGameMode::NEAREST_POINT) DeleteAndCreateNewGame<GameNearestPoint>();
+    //     if (m_currentGameMode == eGameMode::RAYCAST_VS_LINESEGMENTS) DeleteAndCreateNewGame<GameRaycastVsLineSegments>();
+    //     if (m_currentGameMode == eGameMode::RAYCAST_VS_AABBS) DeleteAndCreateNewGame<GameRaycastVsAABBs>();
+    //     if (m_currentGameMode == eGameMode::SHAPES_3D) DeleteAndCreateNewGame<GameShapes3D>();
+    //     if (m_currentGameMode == eGameMode::CURVES_2D) DeleteAndCreateNewGame<GameCurves2D>();
+    // }
+    //
+    // if (g_theInput->WasKeyJustPressed(KEYCODE_F7))
+    // {
+    //     // Cycle through game modes forward
+    //     m_currentGameMode = static_cast<eGameMode>((static_cast<int>(m_currentGameMode) + 1) % 6);
+    //
+    //     if (m_currentGameMode == eGameMode::RAYCAST_VS_DISCS) DeleteAndCreateNewGame<GameRaycastVsDiscs>();
+    //     if (m_currentGameMode == eGameMode::NEAREST_POINT) DeleteAndCreateNewGame<GameNearestPoint>();
+    //     if (m_currentGameMode == eGameMode::RAYCAST_VS_LINESEGMENTS) DeleteAndCreateNewGame<GameRaycastVsLineSegments>();
+    //     if (m_currentGameMode == eGameMode::RAYCAST_VS_AABBS) DeleteAndCreateNewGame<GameRaycastVsAABBs>();
+    //     if (m_currentGameMode == eGameMode::SHAPES_3D) DeleteAndCreateNewGame<GameShapes3D>();
+    //     if (m_currentGameMode == eGameMode::CURVES_2D) DeleteAndCreateNewGame<GameCurves2D>();
+    // }
+
     if (g_theInput->WasKeyJustPressed(KEYCODE_F6))
     {
-        // Cycle through game modes backward
+        // Backward
         m_currentGameMode = static_cast<eGameMode>((static_cast<int>(m_currentGameMode) + 5) % 6);
-
-        if (m_currentGameMode == eGameMode::RAYCAST_VS_DISCS) DeleteAndCreateNewGame<GameRaycastVsDiscs>();
-        if (m_currentGameMode == eGameMode::NEAREST_POINT) DeleteAndCreateNewGame<GameNearestPoint>();
-        if (m_currentGameMode == eGameMode::RAYCAST_VS_LINESEGMENTS) DeleteAndCreateNewGame<GameRaycastVsLineSegments>();
-        if (m_currentGameMode == eGameMode::RAYCAST_VS_AABBS) DeleteAndCreateNewGame<GameRaycastVsAABBs>();
-        if (m_currentGameMode == eGameMode::SHAPES_3D) DeleteAndCreateNewGame<GameShapes3D>();
-        if (m_currentGameMode == eGameMode::CURVES_2D) DeleteAndCreateNewGame<GameCurves2D>();
+        gameModeConstructors[static_cast<int>(m_currentGameMode)]();
     }
 
     if (g_theInput->WasKeyJustPressed(KEYCODE_F7))
     {
-        // Cycle through game modes forward
+        // Forward
         m_currentGameMode = static_cast<eGameMode>((static_cast<int>(m_currentGameMode) + 1) % 6);
-
-        if (m_currentGameMode == eGameMode::RAYCAST_VS_DISCS) DeleteAndCreateNewGame<GameRaycastVsDiscs>();
-        if (m_currentGameMode == eGameMode::NEAREST_POINT) DeleteAndCreateNewGame<GameNearestPoint>();
-        if (m_currentGameMode == eGameMode::RAYCAST_VS_LINESEGMENTS) DeleteAndCreateNewGame<GameRaycastVsLineSegments>();
-        if (m_currentGameMode == eGameMode::RAYCAST_VS_AABBS) DeleteAndCreateNewGame<GameRaycastVsAABBs>();
-        if (m_currentGameMode == eGameMode::SHAPES_3D) DeleteAndCreateNewGame<GameShapes3D>();
-        if (m_currentGameMode == eGameMode::CURVES_2D) DeleteAndCreateNewGame<GameCurves2D>();
+        gameModeConstructors[static_cast<int>(m_currentGameMode)]();
     }
 }
 
@@ -296,12 +308,6 @@ void App::UpdateCursorMode()
     bool const doesWindowHasFocus   = GetActiveWindow() == g_theWindow->GetWindowHandle();
     bool const shouldUsePointerMode = !doesWindowHasFocus || g_theDevConsole->IsOpen();
 
-    if (shouldUsePointerMode == true)
-    {
-        g_theInput->SetCursorMode(CursorMode::POINTER);
-    }
-    else
-    {
-        g_theInput->SetCursorMode(CursorMode::FPS);
-    }
+    if (shouldUsePointerMode == true) { g_theInput->SetCursorMode(CursorMode::POINTER); }
+    else { g_theInput->SetCursorMode(CursorMode::FPS); }
 }
