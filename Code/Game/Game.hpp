@@ -20,6 +20,8 @@ enum class eGameMode : int8_t
     RAYCAST_VS_LINESEGMENTS,
     RAYCAST_VS_AABBS,
     SHAPES_3D,
+    CURVES_2D,
+    COUNT
 };
 
 //----------------------------------------------------------------------------------------------------

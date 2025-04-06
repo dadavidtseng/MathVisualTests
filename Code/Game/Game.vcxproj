@@ -192,6 +192,7 @@
     <ClCompile Include="App.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameCommon.cpp" />
+    <ClCompile Include="GameCurves2D.cpp" />
     <ClCompile Include="GameNearestPoint.cpp" />
     <ClCompile Include="GameRaycastVsAABBs.cpp" />
     <ClCompile Include="GameRaycastVsDiscs.cpp" />
@@ -204,6 +205,7 @@
     <ClInclude Include="EngineBuildPreferences.hpp" />
     <ClInclude Include="Game.hpp" />
     <ClInclude Include="GameCommon.hpp" />
+    <ClInclude Include="GameCurves2D.hpp" />
     <ClInclude Include="GameNearestPoint.hpp" />
     <ClInclude Include="GameRaycastVsAABBs.hpp" />
     <ClInclude Include="GameRaycastVsDiscs.hpp" />

@@ -774,19 +774,3 @@ void GameShapes3D::GenerateRandomShapes()
         }
     }
 }
-
-void GameShapes3D::ToggleTestShapeState(TestShape3D& testShape, int index)
-{
-    if (testShape.m_state == eTestShapeState::IDLE)
-    {
-        testShape.m_state       = eTestShapeState::GRABBED;
-        testShape.m_targetColor = Rgba8::RED;
-        m_grabbedShapeIndex     = index;
-    }
-    else if (testShape.m_state == eTestShapeState::GRABBED)
-    {
-        testShape.m_state       = eTestShapeState::IDLE;
-        testShape.m_targetColor = Rgba8::WHITE;
-        m_grabbedShapeIndex     = -1;
-    }
-}

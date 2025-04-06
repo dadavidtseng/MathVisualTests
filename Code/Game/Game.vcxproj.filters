@@ -36,6 +36,9 @@
     <ClCompile Include="GameShapes3D.cpp">
       <Filter>Gameplay</Filter>
     </ClCompile>
+    <ClCompile Include="GameCurves2D.cpp">
+      <Filter>Gameplay</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.hpp">
@@ -63,6 +66,9 @@
       <Filter>Gameplay</Filter>
     </ClInclude>
     <ClInclude Include="GameShapes3D.hpp">
+      <Filter>Gameplay</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCurves2D.hpp">
       <Filter>Gameplay</Filter>
     </ClInclude>
   </ItemGroup>
