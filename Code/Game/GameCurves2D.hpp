@@ -35,5 +35,7 @@ private:
     Vec2 guide2;
     Vec2 endPos;
 
-    CubicBezierCurve2D m_cubicBezierCurve2D = CubicBezierCurve2D(startPos, guide1, guide2, endPos);
+    CubicBezierCurve2D m_cubicBezierCurve2D;
+    CubicHermiteCurve2D m_cubicHermiteCurve2D;
+    CatmullRomSpline2D m_catmullRomSpline2D;
 };

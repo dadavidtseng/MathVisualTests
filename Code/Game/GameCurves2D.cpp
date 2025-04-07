@@ -51,25 +51,27 @@ GameCurves2D::GameCurves2D()
     DebugAddWorldText("Z-Up", transform, 0.25f, Vec2(1.f, 0.f), -1.f, Rgba8::BLUE);
 
     // GenerateRandomShapes();
-    startPos                              = Vec2(0.f, 0.f);
-    guide1                                = Vec2(100.f, 200.f);
-    guide2                                = Vec2(100.f, 400.f);
-    endPos                                = Vec2(1600.f, 800.f);
-    m_cubicBezierCurve2D.m_startPosition  = startPos;
-    m_cubicBezierCurve2D.m_guidePosition1 = guide1;
-    m_cubicBezierCurve2D.m_guidePosition2 = guide2;
-    m_cubicBezierCurve2D.m_endPosition    = endPos;
+    startPos             = Vec2(50.f, 50.f);
+    guide1               = Vec2(100.f, 200.f);
+    guide2               = Vec2(100.f, 400.f);
+    endPos               = Vec2(1000.f, 500.f);
+    m_cubicBezierCurve2D = CubicBezierCurve2D(startPos, guide1, guide2, endPos);
+    // m_cubicHermiteCurve2D = CubicHermiteCurve2D(startPos, guide1, endPos, guide2);
+    m_cubicHermiteCurve2D = CubicHermiteCurve2D(m_cubicBezierCurve2D);
+
+    std::vector<Vec2> controlPoints = {
+        Vec2(0.f, 0.f),
+        Vec2(100.f, 200.f),
+        Vec2(200.f, 100.f),
+        Vec2(300.f, 300.f),
+        Vec2(400.f, 250.f)
+    };
+
+    m_catmullRomSpline2D = CatmullRomSpline2D(controlPoints);
 }
 
 void GameCurves2D::UpdateShapes()
 {
-    for (int i = 0; i <= 32; ++i)
-    {
-        float t     = (float)i / 32.f;
-        Vec2  point = m_cubicBezierCurve2D.EvaluateAtParametric(t);
-
-        // 把這個點畫出來（取決於你使用的繪圖 API）
-    }
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -97,23 +99,55 @@ void GameCurves2D::RenderShapes() const
     VertexList_PCU verts;
 
     std::vector<Vec2> bezierPoints;
-    int numSteps = 8;
+    std::vector<Vec2> hermitePoints;
+    int               numSteps = 32;
     for (int i = 0; i <= numSteps; ++i)
     {
         float t = (float)i / (float)numSteps;
         bezierPoints.push_back(m_cubicBezierCurve2D.EvaluateAtParametric(t));
+        hermitePoints.push_back((m_cubicHermiteCurve2D.EvaluateAtParametric(t)));
     }
 
-    // 使用你系統的 DrawLine()
+    // 設定參數
+    int   numSubdivisions = 64;
+    float thickness       = 3.f;
+    Rgba8 color           = Rgba8::CYAN;
+
+    // m_catmullRomSpline2D.AddVertsForCurve2D(verts, thickness, color, numSubdivisions);
+
     for (int i = 0; i < numSteps; ++i)
     {
-        AddVertsForLineSegment2D(verts, bezierPoints[i], bezierPoints[i + 1], 3.f,false, Rgba8::WHITE); // 紅色線段
+        AddVertsForLineSegment2D(verts, bezierPoints[i], bezierPoints[i + 1], 3.f, false, Rgba8::WHITE);
     }
 
-    AddVertsForDisc2D(verts, m_cubicBezierCurve2D.m_startPosition, 5.f, Rgba8::RED);
-    AddVertsForDisc2D(verts, m_cubicBezierCurve2D.m_guidePosition1, 5.f, Rgba8::YELLOW);
-    AddVertsForDisc2D(verts, m_cubicBezierCurve2D.m_guidePosition2, 5.f, Rgba8::GREEN);
-    AddVertsForDisc2D(verts, m_cubicBezierCurve2D.m_endPosition, 5.f, Rgba8::BLUE);
+    // AddVertsForDisc2D(verts, m_cubicBezierCurve2D.m_startPosition, 5.f, Rgba8::RED);
+    // AddVertsForDisc2D(verts, m_cubicBezierCurve2D.m_guidePosition1, 5.f, Rgba8::YELLOW);
+    // AddVertsForDisc2D(verts, m_cubicBezierCurve2D.m_guidePosition2, 5.f, Rgba8::GREEN);
+    // AddVertsForDisc2D(verts, m_cubicBezierCurve2D.m_endPosition, 5.f, Rgba8::BLUE);
+
+    // for (int i = 0; i < numSteps; ++i)
+    // {
+    //     AddVertsForLineSegment2D(verts, hermitePoints[i], hermitePoints[i + 1], 3.f, false, Rgba8::WHITE);
+    // }
+    //
+    // AddVertsForDisc2D(verts, m_cubicHermiteCurve2D.m_startPos, 5.f, Rgba8::RED);
+    // AddVertsForArrow2D(verts, m_cubicHermiteCurve2D.m_startPos, m_cubicHermiteCurve2D.m_startPos+ m_cubicHermiteCurve2D.m_startVel, 5.f, 3.f, Rgba8::YELLOW);
+    // AddVertsForArrow2D(verts, m_cubicHermiteCurve2D.m_endPos, m_cubicHermiteCurve2D.m_endPos + m_cubicHermiteCurve2D.m_endVel, 5.f, 3.f, Rgba8::GREEN);
+    // AddVertsForDisc2D(verts, m_cubicHermiteCurve2D.m_endPos, 5.f, Rgba8::BLUE);
+    // int   numSubdivisions = 64;
+    float curveLength      = m_cubicBezierCurve2D.GetApproximateLength(numSubdivisions);
+    float time             = fmod((float)m_gameClock->GetTotalSeconds(), 2.f);  // 2秒loop
+    float normalizedTime   = time / 2.f;
+
+    // ------ 白色點（parametric） ------
+    Vec2 whiteDot = m_cubicBezierCurve2D.EvaluateAtParametric(normalizedTime);
+    AddVertsForDisc2D(verts, whiteDot, 8.f, Rgba8::WHITE);
+
+    // ------ 綠色點（distance-based） ------
+    float speed             = curveLength / 2.f; // 要2秒走完整條曲線
+    float distanceAlongPath = speed * time;
+    Vec2 greenDot           = m_cubicBezierCurve2D.EvaluateAtApproximateDistance(distanceAlongPath, numSubdivisions);
+    AddVertsForDisc2D(verts, greenDot, 8.f, Rgba8::GREEN);
 
 
     // AddVertsForDisc2D(verts, m_startPos, 10.f, Rgba8::WHITE);
@@ -190,8 +224,8 @@ void GameCurves2D::UpdateFromKeyboard(float deltaSeconds)
         m_worldCamera->SetOrientation(EulerAngles::ZERO);
     }
 
-    if (g_theInput->IsKeyDown(KEYCODE_W))m_cubicBezierCurve2D.m_guidePosition1+=Vec2(0.1f,0.1f);
-    if (g_theInput->IsKeyDown(KEYCODE_S))m_cubicBezierCurve2D.m_guidePosition2+=Vec2(0.1f,0.1f);
+    if (g_theInput->IsKeyDown(KEYCODE_W)) m_cubicBezierCurve2D.m_guidePosition1 += Vec2(0.1f, 0.1f);
+    if (g_theInput->IsKeyDown(KEYCODE_S)) m_cubicBezierCurve2D.m_guidePosition2 += Vec2(0.1f, 0.1f);
 }
 
 //----------------------------------------------------------------------------------------------------
