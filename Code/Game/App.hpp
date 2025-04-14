@@ -34,7 +34,7 @@ public:
     static bool OnCloseButtonClicked(EventArgs& arg);
     static void RequestQuit();
     static bool m_isQuitting;
-    static std::function<void()> gameModeConstructors[];
+    static std::function<void()> s_gameModeConstructors[];
 
 private:
     void BeginFrame() const;

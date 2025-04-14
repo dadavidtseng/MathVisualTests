@@ -35,7 +35,7 @@ Window*                g_theWindow     = nullptr;      // Created and owned by t
 STATIC bool App::m_isQuitting = false;
 
 //----------------------------------------------------------------------------------------------------
-STATIC std::function<void()> App::gameModeConstructors[] =
+STATIC std::function<void()> App::s_gameModeConstructors[] =
 {
     [] { DeleteAndCreateNewGame<GameRaycastVsDiscs>(); },
     [] { DeleteAndCreateNewGame<GameNearestPoint>(); },
@@ -260,14 +260,14 @@ void App::UpdateFromFromKeyboard()
     {
         // Backward
         m_currentGameMode = static_cast<eGameMode>((static_cast<int>(m_currentGameMode) + gameModeCount - 1) % gameModeCount);
-        gameModeConstructors[static_cast<int>(m_currentGameMode)]();
+        s_gameModeConstructors[static_cast<int>(m_currentGameMode)]();
     }
 
     if (g_theInput->WasKeyJustPressed(KEYCODE_F7))
     {
         // Forward
         m_currentGameMode = static_cast<eGameMode>((static_cast<int>(m_currentGameMode) + 1) % gameModeCount);
-        gameModeConstructors[static_cast<int>(m_currentGameMode)]();
+        s_gameModeConstructors[static_cast<int>(m_currentGameMode)]();
     }
 }
 

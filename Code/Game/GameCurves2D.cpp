@@ -23,6 +23,16 @@
 #include "Game/App.hpp"
 #include "Game/GameCommon.hpp"
 
+STATIC std::function<float(float)> GameCurves2D::s_easingFunctions[] =
+{
+    [](float const t) { return SmoothStart2(t); },
+    [](float const t) { return SmoothStart3(t); },
+    [](float const t) { return SmoothStop2(t); },
+    [](float const t) { return SmoothStop3(t); },
+    [](float const t) { return SmoothStep3(t); },
+    [](float const t) { return SmoothStep5(t); },
+};
+
 //----------------------------------------------------------------------------------------------------
 GameCurves2D::GameCurves2D()
 {
@@ -36,19 +46,6 @@ GameCurves2D::GameCurves2D()
     m_worldCamera->SetOrthoGraphicView(Vec2::ZERO, Vec2(screenSizeX, screenSizeY));
 
     m_gameClock = new Clock(Clock::GetSystemClock());
-
-    DebugAddWorldBasis(Mat44(), -1.f);
-
-    Mat44 transform;
-
-    transform.SetIJKT3D(-Vec3::Y_BASIS, Vec3::X_BASIS, Vec3::Z_BASIS, Vec3(0.25f, 0.f, 0.25f));
-    DebugAddWorldText("X-Forward", transform, 0.25f, Vec2::ONE, -1.f, Rgba8::RED);
-
-    transform.SetIJKT3D(-Vec3::X_BASIS, -Vec3::Y_BASIS, Vec3::Z_BASIS, Vec3(0.f, 0.25f, 0.5f));
-    DebugAddWorldText("Y-Left", transform, 0.25f, Vec2::ZERO, -1.f, Rgba8::GREEN);
-
-    transform.SetIJKT3D(-Vec3::X_BASIS, Vec3::Z_BASIS, Vec3::Y_BASIS, Vec3(0.f, -0.25f, 0.25f));
-    DebugAddWorldText("Z-Up", transform, 0.25f, Vec2(1.f, 0.f), -1.f, Rgba8::BLUE);
 
     // GenerateRandomShapes();
     startPos             = Vec2(50.f, 50.f);
@@ -68,10 +65,10 @@ GameCurves2D::GameCurves2D()
     };
 
     m_catmullRomSpline2D = CatmullRomSpline2D(controlPoints);
-}
 
-void GameCurves2D::UpdateShapes()
-{
+
+    GenerateAABB2s();
+    GenerateEaseFunction();
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -85,12 +82,7 @@ void GameCurves2D::Update()
     UpdateFromKeyboard(deltaSeconds);
     UpdateFromController(deltaSeconds);
 
-    if (g_theInput->WasKeyJustPressed(NUMCODE_6))
-    {
-        DebugAddWorldWireCylinder(m_worldCamera->GetPosition(), m_worldCamera->GetPosition() + Vec3::Z_BASIS * 2, 1.f, 10.f, Rgba8::WHITE, Rgba8::RED);
-    }
-
-    UpdateShapes();
+    UpdateEaseFunction();
     // m_worldCamera->SetPositionAndOrientation(m_player.m_startPosition, m_player.m_orientation);
 }
 
@@ -135,9 +127,9 @@ void GameCurves2D::RenderShapes() const
     // AddVertsForArrow2D(verts, m_cubicHermiteCurve2D.m_endPos, m_cubicHermiteCurve2D.m_endPos + m_cubicHermiteCurve2D.m_endVel, 5.f, 3.f, Rgba8::GREEN);
     // AddVertsForDisc2D(verts, m_cubicHermiteCurve2D.m_endPos, 5.f, Rgba8::BLUE);
     // int   numSubdivisions = 64;
-    float curveLength      = m_cubicBezierCurve2D.GetApproximateLength(numSubdivisions);
-    float time             = fmod((float)m_gameClock->GetTotalSeconds(), 2.f);  // 2秒loop
-    float normalizedTime   = time / 2.f;
+    float curveLength    = m_cubicBezierCurve2D.GetApproximateLength(numSubdivisions);
+    float time           = fmod((float)m_gameClock->GetTotalSeconds(), 2.f);  // 2秒loop
+    float normalizedTime = time / 2.f;
 
     // ------ 白色點（parametric） ------
     Vec2 whiteDot = m_cubicBezierCurve2D.EvaluateAtParametric(normalizedTime);
@@ -146,7 +138,7 @@ void GameCurves2D::RenderShapes() const
     // ------ 綠色點（distance-based） ------
     float speed             = curveLength / 2.f; // 要2秒走完整條曲線
     float distanceAlongPath = speed * time;
-    Vec2 greenDot           = m_cubicBezierCurve2D.EvaluateAtApproximateDistance(distanceAlongPath, numSubdivisions);
+    Vec2  greenDot          = m_cubicBezierCurve2D.EvaluateAtApproximateDistance(distanceAlongPath, numSubdivisions);
     AddVertsForDisc2D(verts, greenDot, 8.f, Rgba8::GREEN);
 
 
@@ -167,8 +159,9 @@ void GameCurves2D::Render() const
 
     g_theRenderer->BeginCamera(*m_worldCamera);
 
-    RenderShapes();
-    // RenderPlayerBasis();
+    // RenderShapes();
+    RenderAABB2s();
+    RenderEaseFunctions();
 
     g_theRenderer->EndCamera(*m_worldCamera);
 
@@ -226,10 +219,73 @@ void GameCurves2D::UpdateFromKeyboard(float deltaSeconds)
 
     if (g_theInput->IsKeyDown(KEYCODE_W)) m_cubicBezierCurve2D.m_guidePosition1 += Vec2(0.1f, 0.1f);
     if (g_theInput->IsKeyDown(KEYCODE_S)) m_cubicBezierCurve2D.m_guidePosition2 += Vec2(0.1f, 0.1f);
+
+    if (g_theInput->WasKeyJustPressed(KEYCODE_N)) m_easeIndex += 1;
+    if (g_theInput->WasKeyJustPressed(KEYCODE_M)) m_easeIndex -= 1;
 }
 
 //----------------------------------------------------------------------------------------------------
 void GameCurves2D::UpdateFromController(float const deltaSeconds)
 {
     UNUSED(deltaSeconds)
+}
+
+void GameCurves2D::UpdateEaseFunction()
+{
+    // float t = fmod((float)m_gameClock->GetTotalSeconds(), 2.f)/2.f;
+    // float easedT = SmoothStart2(t);
+    // easeFunctionStartPosition = Interpolate(easeFunctionStartPosition,easeFunctionEndPosition, easedT);
+}
+
+void GameCurves2D::RenderEaseFunctions() const
+{
+    float const t = fmodf((float)m_gameClock->GetTotalSeconds(), 2.f) / 2.f;
+
+    float const easedT = s_easingFunctions[m_easeIndex](t);
+
+    Vec2 const     position = Interpolate(m_easeFunctionStartPosition, m_easeFunctionEndPosition, easedT);
+    VertexList_PCU verts;
+
+    AddVertsForDisc2D(verts, position, 5.f, Rgba8::WHITE);
+    g_theRenderer->SetModelConstants();
+    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
+    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
+    g_theRenderer->BindTexture(nullptr);
+    g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+}
+
+void GameCurves2D::GenerateAABB2s()
+{
+    boundA = AABB2(Vec2(50.f, 425.f), Vec2(775.f, 750.f));
+    boundB = AABB2(Vec2(825.f, 425.f), Vec2(1550.f, 750.f));
+    boundB = AABB2(Vec2(275.f, 450.f), Vec2(550.f, 750.f));
+    boundC = AABB2(Vec2(50.f, 50.f), Vec2(1550.f, 375.f));
+}
+
+void GameCurves2D::GenerateEaseFunction()
+{
+    m_easeFunctionStartPosition = Vec2(275.f, 450.f);
+    m_easeFunctionEndPosition   = Vec2(550.f, 750.f);
+    m_easeFunctionBound         = AABB2(m_easeFunctionStartPosition, m_easeFunctionEndPosition);
+}
+
+void GameCurves2D::RenderAABB2s() const
+{
+    VertexList_PCU verts;
+
+    Rgba8 const boundsColor = Rgba8(255, 0, 0, 127);
+
+    AddVertsForAABB2D(verts, boundA, boundsColor);
+    AddVertsForAABB2D(verts, boundB, Rgba8::BLUE);
+    AddVertsForAABB2D(verts, boundC, boundsColor);
+
+    g_theRenderer->SetModelConstants();
+    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
+    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
+    g_theRenderer->BindTexture(nullptr);
+    g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }

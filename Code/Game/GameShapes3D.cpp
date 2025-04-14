@@ -82,7 +82,7 @@ void GameShapes3D::Update()
 
     if (g_theInput->WasKeyJustPressed(NUMCODE_6))
     {
-        DebugAddWorldWireCylinder(m_worldCamera->GetPosition(), m_worldCamera->GetPosition() + Vec3::Z_BASIS * 2, 1.f, 10.f, Rgba8::WHITE, Rgba8::RED);
+        DebugAddWorldCylinder(m_worldCamera->GetPosition(), m_worldCamera->GetPosition() + Vec3::Z_BASIS * 2, 1.f, 10.f, true, Rgba8::WHITE, Rgba8::RED);
     }
 
     UpdateShapes();
