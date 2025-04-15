@@ -7,30 +7,25 @@
 
 #include "Engine/Core/Clock.hpp"
 #include "Engine/Core/EngineCommon.hpp"
-#include "Engine/Core/ErrorWarningAssert.hpp"
-#include "Engine/Core/VertexUtils.hpp"
+// #include "Engine/Core/ErrorWarningAssert.hpp"
+// #include "Engine/Core/VertexUtils.hpp"
 #include "Engine/Input/InputSystem.hpp"
-#include "Engine/Math/AABB3.hpp"
-#include "Engine/Math/Cylinder3.hpp"
-#include "Engine/Math/FloatRange.hpp"
+// #include "Engine/Math/AABB3.hpp"
 #include "Engine/Math/MathUtils.hpp"
-#include "Engine/Math/RandomNumberGenerator.hpp"
-#include "Engine/Math/RaycastUtils.hpp"
-#include "Engine/Math/Sphere3.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/DebugRenderSystem.hpp"
 #include "Engine/Renderer/Renderer.hpp"
 #include "Game/App.hpp"
 #include "Game/GameCommon.hpp"
 
-STATIC std::function<float(float)> GameCurves2D::s_easingFunctions[] =
+std::vector<EasingFunctionInfo> GameCurves2D::s_easingFunctions =
 {
-    [](float const t) { return SmoothStart2(t); },
-    [](float const t) { return SmoothStart3(t); },
-    [](float const t) { return SmoothStop2(t); },
-    [](float const t) { return SmoothStop3(t); },
-    [](float const t) { return SmoothStep3(t); },
-    [](float const t) { return SmoothStep5(t); },
+    {"SmoothStart2", [](float t) { return SmoothStart2(t); }},
+    {"SmoothStart3", [](float t) { return SmoothStart3(t); }},
+    {"SmoothStop2", [](float t) { return SmoothStop2(t); }},
+    {"SmoothStop3", [](float t) { return SmoothStop3(t); }},
+    {"SmoothStep3", [](float t) { return SmoothStep3(t); }},
+    {"SmoothStep5", [](float t) { return SmoothStep5(t); }},
 };
 
 //----------------------------------------------------------------------------------------------------
@@ -65,7 +60,6 @@ GameCurves2D::GameCurves2D()
     };
 
     m_catmullRomSpline2D = CatmullRomSpline2D(controlPoints);
-
 
     GenerateAABB2s();
     GenerateEaseFunction();
@@ -239,29 +233,88 @@ void GameCurves2D::UpdateEaseFunction()
 
 void GameCurves2D::RenderEaseFunctions() const
 {
-    float const t = fmodf((float)m_gameClock->GetTotalSeconds(), 2.f) / 2.f;
+    Vec2 graphSize = boundAChild.GetDimensions();
 
-    float const easedT = s_easingFunctions[m_easeIndex](t);
+    const int numSamples = 64;
+    VertexList_PCU curveVerts;
+    Rgba8 curveColor = Rgba8::GREEN;
 
-    Vec2 const     position = Interpolate(m_easeFunctionStartPosition, m_easeFunctionEndPosition, easedT);
-    VertexList_PCU verts;
+    for (int i = 0; i < numSamples - 1; ++i)
+    {
+        float t0 = (float)i / (float)(numSamples - 1);
+        float t1 = (float)(i + 1) / (float)(numSamples - 1);
 
-    AddVertsForDisc2D(verts, position, 5.f, Rgba8::WHITE);
+        float easedT0 = s_easingFunctions[m_easeIndex].easeFunction(t0);
+        float easedT1 = s_easingFunctions[m_easeIndex].easeFunction(t1);
+
+        // 將 (t, easedT) 映射到 graphBounds 區域
+        Vec2 p0 = boundAChild.m_mins + Vec2(t0 * graphSize.x, easedT0 * graphSize.y);
+        Vec2 p1 = boundAChild.m_mins + Vec2(t1 * graphSize.x, easedT1 * graphSize.y);
+
+        AddVertsForLineSegment2D(curveVerts, p0, p1,3.f,false,Rgba8::WHITE);
+    }
+
     g_theRenderer->SetModelConstants();
     g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
     g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
     g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
     g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
     g_theRenderer->BindTexture(nullptr);
-    g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+    g_theRenderer->DrawVertexArray(static_cast<int>(curveVerts.size()), curveVerts.data());
+
+    std::vector<Vec2> curvePoints;
+    curvePoints.reserve(numSamples);
+
+
+    // 預先計算曲線點
+    for (int i = 0; i < numSamples; ++i)
+    {
+        float tSample = (float)i / (float)(numSamples - 1);
+        float easedT = s_easingFunctions[m_easeIndex].easeFunction(tSample);
+        Vec2 p = boundAChild.m_mins + Vec2(tSample * graphSize.x, easedT * graphSize.y);
+        curvePoints.push_back(p);
+    }
+
+    // 找到目前時間對應的曲線點
+    float t = fmodf((float)m_gameClock->GetTotalSeconds(), 2.f) / 2.f;
+    int currentIndex = static_cast<int>(t * (numSamples - 1));
+    Vec2 position = curvePoints[currentIndex];
+
+    // float const t = fmodf((float)m_gameClock->GetTotalSeconds(), 2.f) / 2.f;
+    //
+    // float const easedT = s_easingFunctions[m_easeIndex].easeFunction(t);
+    //
+    // Vec2 const     position = Interpolate(m_easeFunctionStartPosition, m_easeFunctionEndPosition, easedT);
+    // VertexList_PCU verts;
+    //
+    // AABB2 bounds = AABB2(Vec2(275.f, 425.f), Vec2(550.f, 450.f));
+    //
+    AddVertsForDisc2D(curveVerts, position, 5.f, Rgba8::WHITE);
+    g_theRenderer->SetModelConstants();
+    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
+    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
+    g_theRenderer->BindTexture(nullptr);
+    g_theRenderer->DrawVertexArray(static_cast<int>(curveVerts.size()), curveVerts.data());
+
+    VertexList_PCU textVerts;
+    g_theBitmapFont->AddVertsForTextInBox2D(textVerts, s_easingFunctions[m_easeIndex].easeFunctionName, boundAChild, 25.f);
+    g_theRenderer->SetModelConstants();
+    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
+    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
+    g_theRenderer->BindTexture(&g_theBitmapFont->GetTexture());
+    g_theRenderer->DrawVertexArray(static_cast<int>(textVerts.size()), textVerts.data());
 }
 
 void GameCurves2D::GenerateAABB2s()
 {
-    boundA = AABB2(Vec2(50.f, 425.f), Vec2(775.f, 750.f));
-    boundB = AABB2(Vec2(825.f, 425.f), Vec2(1550.f, 750.f));
-    boundB = AABB2(Vec2(275.f, 450.f), Vec2(550.f, 750.f));
-    boundC = AABB2(Vec2(50.f, 50.f), Vec2(1550.f, 375.f));
+    boundA      = AABB2(Vec2(50.f, 425.f), Vec2(775.f, 750.f));
+    boundAChild = AABB2(Vec2(275.f, 450.f), Vec2(550.f, 750.f));
+    boundB      = AABB2(Vec2(825.f, 425.f), Vec2(1550.f, 750.f));
+    boundC      = AABB2(Vec2(50.f, 50.f), Vec2(1550.f, 375.f));
 }
 
 void GameCurves2D::GenerateEaseFunction()

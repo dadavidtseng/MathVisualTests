@@ -33,6 +33,8 @@
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=D80656F3_002DB024_002D489F_002DB7B3_002D8BF35B25C423_002Fd_003AMath_002Ff_003AAABB2_002Ehpp/@EntryIndexedValue">ForceIncluded</s:String>
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=D80656F3_002DB024_002D489F_002DB7B3_002D8BF35B25C423_002Fd_003AMath_002Ff_003AAABB3_002Ecpp/@EntryIndexedValue">ForceIncluded</s:String>
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=D80656F3_002DB024_002D489F_002DB7B3_002D8BF35B25C423_002Fd_003AMath_002Ff_003ACapsule2_002Ecpp/@EntryIndexedValue">ForceIncluded</s:String>
+	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=D80656F3_002DB024_002D489F_002DB7B3_002D8BF35B25C423_002Fd_003AMath_002Ff_003ACurve2D_002Ecpp/@EntryIndexedValue">ForceIncluded</s:String>
+	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=D80656F3_002DB024_002D489F_002DB7B3_002D8BF35B25C423_002Fd_003AMath_002Ff_003ACurve2D_002Ehpp/@EntryIndexedValue">ForceIncluded</s:String>
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=D80656F3_002DB024_002D489F_002DB7B3_002D8BF35B25C423_002Fd_003AMath_002Ff_003ACylinder3_002Ecpp/@EntryIndexedValue">ForceIncluded</s:String>
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=D80656F3_002DB024_002D489F_002DB7B3_002D8BF35B25C423_002Fd_003AMath_002Ff_003ACylinder3_002Ehpp/@EntryIndexedValue">ForceIncluded</s:String>
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=D80656F3_002DB024_002D489F_002DB7B3_002D8BF35B25C423_002Fd_003AMath_002Ff_003ADisc2_002Ecpp/@EntryIndexedValue">ForceIncluded</s:String>

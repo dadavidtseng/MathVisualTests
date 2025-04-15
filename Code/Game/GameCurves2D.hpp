@@ -12,17 +12,18 @@
 #include "Engine/Math/Curve2D.hpp"
 #include "Game/Game.hpp"
 
-class CubicBezierCurve2D;
-struct Rgba8;
+// class CubicBezierCurve2D;
+// struct Rgba8;
 
+//----------------------------------------------------------------------------------------------------
 struct EasingFunctionInfo
 {
-    String                      name;
-    std::function<float(float)> func;
+    String                      easeFunctionName;
+    std::function<float(float)> easeFunction;
 };
 
 //----------------------------------------------------------------------------------------------------
-class GameCurves2D final : public Game
+class GameCurves2D : public Game
 {
 public:
     GameCurves2D();
@@ -30,8 +31,8 @@ public:
     void Update() override;
     void RenderShapes() const;
 
-    void                               Render() const override;
-    static std::function<float(float)> s_easingFunctions[];
+    void                                   Render() const override;
+    static std::vector<EasingFunctionInfo> s_easingFunctions;
 
 private:
     void UpdateFromKeyboard(float deltaSeconds) override;
@@ -52,6 +53,7 @@ private:
     Vec2 endPos;
 
     AABB2 boundA;
+    AABB2 boundAChild;
     AABB2 boundB;
     AABB2 boundC;
 

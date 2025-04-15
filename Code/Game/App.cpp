@@ -285,6 +285,12 @@ void App::UpdateCursorMode()
     bool const doesWindowHasFocus   = GetActiveWindow() == g_theWindow->GetWindowHandle();
     bool const shouldUsePointerMode = !doesWindowHasFocus || g_theDevConsole->IsOpen();
 
-    if (shouldUsePointerMode == true) { g_theInput->SetCursorMode(CursorMode::POINTER); }
-    else { g_theInput->SetCursorMode(CursorMode::FPS); }
+    if (shouldUsePointerMode == true)
+    {
+        g_theInput->SetCursorMode(CursorMode::POINTER);
+    }
+    else
+    {
+        g_theInput->SetCursorMode(CursorMode::FPS);
+    }
 }
