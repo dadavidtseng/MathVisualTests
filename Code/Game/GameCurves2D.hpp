@@ -52,12 +52,7 @@ private:
     Vec2 guide2;
     Vec2 endPos;
 
-    AABB2 boundA;
-    AABB2 boundAChild;
-    AABB2 boundB;
-    AABB2 boundC;
 
-    CubicBezierCurve2D  m_cubicBezierCurve2D;
     CubicHermiteCurve2D m_cubicHermiteCurve2D;
     CatmullRomSpline2D  m_catmullRomSpline2D;
 
@@ -65,8 +60,17 @@ private:
     // Vec2  startPosition = box.m_mins;
     // Vec2  endPosition   = box.m_maxs;
 
+    // EaseFunctions
     AABB2 m_easeFunctionBound;
     Vec2  m_easeFunctionStartPosition;
     Vec2  m_easeFunctionEndPosition;
     int   m_easeIndex = 0;
+    AABB2 boundA;
+    AABB2 boundAChild;
+    AABB2 boundB;
+    AABB2 boundC;
+
+    // CubicBezierCurve
+    CubicBezierCurve2D m_cubicBezierCurve2D;
+
 };

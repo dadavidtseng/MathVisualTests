@@ -20,12 +20,20 @@
 
 std::vector<EasingFunctionInfo> GameCurves2D::s_easingFunctions =
 {
-    {"SmoothStart2", [](float t) { return SmoothStart2(t); }},
-    {"SmoothStart3", [](float t) { return SmoothStart3(t); }},
-    {"SmoothStop2", [](float t) { return SmoothStop2(t); }},
-    {"SmoothStop3", [](float t) { return SmoothStop3(t); }},
-    {"SmoothStep3", [](float t) { return SmoothStep3(t); }},
-    {"SmoothStep5", [](float t) { return SmoothStep5(t); }},
+    {"SmoothStart2", [](float const t) { return SmoothStart2(t); }},
+    {"SmoothStart3", [](float const t) { return SmoothStart3(t); }},
+    {"SmoothStart4", [](float const t) { return SmoothStart4(t); }},
+    {"SmoothStart5", [](float const t) { return SmoothStart5(t); }},
+    {"SmoothStart6", [](float const t) { return SmoothStart6(t); }},
+    {"SmoothStop2", [](float const t) { return SmoothStop2(t); }},
+    {"SmoothStop3", [](float const t) { return SmoothStop3(t); }},
+    {"SmoothStop4", [](float const t) { return SmoothStop4(t); }},
+    {"SmoothStop5", [](float const t) { return SmoothStop5(t); }},
+    {"SmoothStop6", [](float const t) { return SmoothStop6(t); }},
+    {"SmoothStep3", [](float const t) { return SmoothStep3(t); }},
+    {"SmoothStep5", [](float const t) { return SmoothStep5(t); }},
+    {"Hesitate3", [](float const t) { return Hesitate3(t); }},
+    {"Hesitate5", [](float const t) { return Hesitate5(t); }},
 };
 
 //----------------------------------------------------------------------------------------------------
@@ -153,7 +161,7 @@ void GameCurves2D::Render() const
 
     g_theRenderer->BeginCamera(*m_worldCamera);
 
-    // RenderShapes();
+    RenderShapes();
     RenderAABB2s();
     RenderEaseFunctions();
 
@@ -214,8 +222,11 @@ void GameCurves2D::UpdateFromKeyboard(float deltaSeconds)
     if (g_theInput->IsKeyDown(KEYCODE_W)) m_cubicBezierCurve2D.m_guidePosition1 += Vec2(0.1f, 0.1f);
     if (g_theInput->IsKeyDown(KEYCODE_S)) m_cubicBezierCurve2D.m_guidePosition2 += Vec2(0.1f, 0.1f);
 
-    if (g_theInput->WasKeyJustPressed(KEYCODE_N)) m_easeIndex += 1;
-    if (g_theInput->WasKeyJustPressed(KEYCODE_M)) m_easeIndex -= 1;
+    if (g_theInput->WasKeyJustPressed(KEYCODE_W)) m_easeIndex++;
+    if (g_theInput->WasKeyJustPressed(KEYCODE_E)) m_easeIndex--;
+
+    int const size = static_cast<int>(s_easingFunctions.size());
+    m_easeIndex    = (m_easeIndex + size) % size;
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -233,63 +244,48 @@ void GameCurves2D::UpdateEaseFunction()
 
 void GameCurves2D::RenderEaseFunctions() const
 {
-    Vec2 graphSize = boundAChild.GetDimensions();
-
-    const int numSamples = 64;
     VertexList_PCU curveVerts;
-    Rgba8 curveColor = Rgba8::GREEN;
+    int constexpr  numSteps   = 64;
+    Rgba8 const    curveColor = Rgba8::GREEN;
+    Vec2 const     dimension  = boundAChild.GetDimensions();
 
-    for (int i = 0; i < numSamples - 1; ++i)
+    for (int i = 0; i < numSteps - 1; ++i)
     {
-        float t0 = (float)i / (float)(numSamples - 1);
-        float t1 = (float)(i + 1) / (float)(numSamples - 1);
+        float const t0 = static_cast<float>(i) / static_cast<float>(numSteps - 1);
+        float const t1 = static_cast<float>(i + 1) / static_cast<float>(numSteps - 1);
 
-        float easedT0 = s_easingFunctions[m_easeIndex].easeFunction(t0);
-        float easedT1 = s_easingFunctions[m_easeIndex].easeFunction(t1);
+        float const easedT0 = s_easingFunctions[m_easeIndex].easeFunction(t0);
+        float const easedT1 = s_easingFunctions[m_easeIndex].easeFunction(t1);
 
-        // 將 (t, easedT) 映射到 graphBounds 區域
-        Vec2 p0 = boundAChild.m_mins + Vec2(t0 * graphSize.x, easedT0 * graphSize.y);
-        Vec2 p1 = boundAChild.m_mins + Vec2(t1 * graphSize.x, easedT1 * graphSize.y);
+        Vec2 p0 = boundAChild.m_mins + Vec2(t0 * dimension.x, easedT0 * dimension.y);
+        Vec2 p1 = boundAChild.m_mins + Vec2(t1 * dimension.x, easedT1 * dimension.y);
 
-        AddVertsForLineSegment2D(curveVerts, p0, p1,3.f,false,Rgba8::WHITE);
+        AddVertsForLineSegment2D(curveVerts, p0, p1, 3.f, false, curveColor);
     }
-
-    g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
-    g_theRenderer->BindTexture(nullptr);
-    g_theRenderer->DrawVertexArray(static_cast<int>(curveVerts.size()), curveVerts.data());
 
     std::vector<Vec2> curvePoints;
-    curvePoints.reserve(numSamples);
+    curvePoints.reserve(numSteps);
 
-
-    // 預先計算曲線點
-    for (int i = 0; i < numSamples; ++i)
+    for (int i = 0; i < numSteps; ++i)
     {
-        float tSample = (float)i / (float)(numSamples - 1);
-        float easedT = s_easingFunctions[m_easeIndex].easeFunction(tSample);
-        Vec2 p = boundAChild.m_mins + Vec2(tSample * graphSize.x, easedT * graphSize.y);
-        curvePoints.push_back(p);
+        float const t      = static_cast<float>(i) / static_cast<float>(numSteps - 1);
+        float const easedT = s_easingFunctions[m_easeIndex].easeFunction(t);
+        Vec2        point  = boundAChild.m_mins + Vec2(t * dimension.x, easedT * dimension.y);
+        curvePoints.push_back(point);
     }
 
-    // 找到目前時間對應的曲線點
-    float t = fmodf((float)m_gameClock->GetTotalSeconds(), 2.f) / 2.f;
-    int currentIndex = static_cast<int>(t * (numSamples - 1));
-    Vec2 position = curvePoints[currentIndex];
+    float const t            = fmodf(static_cast<float>(m_gameClock->GetTotalSeconds()), 2.f) / 2.f;
+    int const   currentIndex = static_cast<int>(t * (numSteps - 1));
+    Vec2 const  position     = curvePoints[currentIndex];
 
-    // float const t = fmodf((float)m_gameClock->GetTotalSeconds(), 2.f) / 2.f;
-    //
-    // float const easedT = s_easingFunctions[m_easeIndex].easeFunction(t);
-    //
-    // Vec2 const     position = Interpolate(m_easeFunctionStartPosition, m_easeFunctionEndPosition, easedT);
-    // VertexList_PCU verts;
-    //
-    // AABB2 bounds = AABB2(Vec2(275.f, 425.f), Vec2(550.f, 450.f));
-    //
+    Vec2 const  horizontalPosition = Vec2(position.x, boundAChild.m_mins.y);
+    Vec2 const  verticalPosition   = Vec2(boundAChild.m_mins.x, position.y);
+    Rgba8 const axisLineColor      = Rgba8(39, 39, 78);
+
+    AddVertsForLineSegment2D(curveVerts, position, horizontalPosition, 3.f, false, axisLineColor);
+    AddVertsForLineSegment2D(curveVerts, position, verticalPosition, 3.f, false, axisLineColor);
     AddVertsForDisc2D(curveVerts, position, 5.f, Rgba8::WHITE);
+
     g_theRenderer->SetModelConstants();
     g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
     g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
@@ -298,8 +294,13 @@ void GameCurves2D::RenderEaseFunctions() const
     g_theRenderer->BindTexture(nullptr);
     g_theRenderer->DrawVertexArray(static_cast<int>(curveVerts.size()), curveVerts.data());
 
-    VertexList_PCU textVerts;
-    g_theBitmapFont->AddVertsForTextInBox2D(textVerts, s_easingFunctions[m_easeIndex].easeFunctionName, boundAChild, 25.f);
+    // Render EaseFunction text
+    VertexList_PCU  textVerts;
+    float constexpr textHeight        = 25.f;
+    float const     textWidth         = g_theBitmapFont->GetTextWidth(textHeight, s_easingFunctions[m_easeIndex].easeFunctionName);
+    Vec2 const      textStartPosition = Vec2((boundAChild.m_mins.x + boundAChild.m_maxs.x - textWidth) * 0.5f, boundAChild.m_mins.y - textHeight);
+
+    g_theBitmapFont->AddVertsForText2D(textVerts, s_easingFunctions[m_easeIndex].easeFunctionName, textStartPosition, textHeight);
     g_theRenderer->SetModelConstants();
     g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
     g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
@@ -328,10 +329,12 @@ void GameCurves2D::RenderAABB2s() const
 {
     VertexList_PCU verts;
 
-    Rgba8 const boundsColor = Rgba8(255, 0, 0, 127);
+    Rgba8 const boundsColor       = Rgba8(255, 0, 0, 127);
+    Rgba8 const boundsAChildColor = Rgba8(30, 30, 60);
 
     AddVertsForAABB2D(verts, boundA, boundsColor);
-    AddVertsForAABB2D(verts, boundB, Rgba8::BLUE);
+    AddVertsForAABB2D(verts, boundAChild, boundsAChildColor);
+    AddVertsForAABB2D(verts, boundB, boundsColor);
     AddVertsForAABB2D(verts, boundC, boundsColor);
 
     g_theRenderer->SetModelConstants();
