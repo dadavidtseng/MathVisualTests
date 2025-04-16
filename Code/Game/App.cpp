@@ -6,6 +6,7 @@
 #include "Game/App.hpp"
 
 #include "GameCurves2D.hpp"
+#include "GamePachinkoMachine2D.hpp"
 #include "Engine/Core/Clock.hpp"
 #include "Engine/Core/DevConsole.hpp"
 #include "Engine/Core/EngineCommon.hpp"
@@ -42,7 +43,8 @@ std::function<void()> App::s_gameModeConstructors[] =
     [] { DeleteAndCreateNewGame<GameRaycastVsLineSegments>(); },
     [] { DeleteAndCreateNewGame<GameRaycastVsAABBs>(); },
     [] { DeleteAndCreateNewGame<GameShapes3D>(); },
-    [] { DeleteAndCreateNewGame<GameCurves2D>(); }
+    [] { DeleteAndCreateNewGame<GameCurves2D>(); },
+    [] { DeleteAndCreateNewGame<GamePachinkoMachine2D>(); }
 };
 
 //----------------------------------------------------------------------------------------------------

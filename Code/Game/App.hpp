@@ -52,7 +52,7 @@ public:
     static bool                               OnCloseButtonClicked(EventArgs& arg);
     static void                               RequestQuit();
     static bool                               m_isQuitting;
-    static std::function<void()> s_gameModeConstructors[6];
+    static std::function<void()> s_gameModeConstructors[7];
 
 private:
     void BeginFrame() const;

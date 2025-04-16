@@ -39,6 +39,9 @@
     <ClCompile Include="GameCurves2D.cpp">
       <Filter>Gameplay</Filter>
     </ClCompile>
+    <ClCompile Include="GamePachinkoMachine2D.cpp">
+      <Filter>Gameplay</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.hpp">
@@ -69,6 +72,9 @@
       <Filter>Gameplay</Filter>
     </ClInclude>
     <ClInclude Include="GameCurves2D.hpp">
+      <Filter>Gameplay</Filter>
+    </ClInclude>
+    <ClInclude Include="GamePachinkoMachine2D.hpp">
       <Filter>Gameplay</Filter>
     </ClInclude>
   </ItemGroup>
