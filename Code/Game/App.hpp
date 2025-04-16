@@ -4,6 +4,8 @@
 
 //----------------------------------------------------------------------------------------------------
 #pragma once
+// #include <functional>
+
 #include <functional>
 
 #include "GameCommon.hpp"
@@ -16,8 +18,24 @@ class GameRaycastVsAABBs;
 class GameRaycastVsLineSegments;
 class GameNearestPoint;
 class GameRaycastVsDiscs;
+
 //-Forward-Declaration--------------------------------------------------------------------------------
 class Camera;
+
+//----------------------------------------------------------------------------------------------------
+template <typename T>
+void DeleteAndCreateNewGame()
+{
+    static_assert(std::is_base_of_v<Game, T>, "T must be a subclass of Game");
+
+    if (g_theGame != nullptr)
+    {
+        delete g_theGame;
+        g_theGame = nullptr;
+    }
+
+    g_theGame = new T();
+}
 
 //----------------------------------------------------------------------------------------------------
 class App
@@ -31,10 +49,10 @@ public:
     void RunFrame();
     void RunMainLoop();
 
-    static bool OnCloseButtonClicked(EventArgs& arg);
-    static void RequestQuit();
-    static bool m_isQuitting;
-    static std::function<void()> s_gameModeConstructors[];
+    static bool                               OnCloseButtonClicked(EventArgs& arg);
+    static void                               RequestQuit();
+    static bool                               m_isQuitting;
+    static std::function<void()> s_gameModeConstructors[6];
 
 private:
     void BeginFrame() const;
@@ -50,21 +68,10 @@ private:
     Clock*                m_gameClock            = nullptr;
     eGameMode             m_currentGameMode      = eGameMode::NEAREST_POINT;
     Camera*               m_devConsoleCamera     = nullptr;
-    // std::function<void()> gameModeConstructors[];
+
 };
 
 
 
-//----------------------------------------------------------------------------------------------------
-template <typename T>
-void DeleteAndCreateNewGame()
-{
-    static_assert(std::is_base_of_v<Game, T>, "T must be a subclass of Game");
-
-    delete g_theGame;
-    g_theGame = nullptr;
-
-    g_theGame = new T();
-}
 
 

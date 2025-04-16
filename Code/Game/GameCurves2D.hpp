@@ -12,9 +12,6 @@
 #include "Engine/Math/Curve2D.hpp"
 #include "Game/Game.hpp"
 
-// class CubicBezierCurve2D;
-// struct Rgba8;
-
 //----------------------------------------------------------------------------------------------------
 struct EasingFunctionInfo
 {
@@ -23,54 +20,56 @@ struct EasingFunctionInfo
 };
 
 //----------------------------------------------------------------------------------------------------
-class GameCurves2D : public Game
+class GameCurves2D final : public Game
 {
 public:
     GameCurves2D();
 
     void Update() override;
-    void RenderShapes() const;
+    void Render() const override;
 
-    void                                   Render() const override;
     static std::vector<EasingFunctionInfo> s_easingFunctions;
 
 private:
     void UpdateFromKeyboard(float deltaSeconds) override;
     void UpdateFromController(float deltaSeconds) override;
-    void UpdateEaseFunction();
 
+    void GenerateRandomShapes();
     void GenerateAABB2s();
     void GenerateEaseFunction();
+    void GenerateCubicBezierCurves();
+    void GenerateCubicHermiteCurves();
 
+    void RenderShapes() const;
     void RenderAABB2s() const;
     void RenderEaseFunctions() const;
+    void RenderCubicBezierCurves() const;
+    void RenderCubicHermiteCurves() const;
 
     Camera* m_worldCamera = nullptr;
 
-    Vec2 startPos;
-    Vec2 guide1;
-    Vec2 guide2;
-    Vec2 endPos;
-
-
-    CubicHermiteCurve2D m_cubicHermiteCurve2D;
-    CatmullRomSpline2D  m_catmullRomSpline2D;
-
-    // AABB2 box           = AABB2(Vec2(100.f, 100.f), Vec2(500.f, 500.f));
-    // Vec2  startPosition = box.m_mins;
-    // Vec2  endPosition   = box.m_maxs;
+    // Common
+    AABB2 m_boundA;
+    AABB2 m_boundAChild;
+    AABB2 m_boundB;
+    AABB2 m_boundC;
+    float m_lineThickness        = 3.f;
+    float m_discRadius           = 6.f;
+    int   m_numSubDivisions      = 2;
+    int   m_fixedNumSubDivisions = 64;
+    float m_loopDuration         = 2.f;
 
     // EaseFunctions
     AABB2 m_easeFunctionBound;
     Vec2  m_easeFunctionStartPosition;
     Vec2  m_easeFunctionEndPosition;
     int   m_easeIndex = 0;
-    AABB2 boundA;
-    AABB2 boundAChild;
-    AABB2 boundB;
-    AABB2 boundC;
 
     // CubicBezierCurve
     CubicBezierCurve2D m_cubicBezierCurve2D;
 
+    // CubicHermiteCurve
+    CubicHermiteCurve2D m_cubicHermiteCurve2D;
+    CatmullRomSpline2D  m_catmullRomSpline2D;
+    std::vector<Vec2>   m_points;
 };

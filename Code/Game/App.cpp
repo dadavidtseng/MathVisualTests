@@ -35,7 +35,7 @@ Window*                g_theWindow     = nullptr;      // Created and owned by t
 STATIC bool App::m_isQuitting = false;
 
 //----------------------------------------------------------------------------------------------------
-STATIC std::function<void()> App::s_gameModeConstructors[] =
+std::function<void()> App::s_gameModeConstructors[] =
 {
     [] { DeleteAndCreateNewGame<GameRaycastVsDiscs>(); },
     [] { DeleteAndCreateNewGame<GameNearestPoint>(); },
