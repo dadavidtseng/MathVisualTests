@@ -24,12 +24,12 @@
     <GamePachinkoMachine2D.Ball.Radius>5~25</GamePachinkoMachine2D.Ball.Radius>
     <GamePachinkoMachine2D.Ball.DefaultElasticity>0.9</GamePachinkoMachine2D.Ball.DefaultElasticity>
     <GamePachinkoMachine2D.Bumper.Disc.Num>10</GamePachinkoMachine2D.Bumper.Disc.Num>
-    <GamePachinkoMachine2D.Bumper.DiscRadius>5~50</GamePachinkoMachine2D.Bumper.DiscRadius>
+    <GamePachinkoMachine2D.Bumper.Disc.Radius>5~50</GamePachinkoMachine2D.Bumper.Disc.Radius>
     <GamePachinkoMachine2D.Bumper.Capsule.Num>10</GamePachinkoMachine2D.Bumper.Capsule.Num>
     <GamePachinkoMachine2D.Bumper.Capsule.Length>1~150</GamePachinkoMachine2D.Bumper.Capsule.Length>
     <GamePachinkoMachine2D.Bumper.Capsule.Radius>5~50</GamePachinkoMachine2D.Bumper.Capsule.Radius>
-    <GamePachinkoMachine2D.Bumper.Obb.Num>10</GamePachinkoMachine2D.Bumper.Obb.Num>
-    <GamePachinkoMachine2D.Bumper.Obb.Width>5~80</GamePachinkoMachine2D.Bumper.Obb.Width>
+    <GamePachinkoMachine2D.Bumper.Obb2.Num>10</GamePachinkoMachine2D.Bumper.Obb2.Num>
+    <GamePachinkoMachine2D.Bumper.Obb2.Width>5~80</GamePachinkoMachine2D.Bumper.Obb2.Width>
     <GamePachinkoMachine2D.Bumper.Elasticity>0.01~0.99</GamePachinkoMachine2D.Bumper.Elasticity>
     <GamePachinkoMachine2D.Wall.Elasticity>0.90</GamePachinkoMachine2D.Wall.Elasticity>
     <GamePachinkoMachine2D.Misc.ExtraWarpHeight>300</GamePachinkoMachine2D.Misc.ExtraWarpHeight>

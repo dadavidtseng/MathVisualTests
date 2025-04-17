@@ -13,6 +13,7 @@
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Math/FloatRange.hpp"
 #include "Engine/Math/MathUtils.hpp"
+#include "Engine/Math/OBB2.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/Camera.hpp"
@@ -33,12 +34,9 @@ GamePachinkoMachine2D::GamePachinkoMachine2D()
 
     m_gameClock = new Clock(Clock::GetSystemClock());
     GenerateRandomLineSegmentInScreen();
+    GenerateRandomShapes();
     m_ballElasticity = g_gameConfigBlackboard.GetValue("GamePachinkoMachine2D.Ball.DefaultElasticity", -1.f);
     m_fixedTimeStep  = g_gameConfigBlackboard.GetValue("GamePachinkoMachine2D.Misc.InitialTimeStep", -1.f);
-
-    // m_ball                 = Ball();
-    // m_ball.m_startPosition = Vec2::ZERO;
-    // FloatRange x = g_gameConfigBlackboard.GetValue("GamePachinkoMachine2D.Ball.Radius", FloatRange::ZERO);
 }
 
 void GamePachinkoMachine2D::Update()
@@ -78,7 +76,26 @@ void GamePachinkoMachine2D::RenderShapes() const
 
     for (int i = 0; i < (int)m_ballList.size(); ++i)
     {
-        AddVertsForDisc2D(verts, m_ballList[i].m_startPosition, m_ballList[i].m_radius, m_ballList[i].m_currentColor);
+        AddVertsForDisc2D(verts, m_ballList[i].m_position, m_ballList[i].m_radius, m_ballList[i].m_color);
+    }
+
+    for (int i = 0; i < (int)m_bumperList.size(); ++i)
+    {
+        if (m_bumperList[i].m_type == eBumperType::DISC2)
+        {
+            AddVertsForDisc2D(verts, m_bumperList[i].m_startPosition, m_bumperList[i].m_radius, m_bumperList[i].m_color);
+        }
+
+        if (m_bumperList[i].m_type == eBumperType::CAPSULE2)
+        {
+            AddVertsForCapsule2D(verts, m_bumperList[i].m_startPosition, m_bumperList[i].m_endPosition, m_bumperList[i].m_radius, m_bumperList[i].m_color);
+        }
+
+        if (m_bumperList[i].m_type == eBumperType::OBB2)
+        {
+            Vec2 iBasis = (m_bumperList[i].m_endPosition - m_bumperList[i].m_startPosition).GetNormalized();
+            AddVertsForOBB2D(verts, m_bumperList[i].m_startPosition, iBasis, Vec2(m_bumperList[i].m_radius, m_bumperList[i].m_radius), m_bumperList[i].m_color);
+        }
     }
 
     g_theRenderer->SetModelConstants();
@@ -167,10 +184,10 @@ void GamePachinkoMachine2D::UpdateFromKeyboard(float deltaSeconds)
         g_theInput->WasKeyJustPressed(KEYCODE_SPACE))
     {
         Ball ball                    = Ball();
-        ball.m_startPosition         = Vec2(m_lineSegment.m_endPosition.x, m_lineSegment.m_endPosition.y);
+        ball.m_position              = Vec2(m_lineSegment.m_endPosition.x, m_lineSegment.m_endPosition.y);
         ball.m_velocity              = Vec2(m_lineSegment.m_endPosition - m_lineSegment.m_startPosition) * 3.f;
-        FloatRange const radiusRange = FloatRange(g_gameConfigBlackboard.GetValue("GamePachinkoMachine2D.Bumper.DiscRadius", FloatRange::ZERO));
-        ball.m_currentColor          = Interpolate(Rgba8::BLUE, Rgba8::WHITE, g_theRNG->RollRandomFloatZeroToOne());
+        FloatRange const radiusRange = FloatRange(g_gameConfigBlackboard.GetValue("GamePachinkoMachine2D.Ball.Radius", FloatRange::ZERO));
+        ball.m_color                 = Interpolate(Rgba8::BLUE, Rgba8::WHITE, g_theRNG->RollRandomFloatZeroToOne());
         ball.m_radius                = g_theRNG->RollRandomFloatInRange(radiusRange.m_min, radiusRange.m_max);
         ball.m_elasticity            = m_ballElasticity;
 
@@ -189,18 +206,89 @@ void GamePachinkoMachine2D::UpdateBall(float const timeSteps)
     for (int i = 0; i < (int)m_ballList.size(); i++)
     {
         m_ballList[i].m_velocity -= Vec2(0.f, gravityY) * timeSteps;
-        m_ballList[i].m_startPosition += m_ballList[i].m_velocity * timeSteps;
+        m_ballList[i].m_position += m_ballList[i].m_velocity * timeSteps;
     }
 
     for (int i = 0; i < (int)m_ballList.size(); i++)
     {
         for (int j = 0; j < (int)m_ballList.size(); j++)
         {
-            BounceDiscOutOfEachOther2D(m_ballList[i].m_startPosition, m_ballList[i].m_radius, m_ballList[i].m_velocity, m_ballList[i].m_elasticity, m_ballList[j].m_startPosition, m_ballList[j].m_radius, m_ballList[j].m_velocity, m_ballList[j].m_elasticity);
+            BounceDiscOutOfEachOther2D(m_ballList[i].m_position, m_ballList[i].m_radius, m_ballList[i].m_velocity, m_ballList[i].m_elasticity, m_ballList[j].m_position, m_ballList[j].m_radius, m_ballList[j].m_velocity, m_ballList[j].m_elasticity);
+        }
+    }
+
+    for (int i = 0; i < (int)m_ballList.size(); i++)
+    {
+        for (int j = 0; j < (int)m_bumperList.size(); j++)
+        {
+            if (m_bumperList[j].m_type == eBumperType::DISC2)
+            {
+                BounceDiscOutOfFixedDisc2D(m_ballList[i].m_position, m_ballList[i].m_radius, m_ballList[i].m_velocity, m_ballList[i].m_elasticity, m_bumperList[j].m_startPosition, m_bumperList[j].m_radius, m_bumperList[j].m_elasticity);
+            }
+            if (m_bumperList[j].m_type == eBumperType::CAPSULE2)
+            {
+                BounceDiscOutOfFixedCapsule2D(m_ballList[i].m_position, m_ballList[i].m_radius, m_ballList[i].m_velocity, m_ballElasticity, m_bumperList[j].m_startPosition, m_bumperList[j].m_endPosition, m_bumperList[j].m_radius, m_bumperList[j].m_elasticity);
+            }
+            if (m_bumperList[j].m_type == eBumperType::OBB2)
+            {
+                Vec2 iBasis = (m_bumperList[j].m_endPosition - m_bumperList[j].m_startPosition).GetNormalized();
+                BounceDiscOutOfFixedOBB2D(m_ballList[i].m_position, m_ballList[i].m_radius, m_ballList[i].m_velocity, m_ballElasticity, m_bumperList[j].m_startPosition, iBasis,Vec2(m_bumperList[j].m_radius, m_bumperList[j].m_radius), m_bumperList[i].m_elasticity);
+            }
         }
     }
 }
 
 void GamePachinkoMachine2D::GenerateRandomShapes()
 {
+    int        discNum            = g_gameConfigBlackboard.GetValue("GamePachinkoMachine2D.Bumper.Disc.Num", -1);
+    FloatRange discRadiusRange    = g_gameConfigBlackboard.GetValue("GamePachinkoMachine2D.Bumper.Disc.Radius", FloatRange::ZERO);
+    int        capsuleNum         = g_gameConfigBlackboard.GetValue("GamePachinkoMachine2D.Bumper.Capsule.Num", -1);
+    FloatRange capsuleLengthRange = g_gameConfigBlackboard.GetValue("GamePachinkoMachine2D.Bumper.Capsule.Length", FloatRange::ZERO);
+    FloatRange capsuleRadiusRange = g_gameConfigBlackboard.GetValue("GamePachinkoMachine2D.Bumper.Capsule.Radius", FloatRange::ZERO);
+    int        obb2Num            = g_gameConfigBlackboard.GetValue("GamePachinkoMachine2D.Bumper.Obb2.Num", -1);
+    FloatRange obb2WidthRange     = g_gameConfigBlackboard.GetValue("GamePachinkoMachine2D.Bumper.Obb2.Width", FloatRange::ZERO);
+    FloatRange elasticityRange    = g_gameConfigBlackboard.GetValue("GamePachinkoMachine2D.Bumper.Elasticity", FloatRange::ZERO);
+
+    for (int i = 0; i < discNum; i++)
+    {
+        Bumper bumper          = Bumper();
+        bumper.m_type          = eBumperType::DISC2;
+        bumper.m_startPosition = GenerateRandomPointInScreen();
+        bumper.m_radius        = g_theRNG->RollRandomFloatInRange(discRadiusRange.m_min, discRadiusRange.m_max);
+        bumper.m_elasticity    = g_theRNG->RollRandomFloatInRange(elasticityRange.m_min, elasticityRange.m_max);;
+        bumper.m_color         = Interpolate(Rgba8::RED, Rgba8::GREEN, bumper.m_elasticity);
+        m_bumperList.push_back(bumper);
+    }
+
+    for (int i = 0; i < capsuleNum; i++)
+    {
+        Bumper bumper                   = Bumper();
+        bumper.m_type                   = eBumperType::CAPSULE2;
+        Vec2 tempStartPosition          = GenerateRandomPointInScreen();
+        Vec2 tempEndPosition            = GenerateRandomPointInScreen();
+        Vec2 tempVelocity               = tempEndPosition - tempStartPosition;
+        bumper.m_startPosition          = tempStartPosition;
+        float const randomCapsuleLength = g_theRNG->RollRandomFloatInRange(capsuleLengthRange.m_min, capsuleLengthRange.m_max);
+        bumper.m_endPosition            = tempStartPosition + tempVelocity.GetNormalized() * randomCapsuleLength;
+        bumper.m_radius                 = g_theRNG->RollRandomFloatInRange(capsuleRadiusRange.m_min, capsuleRadiusRange.m_max);
+        bumper.m_elasticity             = g_theRNG->RollRandomFloatInRange(elasticityRange.m_min, elasticityRange.m_max);
+        bumper.m_color                  = Interpolate(Rgba8::RED, Rgba8::GREEN, bumper.m_elasticity);
+        m_bumperList.push_back(bumper);
+    }
+
+    for (int i = 0; i < obb2Num; i++)
+    {
+        Bumper bumper               = Bumper();
+        bumper.m_type               = eBumperType::OBB2;
+        Vec2 tempStartPosition      = GenerateRandomPointInScreen();
+        Vec2 tempEndPosition        = GenerateRandomPointInScreen();
+        Vec2 tempVelocity           = tempEndPosition - tempStartPosition;
+        bumper.m_startPosition      = tempStartPosition;
+        float const randomObb2Width = g_theRNG->RollRandomFloatInRange(obb2WidthRange.m_min, obb2WidthRange.m_max);
+        bumper.m_endPosition        = tempStartPosition + tempVelocity.GetNormalized() * randomObb2Width;
+        bumper.m_radius             = g_theRNG->RollRandomFloatInRange(obb2WidthRange.m_min, obb2WidthRange.m_max);
+        bumper.m_elasticity         = g_theRNG->RollRandomFloatInRange(elasticityRange.m_min, elasticityRange.m_max);
+        bumper.m_color              = Interpolate(Rgba8::RED, Rgba8::GREEN, bumper.m_elasticity);
+        m_bumperList.push_back(bumper);
+    }
 }

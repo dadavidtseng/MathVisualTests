@@ -23,17 +23,22 @@ enum class eBumperType : int8_t
 //----------------------------------------------------------------------------------------------------
 struct Ball
 {
-    Vec2  m_startPosition = Vec2::ZERO;
-    Vec2  m_endPosition   = Vec2::ZERO;
-    Vec2  m_velocity      = Vec2::ZERO;
-    float m_radius        = 0.f;
-    float m_elasticity    = 0.f;
-    Rgba8 m_currentColor  = Rgba8::WHITE;
-    Rgba8 m_targetColor   = Rgba8::WHITE;
+    Vec2  m_position   = Vec2::ZERO;
+    Vec2  m_velocity   = Vec2::ZERO;
+    float m_radius     = 0.f;
+    float m_elasticity = 0.f;
+    Rgba8 m_color      = Rgba8::WHITE;
 };
 
 struct Bumper
 {
+    eBumperType m_type          = eBumperType::NONE;
+    Vec2        m_startPosition = Vec2::ZERO;
+    Vec2        m_endPosition   = Vec2::ZERO;
+    Vec2        m_velocity      = Vec2::ZERO;
+    float       m_radius        = 0.f;
+    float       m_elasticity    = 0.f;
+    Rgba8       m_color         = Rgba8::WHITE;
 };
 
 //----------------------------------------------------------------------------------------------------
@@ -43,7 +48,7 @@ public:
     GamePachinkoMachine2D();
 
     void Update() override;
-    void RenderShapes() const;
+
     void Render() const override;
 
 private:
@@ -54,13 +59,16 @@ private:
     void GenerateRandomShapes();
     void GenerateRandomLineSegmentInScreen();
 
-    std::vector<Ball> m_ballList;
-    float             m_ballElasticity = 0.f;
+    void RenderShapes() const;
+
+    std::vector<Ball>   m_ballList;
+    std::vector<Bumper> m_bumperList;
+    float               m_ballElasticity = 0.f;
     // Ball m_ball;
 
     Camera* m_worldCamera = nullptr;
 
     LineSegment2 m_lineSegment;
     float        m_physicsTimeOwed = 0.f;
-    float m_fixedTimeStep = 0.f;
+    float        m_fixedTimeStep   = 0.f;
 };
