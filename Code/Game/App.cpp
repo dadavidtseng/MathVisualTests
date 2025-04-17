@@ -36,7 +36,7 @@ Window*                g_theWindow     = nullptr;      // Created and owned by t
 STATIC bool App::m_isQuitting = false;
 
 //----------------------------------------------------------------------------------------------------
-std::function<void()> App::s_gameModeConstructors[] =
+std::vector<std::function<void()>> App::s_gameModeConstructors =
 {
     [] { DeleteAndCreateNewGame<GameRaycastVsDiscs>(); },
     [] { DeleteAndCreateNewGame<GameNearestPoint>(); },
@@ -176,6 +176,21 @@ void App::RunMainLoop()
     }
 }
 
+
+template <typename T>
+void App::DeleteAndCreateNewGame()
+{
+    static_assert(std::is_base_of_v<Game, T>, "T must be a subclass of Game");
+
+    if (g_theGame != nullptr)
+    {
+        delete g_theGame;
+        g_theGame = nullptr;
+    }
+
+    g_theGame = new T();
+}
+
 //----------------------------------------------------------------------------------------------------
 bool App::OnCloseButtonClicked(EventArgs& arg)
 {
@@ -247,10 +262,19 @@ void App::LoadGameConfig(char const* gameConfigXmlFilePath)
 
     if (result == XmlResult::XML_SUCCESS)
     {
-        if (XmlElement const* rootElement = gameConfigXml.RootElement()) { g_gameConfigBlackboard.PopulateFromXmlElementAttributes(*rootElement); }
-        else { printf("WARNING: game config from file \"%s\" was invalid (missing root element)\n", gameConfigXmlFilePath); }
+        if (XmlElement const* rootElement = gameConfigXml.RootElement())
+        {
+            g_gameConfigBlackboard.PopulateFromXmlElementAttributes(*rootElement);
+        }
+        else
+        {
+            printf("WARNING: game config from file \"%s\" was invalid (missing root element)\n", gameConfigXmlFilePath);
+        }
     }
-    else { printf("WARNING: failed to load game config from file \"%s\"\n", gameConfigXmlFilePath); }
+    else
+    {
+        printf("WARNING: failed to load game config from file \"%s\"\n", gameConfigXmlFilePath);
+    }
 }
 
 //----------------------------------------------------------------------------------------------------

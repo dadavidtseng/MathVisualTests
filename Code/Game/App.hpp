@@ -4,7 +4,6 @@
 
 //----------------------------------------------------------------------------------------------------
 #pragma once
-// #include <functional>
 
 #include <functional>
 
@@ -22,20 +21,6 @@ class GameRaycastVsDiscs;
 //-Forward-Declaration--------------------------------------------------------------------------------
 class Camera;
 
-//----------------------------------------------------------------------------------------------------
-template <typename T>
-void DeleteAndCreateNewGame()
-{
-    static_assert(std::is_base_of_v<Game, T>, "T must be a subclass of Game");
-
-    if (g_theGame != nullptr)
-    {
-        delete g_theGame;
-        g_theGame = nullptr;
-    }
-
-    g_theGame = new T();
-}
 
 //----------------------------------------------------------------------------------------------------
 class App
@@ -48,11 +33,13 @@ public:
     void Shutdown();
     void RunFrame();
     void RunMainLoop();
-
+    //----------------------------------------------------------------------------------------------------
+    template <typename T>
+    static void                               DeleteAndCreateNewGame();
     static bool                               OnCloseButtonClicked(EventArgs& arg);
     static void                               RequestQuit();
     static bool                               m_isQuitting;
-    static std::function<void()> s_gameModeConstructors[7];
+    static std::vector<std::function<void()>> s_gameModeConstructors;
 
 private:
     void BeginFrame() const;
@@ -65,13 +52,8 @@ private:
     void UpdateFromController();
     void UpdateCursorMode();
 
-    Clock*                m_gameClock            = nullptr;
-    eGameMode             m_currentGameMode      = eGameMode::NEAREST_POINT;
-    Camera*               m_devConsoleCamera     = nullptr;
-
+    Clock*    m_gameClock        = nullptr;
+    eGameMode m_currentGameMode  = eGameMode::NEAREST_POINT;
+    Camera*   m_devConsoleCamera = nullptr;
 };
-
-
-
-
 
