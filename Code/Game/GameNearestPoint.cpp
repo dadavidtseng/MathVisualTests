@@ -13,6 +13,7 @@
 #include "Engine/Math/RandomNumberGenerator.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/Renderer.hpp"
+#include "Engine/Renderer/Window.hpp"
 #include "Game/App.hpp"
 
 //----------------------------------------------------------------------------------------------------
@@ -26,6 +27,11 @@ GameNearestPoint::GameNearestPoint()
     float const screenCenterY = g_gameConfigBlackboard.GetValue("screenCenterY", 400.f);
 
     m_screenCamera->SetOrthoGraphicView(Vec2::ZERO, Vec2(screenSizeX, screenSizeY));
+    float x = (float)Window::s_mainWindow->GetClientDimensions().x;
+    float y = (float)Window::s_mainWindow->GetClientDimensions().y;
+    // m_worldCamera->m_viewPort = AABB2(Vec2::ZERO, Vec2(x, y));
+    // m_screenCamera->m_viewPort = AABB2(Vec2::ZERO, Vec2(x, y));
+    m_screenCamera->SetNormalizedViewport(AABB2(Vec2::ZERO, Vec2(1.f, 1.f)));
     m_referencePoint = Vec2(screenCenterX, screenCenterY);
     m_gameClock      = new Clock(Clock::GetSystemClock());
 
@@ -158,9 +164,9 @@ void GameNearestPoint::GenerateRandomShapes()
 void GameNearestPoint::RenderNearestPoints() const
 {
     VertexList_PCU verts;
-    Vec2       nearestPoint;
-    Vec2       closestNearestPoint;
-    float      minLengthSquared = FLOAT_MAX;
+    Vec2           nearestPoint;
+    Vec2           closestNearestPoint;
+    float          minLengthSquared = FLOAT_MAX;
 
     for (int i = 0; i < static_cast<int>(eTestShape2DType::COUNT); ++i)
     {
@@ -222,7 +228,15 @@ void GameNearestPoint::RenderNearestPoints() const
 //----------------------------------------------------------------------------------------------------
 void GameNearestPoint::RenderReferencePoint() const
 {
-    DrawDisc2D(m_referencePoint, 3.f, Rgba8::WHITE);
+    VertexList_PCU verts;
+    AddVertsForDisc2D(verts, m_referencePoint, 3.f);
+    g_theRenderer->SetModelConstants();
+    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
+    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
+    g_theRenderer->BindTexture(nullptr);
+    g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -355,5 +369,3 @@ void GameNearestPoint::GenerateRandomCapsule2D()
     m_testShapes[static_cast<int>(eTestShape2DType::CAPSULE2)].m_endPosition   = endPosition;
     m_testShapes[static_cast<int>(eTestShape2DType::CAPSULE2)].m_radius        = randomRadius;
 }
-
-

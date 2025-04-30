@@ -36,9 +36,20 @@ struct Bumper
     Vec2        m_startPosition = Vec2::ZERO;
     Vec2        m_endPosition   = Vec2::ZERO;
     Vec2        m_velocity      = Vec2::ZERO;
+    Vec2        m_halfDimension = Vec2::ZERO;       // This is specially for OBB2.
     float       m_radius        = 0.f;
     float       m_elasticity    = 0.f;
     Rgba8       m_color         = Rgba8::WHITE;
+};
+
+struct Wall
+{
+    Vec2  m_startPosition = Vec2::ZERO;
+    Vec2  m_endPosition   = Vec2::ZERO;
+    Vec2  m_halfDimension = Vec2::ZERO;
+    Vec2  m_velocity      = Vec2::ZERO;
+    float m_elasticity    = 0.f;
+    bool  m_isWarped      = false;
 };
 
 //----------------------------------------------------------------------------------------------------
@@ -48,7 +59,6 @@ public:
     GamePachinkoMachine2D();
 
     void Update() override;
-
     void Render() const override;
 
 private:
@@ -63,12 +73,11 @@ private:
 
     std::vector<Ball>   m_ballList;
     std::vector<Bumper> m_bumperList;
-    float               m_ballElasticity = 0.f;
-    // Ball m_ball;
-
-    Camera* m_worldCamera = nullptr;
-
-    LineSegment2 m_lineSegment;
-    float        m_physicsTimeOwed = 0.f;
-    float        m_fixedTimeStep   = 0.f;
+    std::vector<Wall>   m_wallList;
+    float               m_ballElasticity      = 0.f;
+    float               m_ballElasticityDelta = 0.f;
+    LineSegment2        m_lineSegment;
+    float               m_physicsTimeOwed   = 0.f;
+    float               m_fixedTimeStep     = 0.f;
+    bool                m_isWallWarpEnabled = false;
 };

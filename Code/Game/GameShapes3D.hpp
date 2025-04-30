@@ -65,7 +65,6 @@ private:
 
     void GenerateRandomShapes();
 
-    Camera*     m_worldCamera    = nullptr;
     Texture*    m_texture        = nullptr;
     TestShape3D m_testShapes[15] = {};
 

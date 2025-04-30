@@ -115,7 +115,7 @@ void App::Startup()
     g_theRNG        = new RandomNumberGenerator();
     g_theGame       = new GameNearestPoint();
 
-    m_gameClock = new Clock(Clock::GetSystemClock());
+    // m_gameClock = new Clock(Clock::GetSystemClock());
 }
 
 //----------------------------------------------------------------------------------------------------

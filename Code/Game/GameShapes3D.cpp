@@ -20,6 +20,7 @@
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/DebugRenderSystem.hpp"
 #include "Engine/Renderer/Renderer.hpp"
+#include "Engine/Renderer/Window.hpp"
 #include "Game/App.hpp"
 #include "Game/GameCommon.hpp"
 
@@ -32,27 +33,26 @@ GameShapes3D::GameShapes3D()
     // m_player.m_startPosition = Vec3(0, 0.f, 0);
     // m_player.m_orientation   = EulerAngles::ZERO;
 
-    float const screenSizeX = g_gameConfigBlackboard.GetValue("screenSizeX", 1600.f);
-    float const screenSizeY = g_gameConfigBlackboard.GetValue("screenSizeY", 800.f);
+    float const screenSizeX = g_gameConfigBlackboard.GetValue("screenSizeX", 0.f);
+    float const screenSizeY = g_gameConfigBlackboard.GetValue("screenSizeY", 0.f);
+    m_space                 = AABB2(Vec2::ZERO, Vec2(screenSizeX, screenSizeY));
 
-    m_screenCamera->SetOrthoGraphicView(Vec2::ZERO, Vec2(screenSizeX, screenSizeY));
-    m_worldCamera->SetPerspectiveGraphicView(2.f, 60.f, 0.1f, 100.f);
+    m_screenCamera->SetOrthoGraphicView(m_space.m_mins, m_space.m_maxs);
+    m_worldCamera->SetPerspectiveGraphicView(m_space.GetHeightWidthRatios(), 60.f, 0.1f, 100.f);
+    m_screenCamera->SetNormalizedViewport(AABB2(Vec2::ZERO, Vec2::ONE));
+    m_worldCamera->SetNormalizedViewport(AABB2(Vec2::ZERO, Vec2::ONE));
     m_worldCamera->SetPosition(Vec3(-2.f, 0.f, 1.f));
 
-    m_texture = g_theRenderer->CreateOrGetTextureFromFile("Data/Images/Test_StbiFlippedAndOpenGL.png");
+
     Mat44 c2r;
-
-    c2r.m_values[Mat44::Ix] = 0.f;
-    c2r.m_values[Mat44::Iz] = 1.f;
-    c2r.m_values[Mat44::Jx] = -1.f;
-    c2r.m_values[Mat44::Jy] = 0.f;
-    c2r.m_values[Mat44::Ky] = 1.f;
-    c2r.m_values[Mat44::Kz] = 0.f;
-
+    c2r.SetIJK3D(Vec3::Z_BASIS, -Vec3::X_BASIS, Vec3::Y_BASIS);
     m_worldCamera->SetCameraToRenderTransform(c2r);
 
     m_gameClock = new Clock(Clock::GetSystemClock());
 
+    m_texture   = g_theRenderer->CreateOrGetTextureFromFile("Data/Images/Test_StbiFlippedAndOpenGL.png");
+
+    // Initialize DebugRenderSystem for world basis and world text.
     DebugAddWorldBasis(Mat44(), -1.f);
 
     Mat44 transform;
@@ -99,6 +99,17 @@ void GameShapes3D::Render() const
     RenderShapes();
     RenderPlayerBasis();
 
+VertexList_PCU verts1;
+    // AddVertsForSphere3D(verts1, m_worldCamera->PerspectiveScreenPosToWorld(Vec2(0.5f, 0.5f)), 0.05f);
+    Ray3 ray = m_worldCamera->ScreenPosToWorldRay(Vec2(0.5f, 0.5f));
+AddVertsForArrow3D(verts1, ray.m_startPosition, ray.m_startPosition+ray.m_forwardNormal*ray.m_maxLength,0.5f, 0.005f, 0.005f);
+
+    g_theRenderer->SetBlendMode(eBlendMode::OPAQUE);
+    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_theRenderer->SetDepthMode(eDepthMode::READ_WRITE_LESS_EQUAL);
+    g_theRenderer->BindTexture(nullptr);
+    g_theRenderer->DrawVertexArray(static_cast<int>(verts1.size()), verts1.data());
     g_theRenderer->EndCamera(*m_worldCamera);
 
     //-End-of-World-Camera----------------------------------------------------------------------------
@@ -111,7 +122,40 @@ void GameShapes3D::Render() const
 
     RenderCurrentModeText("CurrentMode: 3D Shapes");
 
-    VertexList_PCU verts;
+
+   VertexList_PCU verts;
+   // for (int i = 0; i < 15; i++)
+   //  {
+   //      AABB3     aabb3     = AABB3(m_testShapes[i].m_centerPosition - Vec3::ONE, m_testShapes[i].m_centerPosition + Vec3::ONE);
+   //      Sphere3   sphere3   = Sphere3(m_testShapes[i].m_centerPosition, m_testShapes[i].m_radius);
+   //      Cylinder3 cylinder3 = Cylinder3(m_testShapes[i].m_centerPosition - Vec3::Z_BASIS, m_testShapes[i].m_centerPosition + Vec3::Z_BASIS, m_testShapes[i].m_radius);
+   //
+   //
+   //      Vec2 center = m_worldCamera->PerspectiveWorldPosToScreen(m_testShapes[i].m_centerPosition)*m_space.GetDimensions();
+   //      if (m_testShapes[i].m_type == eTestShapeType::AABB3)
+   //      {
+   //          AddVertsForDisc2D(verts,center,30.f );
+   //      }
+   //
+   //      if (m_testShapes[i].m_type == eTestShapeType::SPHERE3)
+   //      {
+   //
+   //          AddVertsForDisc2D(verts,center,30.f );
+   //
+   //      }
+   //
+   //      if (m_testShapes[i].m_type == eTestShapeType::CYLINDER3)
+   //      {
+   //          AddVertsForDisc2D(verts,center,30.f );
+   //      }
+   //
+   //      g_theRenderer->SetBlendMode(eBlendMode::OPAQUE);
+   //      g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+   //      g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+   //      g_theRenderer->SetDepthMode(eDepthMode::READ_WRITE_LESS_EQUAL);
+   //      g_theRenderer->BindTexture(m_texture);
+   //      g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+   //  }
 
     float const currentControlTextBoxMinX = g_gameConfigBlackboard.GetValue("currentControlTextBoxMinX", 0.f);
     float const currentControlTextBoxMinY = g_gameConfigBlackboard.GetValue("currentControlTextBoxMinY", 760.f);
@@ -295,7 +339,7 @@ void GameShapes3D::UpdateFromKeyboard(float deltaSeconds)
         }
         else
         {
-            SafeDelete(m_storedRay);
+            SafeDeletePointer(m_storedRay);
             m_raycastResultText = "space=lock raycast; ";
         }
     }

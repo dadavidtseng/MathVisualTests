@@ -14,6 +14,7 @@
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/DebugRenderSystem.hpp"
 #include "Engine/Renderer/Renderer.hpp"
+#include "Engine/Renderer/Window.hpp"
 #include "Game/App.hpp"
 #include "Game/GameCommon.hpp"
 
@@ -46,6 +47,10 @@ GameCurves2D::GameCurves2D()
 
     m_screenCamera->SetOrthoGraphicView(Vec2::ZERO, Vec2(screenSizeX, screenSizeY));
     m_worldCamera->SetOrthoGraphicView(Vec2::ZERO, Vec2(screenSizeX, screenSizeY));
+    float x = (float)Window::s_mainWindow->GetClientDimensions().x;
+    float y = (float)Window::s_mainWindow->GetClientDimensions().y;
+    // m_worldCamera->m_viewPort = AABB2(Vec2::ZERO, Vec2(x, y));
+    // m_screenCamera->m_viewPort = AABB2(Vec2::ZERO, Vec2(x, y));
 
     m_gameClock = new Clock(Clock::GetSystemClock());
 
@@ -112,6 +117,7 @@ void GameCurves2D::Render() const
 //----------------------------------------------------------------------------------------------------
 void GameCurves2D::UpdateFromKeyboard(float deltaSeconds)
 {
+    UNUSED(deltaSeconds)
     if (g_theInput->WasKeyJustPressed(KEYCODE_O)) m_gameClock->StepSingleFrame();
     if (g_theInput->WasKeyJustPressed(KEYCODE_T)) m_gameClock->SetTimeScale(0.1f);
     if (g_theInput->WasKeyJustReleased(KEYCODE_T)) m_gameClock->SetTimeScale(1.f);

@@ -5,7 +5,6 @@
 //----------------------------------------------------------------------------------------------------
 #include "Game/Game.hpp"
 
-#include "Engine/Core/Clock.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Core/VertexUtils.hpp"
 #include "Engine/Input/InputSystem.hpp"
@@ -20,8 +19,9 @@
 //----------------------------------------------------------------------------------------------------
 Game::~Game()
 {
-    SafeDelete(m_screenCamera);
-    SafeDelete(m_gameClock);
+    SafeDeletePointer(m_screenCamera);
+    SafeDeletePointer(m_worldCamera);
+    // SafeDelete(m_gameClock);
 }
 
 //----------------------------------------------------------------------------------------------------

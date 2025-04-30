@@ -6,6 +6,7 @@
 #pragma once
 #include <cstdint>
 
+#include "Engine/Math/AABB2.hpp"
 #include "Engine/Math/Vec2.hpp"
 
 //-Forward-Declaration--------------------------------------------------------------------------------
@@ -44,8 +45,10 @@ protected:
 
     Clock*  m_gameClock     = nullptr;
     Camera* m_screenCamera  = nullptr;
+    Camera* m_worldCamera   = nullptr;
     Vec2    m_baseCameraPos = Vec2::ZERO;
     float   m_moveSpeed     = 500.f;
+    AABB2   m_space         = AABB2::ZERO_TO_ONE;
 
 private:
     virtual void UpdateFromKeyboard(float deltaSeconds) = 0;

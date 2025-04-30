@@ -52,7 +52,7 @@ private:
     void UpdateFromController();
     void UpdateCursorMode();
 
-    Clock*    m_gameClock        = nullptr;
+    // Clock*    m_gameClock        = nullptr;
     eGameMode m_currentGameMode  = eGameMode::NEAREST_POINT;
     Camera*   m_devConsoleCamera = nullptr;
 };

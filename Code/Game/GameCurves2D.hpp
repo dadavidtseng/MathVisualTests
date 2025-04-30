@@ -46,8 +46,6 @@ private:
     void RenderCubicBezierCurves() const;
     void RenderCubicHermiteCurves() const;
 
-    Camera* m_worldCamera = nullptr;
-
     // Common
     AABB2 m_boundA;
     AABB2 m_boundAChild;

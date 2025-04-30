@@ -11,6 +11,7 @@
 #include "Engine/Math/RaycastUtils.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/Renderer.hpp"
+#include "Engine/Renderer/Window.hpp"
 #include "Game/App.hpp"
 #include "Game/GameCommon.hpp"
 
@@ -22,7 +23,10 @@ GameRaycastVsLineSegments::GameRaycastVsLineSegments()
     float const screenSizeX = g_gameConfigBlackboard.GetValue("screenSizeX", 1600.f);
     float const screenSizeY = g_gameConfigBlackboard.GetValue("screenSizeY", 800.f);
     m_screenCamera->SetOrthoGraphicView(Vec2::ZERO, Vec2(screenSizeX, screenSizeY));
-
+    float x = (float)Window::s_mainWindow->GetClientDimensions().x;
+    float y = (float)Window::s_mainWindow->GetClientDimensions().y;
+    // m_worldCamera->m_viewPort = AABB2(Vec2::ZERO, Vec2(x, y));
+    // m_screenCamera->m_viewPort = AABB2(Vec2::ZERO, Vec2(x, y));
     m_gameClock = new Clock(Clock::GetSystemClock());
 
     GenerateRandomLineSegmentInScreen();
@@ -103,15 +107,27 @@ void GameRaycastVsLineSegments::GenerateRandomLineSegment2D()
 //----------------------------------------------------------------------------------------------------
 void GameRaycastVsLineSegments::RenderLineSegments2D() const
 {
+    VertexList_PCU verts;
+
     for (int i = 0; i < 8; ++i)
     {
-        DrawLineSegment2D(m_lineSegments[i].m_startPosition, m_lineSegments[i].m_endPosition, 3.f, false, Rgba8::BLUE);
+        AddVertsForLineSegment2D(verts, m_lineSegments[i].m_startPosition, m_lineSegments[i].m_endPosition, 3.f, false, Rgba8::BLUE);
     }
+
+    g_theRenderer->SetModelConstants();
+    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
+    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
+    g_theRenderer->BindTexture(nullptr);
+    g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
 
 //----------------------------------------------------------------------------------------------------
 void GameRaycastVsLineSegments::RenderRaycastResult() const
 {
+    VertexList_PCU verts;
+
     // Ray direction and starting position
     Vec2 const  forwardNormal = (m_lineSegment.m_endPosition - m_lineSegment.m_startPosition).GetNormalized();
     Vec2 const  tailPosition  = m_lineSegment.m_startPosition;
@@ -119,9 +135,9 @@ void GameRaycastVsLineSegments::RenderRaycastResult() const
 
     // To store the closest collision result
     RaycastResult2D closestResult;
-    closestResult.m_didImpact  = false;
+    closestResult.m_didImpact    = false;
     closestResult.m_impactLength = maxDistance;
-    int closestDiscIndex       = -1; // Index of the closest disc
+    int closestDiscIndex         = -1; // Index of the closest disc
 
 
     // Check collisions with all discs and find the closest one
@@ -137,43 +153,32 @@ void GameRaycastVsLineSegments::RenderRaycastResult() const
     }
 
     // Draw the ray as a white arrow
-    DrawArrow2D(tailPosition,
-                tailPosition + forwardNormal * maxDistance,
-                50.f,
-                m_lineSegment.m_thickness,
-                Rgba8::WHITE);
+    AddVertsForArrow2D(verts, tailPosition, tailPosition + forwardNormal * maxDistance, 50.f, m_lineSegment.m_thickness);
 
     // If a collision occurred, draw the closest collision result
     if (closestResult.m_didImpact)
     {
         // Mark the closest collision disc in blue
-        DrawLineSegment2D(m_lineSegments[closestDiscIndex].m_startPosition,
-                          m_lineSegments[closestDiscIndex].m_endPosition, 3.f, false,
-                          Rgba8::LIGHT_BLUE);
+        AddVertsForLineSegment2D(verts, m_lineSegments[closestDiscIndex].m_startPosition, m_lineSegments[closestDiscIndex].m_endPosition, 3.f, false, Rgba8::LIGHT_BLUE);
 
         // 1. Dark gray arrow: represents the full ray distance
-        DrawArrow2D(tailPosition,
-                    tailPosition + forwardNormal * maxDistance, 50.f,
-                    m_lineSegment.m_thickness,
-                    Rgba8::GREY);
+        AddVertsForArrow2D(verts, tailPosition, tailPosition + forwardNormal * maxDistance, 50.f, m_lineSegment.m_thickness, Rgba8::GREY);
 
         // 2. Orange arrow: represents the distance from the start to the impact point
-        DrawArrow2D(tailPosition,
-                    closestResult.m_impactPosition,
-                    50.f,
-                    m_lineSegment.m_thickness,
-                    Rgba8::ORANGE);
+        AddVertsForArrow2D(verts, tailPosition, closestResult.m_impactPosition, 50.f, m_lineSegment.m_thickness, Rgba8::ORANGE);
 
         // 3. Cyan arrow: represents the normal vector at the impact point
-        DrawArrow2D(closestResult.m_impactPosition,
-                    closestResult.m_impactPosition + closestResult.m_impactNormal * 100.0f,
-                    50.f,
-                    m_lineSegment.m_thickness,
-                    Rgba8::CYAN);
+        AddVertsForArrow2D(verts, closestResult.m_impactPosition, closestResult.m_impactPosition + closestResult.m_impactNormal * 100.0f, 50.f, m_lineSegment.m_thickness, Rgba8::CYAN);
 
         // 4. Small white circle: represents the impact point location
-        DrawDisc2D(closestResult.m_impactPosition,
-                   5.0f,
-                   Rgba8::WHITE);
+        AddVertsForDisc2D(verts, closestResult.m_impactPosition, 5.f);
     }
+
+    g_theRenderer->SetModelConstants();
+    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
+    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
+    g_theRenderer->BindTexture(nullptr);
+    g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }

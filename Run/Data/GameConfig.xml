@@ -23,6 +23,7 @@
     <!-- GamePachinkoMachine2D configuration -->
     <GamePachinkoMachine2D.Ball.Radius>5~25</GamePachinkoMachine2D.Ball.Radius>
     <GamePachinkoMachine2D.Ball.DefaultElasticity>0.9</GamePachinkoMachine2D.Ball.DefaultElasticity>
+    <GamePachinkoMachine2D.Ball.ElasticityDelta>0.05</GamePachinkoMachine2D.Ball.ElasticityDelta>
     <GamePachinkoMachine2D.Bumper.Disc.Num>10</GamePachinkoMachine2D.Bumper.Disc.Num>
     <GamePachinkoMachine2D.Bumper.Disc.Radius>5~50</GamePachinkoMachine2D.Bumper.Disc.Radius>
     <GamePachinkoMachine2D.Bumper.Capsule.Num>10</GamePachinkoMachine2D.Bumper.Capsule.Num>
@@ -34,5 +35,6 @@
     <GamePachinkoMachine2D.Wall.Elasticity>0.90</GamePachinkoMachine2D.Wall.Elasticity>
     <GamePachinkoMachine2D.Misc.ExtraWarpHeight>300</GamePachinkoMachine2D.Misc.ExtraWarpHeight>
     <GamePachinkoMachine2D.Misc.InitialTimeStep>0.005</GamePachinkoMachine2D.Misc.InitialTimeStep>
+    <GamePachinkoMachine2D.Misc.LineThickness>2</GamePachinkoMachine2D.Misc.LineThickness>
     <GamePachinkoMachine2D.Misc.Gravity>980</GamePachinkoMachine2D.Misc.Gravity>
 </GameConfig>
