@@ -21,6 +21,8 @@ enum class eTestShapeType : int8_t
     AABB3,
     SPHERE3,
     CYLINDER3,
+    OBB3,
+    PLANE3,
     PLAYER
 };
 
