@@ -41,6 +41,7 @@ struct TestShape3D
     Vec3            m_centerPosition = Vec3::ZERO;
     EulerAngles     m_orientation    = EulerAngles::ZERO;
     float           m_radius         = 0.f;
+    Vec3            m_halfDimensions = Vec3::ZERO;
     Rgba8           m_currentColor   = Rgba8::WHITE;
     Rgba8           m_targetColor    = Rgba8::WHITE;
 };
@@ -67,8 +68,10 @@ private:
 
     void GenerateRandomShapes();
 
+    Vec3 RollVec3InRange(FloatRange const& rangeX, FloatRange const& rangeY, FloatRange const& rangeZ) const;
+
     Texture*    m_texture        = nullptr;
-    TestShape3D m_testShapes[15] = {};
+    TestShape3D m_testShapes[25] = {};
 
     int    m_grabbedShapeIndex                    = -1;
     Vec3   m_grabbedShapeCameraSpaceStartPosition = Vec3::ZERO;
