@@ -36,14 +36,15 @@ enum class eTestShapeState : int8_t
 //----------------------------------------------------------------------------------------------------
 struct TestShape3D
 {
-    eTestShapeType  m_type           = eTestShapeType::NONE;
-    eTestShapeState m_state          = eTestShapeState::IDLE;
-    Vec3            m_centerPosition = Vec3::ZERO;
-    EulerAngles     m_orientation    = EulerAngles::ZERO;
-    float           m_radius         = 0.f;
-    Vec3            m_halfDimensions = Vec3::ZERO;
-    Rgba8           m_currentColor   = Rgba8::WHITE;
-    Rgba8           m_targetColor    = Rgba8::WHITE;
+    eTestShapeType  m_type               = eTestShapeType::NONE;
+    eTestShapeState m_state              = eTestShapeState::IDLE;
+    Vec3            m_centerPosition     = Vec3::ZERO;
+    EulerAngles     m_orientation        = EulerAngles::ZERO;
+    float           m_radius             = 0.f;
+    float           m_distanceFromOrigin = 0.f;
+    Vec3            m_halfDimensions     = Vec3::ZERO;
+    Rgba8           m_currentColor       = Rgba8::WHITE;
+    Rgba8           m_targetColor        = Rgba8::WHITE;
 };
 
 //----------------------------------------------------------------------------------------------------
@@ -68,7 +69,8 @@ private:
 
     void GenerateRandomShapes();
 
-    Vec3 RollVec3InRange(FloatRange const& rangeX, FloatRange const& rangeY, FloatRange const& rangeZ) const;
+    Vec3        RollVec3InRange(FloatRange const& rangeX, FloatRange const& rangeY, FloatRange const& rangeZ) const;
+    EulerAngles RollEulerAngleInRange(FloatRange const& rangeX, FloatRange const& rangeY, FloatRange const& rangeZ) const;
 
     Texture*    m_texture        = nullptr;
     TestShape3D m_testShapes[25] = {};

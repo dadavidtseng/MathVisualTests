@@ -15,6 +15,7 @@
 #include "Engine/Math/FloatRange.hpp"
 #include "Engine/Math/MathUtils.hpp"
 #include "Engine/Math/OBB3.hpp"
+#include "Engine/Math/Plane3.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
 #include "Engine/Math/RaycastUtils.hpp"
 #include "Engine/Math/Sphere3.hpp"
@@ -229,32 +230,38 @@ void GameShapes3D::UpdateFromKeyboard(float deltaSeconds)
     {
         for (int i = 0; i < 25; i++)
         {
-            AABB3     aabb3     = AABB3(m_testShapes[i].m_centerPosition - Vec3::ONE, m_testShapes[i].m_centerPosition + Vec3::ONE);
-            Sphere3   sphere3   = Sphere3(m_testShapes[i].m_centerPosition, m_testShapes[i].m_radius);
-            Cylinder3 cylinder3 = Cylinder3(m_testShapes[i].m_centerPosition - Vec3::Z_BASIS, m_testShapes[i].m_centerPosition + Vec3::Z_BASIS, m_testShapes[i].m_radius);
+            TestShape3D testShape         = m_testShapes[i];
+            AABB3       aabb3             = AABB3(testShape.m_centerPosition - Vec3::ONE, testShape.m_centerPosition + Vec3::ONE);
+            Sphere3     sphere3           = Sphere3(testShape.m_centerPosition, testShape.m_radius);
+            Cylinder3   cylinder3         = Cylinder3(testShape.m_centerPosition - Vec3::Z_BASIS, testShape.m_centerPosition + Vec3::Z_BASIS, testShape.m_radius);
+            Mat44       orientationMatrix = testShape.m_orientation.GetAsMatrix_IFwd_JLeft_KUp();
+            OBB3        obb3              = OBB3(testShape.m_centerPosition, testShape.m_halfDimensions, orientationMatrix.GetIBasis3D(), orientationMatrix.GetJBasis3D(), orientationMatrix.GetKBasis3D());
+            Plane3      plane3            = Plane3(testShape.m_centerPosition.GetNormalized(), testShape.m_distanceFromOrigin);
 
             Ray3 ray = Ray3(m_worldCamera->GetPosition(), m_worldCamera->GetPosition() + forwardNormal * 20.f);
 
             RaycastResult3D result;
 
-            if (m_testShapes[i].m_type == eTestShapeType::AABB3)
+            if (testShape.m_type == eTestShapeType::AABB3)
             {
                 result = RaycastVsAABB3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, aabb3.m_mins, aabb3.m_maxs);
             }
-            else if (m_testShapes[i].m_type == eTestShapeType::SPHERE3)
+            else if (testShape.m_type == eTestShapeType::SPHERE3)
             {
                 result = RaycastVsSphere3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, sphere3.m_centerPosition, sphere3.m_radius);
             }
-            else if (m_testShapes[i].m_type == eTestShapeType::CYLINDER3)
+            else if (testShape.m_type == eTestShapeType::CYLINDER3)
             {
                 result = RaycastVsCylinderZ3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, cylinder3.GetCenterPositionXY(), cylinder3.GetFloatRange(), cylinder3.m_radius);
             }
-            else if (m_testShapes[i].m_type == eTestShapeType::OBB3)
+            else if (testShape.m_type == eTestShapeType::OBB3)
             {
+                result = RaycastVsOBB3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, obb3);
             }
-            else if (m_testShapes[i].m_type == eTestShapeType::PLANE3)
-            {
-            }
+            // else if (testShape.m_type == eTestShapeType::PLANE3)
+            // {
+            //     result = RaycastVsPlane3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, plane3);
+            // }
 
             if (result.m_didImpact && result.m_impactLength < closestDistance)
             {
@@ -355,8 +362,12 @@ void GameShapes3D::UpdateShapes()
             TestShape3D& shapeA        = m_testShapes[i];
             TestShape3D& shapeB        = m_testShapes[j];
 
-            AABB3 aabb3A = AABB3(shapeA.m_centerPosition - Vec3::ONE, shapeA.m_centerPosition + Vec3::ONE);
-            AABB3 aabb3B = AABB3(shapeB.m_centerPosition - Vec3::ONE, shapeB.m_centerPosition + Vec3::ONE);
+            AABB3 aabb3A             = AABB3(shapeA.m_centerPosition - Vec3::ONE, shapeA.m_centerPosition + Vec3::ONE);
+            AABB3 aabb3B             = AABB3(shapeB.m_centerPosition - Vec3::ONE, shapeB.m_centerPosition + Vec3::ONE);
+            Mat44 orientationMatrixA = shapeA.m_orientation.GetAsMatrix_IFwd_JLeft_KUp();
+            Mat44 orientationMatrixB = shapeB.m_orientation.GetAsMatrix_IFwd_JLeft_KUp();
+            OBB3  obb3A              = OBB3(shapeA.m_centerPosition, shapeA.m_halfDimensions, orientationMatrixA.GetIBasis3D(), orientationMatrixA.GetJBasis3D(), orientationMatrixA.GetKBasis3D());
+            OBB3  obb3B              = OBB3(shapeB.m_centerPosition, shapeB.m_halfDimensions, orientationMatrixB.GetIBasis3D(), orientationMatrixB.GetJBasis3D(), orientationMatrixB.GetKBasis3D());
 
             // AABB3 vs. AABB3
             if (shapeA.m_type == eTestShapeType::AABB3 &&
@@ -411,6 +422,34 @@ void GameShapes3D::UpdateShapes()
                 isOverlapping = DoAABB3AndZCylinderOverlap3D(aabb3A, cylinderCenterXY, shapeB.m_radius, cylinderMinMaxZ);
             }
 
+            // Sphere3 vs. OBB3
+            else if (shapeA.m_type == eTestShapeType::SPHERE3 &&
+                shapeB.m_type == eTestShapeType::OBB3)
+            {
+                isOverlapping = DoSphereAndOBB3Overlap3D(shapeA.m_centerPosition, shapeA.m_radius, obb3B);
+            }
+            // Sphere3 vs. Plane3
+            else if (shapeA.m_type == eTestShapeType::SPHERE3 &&
+                shapeB.m_type == eTestShapeType::PLANE3)
+            {
+                Plane3 plane  = Plane3(shapeB.m_centerPosition.GetNormalized(), shapeB.m_distanceFromOrigin);
+                isOverlapping = DoSphereAndPlaneOverlap3D(shapeA.m_centerPosition, shapeA.m_radius, plane);
+            }
+            // AABB3 vs. Plane3
+            else if (shapeA.m_type == eTestShapeType::AABB3 &&
+                shapeB.m_type == eTestShapeType::PLANE3)
+            {
+                Plane3 plane  = Plane3(shapeB.m_centerPosition.GetNormalized(), shapeB.m_distanceFromOrigin);
+                isOverlapping = DoAABB3AndPlaneOverlap3D(aabb3A,plane);
+            }
+            // OBB3 vs. Plane3
+            else if (shapeA.m_type == eTestShapeType::OBB3 &&
+                shapeB.m_type == eTestShapeType::PLANE3)
+            {
+                Plane3 plane  = Plane3(shapeB.m_centerPosition.GetNormalized(), shapeB.m_distanceFromOrigin);
+                isOverlapping = DoOBB3AndPlaneOverlap3D(obb3A, plane);
+            }
+
             if (isOverlapping)
             {
                 isOverlappingArray[i] = true;
@@ -449,9 +488,13 @@ void GameShapes3D::UpdateShapes()
 
     for (int i = 0; i < 25; i++)
     {
-        AABB3     aabb3     = AABB3(m_testShapes[i].m_centerPosition - Vec3::ONE, m_testShapes[i].m_centerPosition + Vec3::ONE);
-        Sphere3   sphere3   = Sphere3(m_testShapes[i].m_centerPosition, m_testShapes[i].m_radius);
-        Cylinder3 cylinder3 = Cylinder3(m_testShapes[i].m_centerPosition - Vec3::Z_BASIS, m_testShapes[i].m_centerPosition + Vec3::Z_BASIS, m_testShapes[i].m_radius);
+        TestShape3D testShape         = m_testShapes[i];
+        AABB3       aabb3             = AABB3(testShape.m_centerPosition - Vec3::ONE, testShape.m_centerPosition + Vec3::ONE);
+        Sphere3     sphere3           = Sphere3(testShape.m_centerPosition, testShape.m_radius);
+        Cylinder3   cylinder3         = Cylinder3(testShape.m_centerPosition - Vec3::Z_BASIS, testShape.m_centerPosition + Vec3::Z_BASIS, testShape.m_radius);
+        Mat44       orientationMatrix = testShape.m_orientation.GetAsMatrix_IFwd_JLeft_KUp();
+        OBB3        obb3              = OBB3(testShape.m_centerPosition, testShape.m_halfDimensions, orientationMatrix.GetIBasis3D(), orientationMatrix.GetJBasis3D(), orientationMatrix.GetKBasis3D());
+        Plane3      plane3            = Plane3(testShape.m_centerPosition.GetNormalized(), testShape.m_distanceFromOrigin);
 
         if (m_storedRay != nullptr)
         {
@@ -460,23 +503,25 @@ void GameShapes3D::UpdateShapes()
 
         RaycastResult3D result;
 
-        if (m_testShapes[i].m_type == eTestShapeType::AABB3)
+        if (testShape.m_type == eTestShapeType::AABB3)
         {
             result = RaycastVsAABB3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, aabb3.m_mins, aabb3.m_maxs);
         }
-        else if (m_testShapes[i].m_type == eTestShapeType::SPHERE3)
+        else if (testShape.m_type == eTestShapeType::SPHERE3)
         {
             result = RaycastVsSphere3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, sphere3.m_centerPosition, sphere3.m_radius);
         }
-        else if (m_testShapes[i].m_type == eTestShapeType::CYLINDER3)
+        else if (testShape.m_type == eTestShapeType::CYLINDER3)
         {
             result = RaycastVsCylinderZ3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, cylinder3.GetCenterPositionXY(), cylinder3.GetFloatRange(), cylinder3.m_radius);
         }
-        else if (m_testShapes[i].m_type == eTestShapeType::OBB3)
+        else if (testShape.m_type == eTestShapeType::OBB3)
         {
+            result = RaycastVsOBB3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, obb3);
         }
-        else if (m_testShapes[i].m_type == eTestShapeType::PLANE3)
+        else if (testShape.m_type == eTestShapeType::PLANE3)
         {
+            result = RaycastVsPlane3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, plane3);
         }
 
         if (result.m_didImpact == true && result.m_impactLength < closestDistance)
@@ -527,15 +572,22 @@ void GameShapes3D::UpdateShapes()
 
 void GameShapes3D::RenderRaycastResult() const
 {
-    VertexList_PCU raycastResultVerts;
-    Vec3 const     forwardNormal = m_worldCamera->GetOrientation().GetAsMatrix_IFwd_JLeft_KUp().GetIBasis3D().GetNormalized();
-    Ray3 const     ray           = Ray3(m_worldCamera->GetPosition(), m_worldCamera->GetPosition() + forwardNormal * 20.f);
+    VertexList_PCU  raycastResultVerts;
+    Vec3 const      forwardNormal = m_worldCamera->GetOrientation().GetAsMatrix_IFwd_JLeft_KUp().GetIBasis3D().GetNormalized();
+    Ray3 const      ray           = Ray3(m_worldCamera->GetPosition(), m_worldCamera->GetPosition() + forwardNormal * 20.f);
+    RaycastResult3D closestResult;
+    float           minLengthSquared = FLOAT_MAX;
+    bool            hasValidImpact   = false;
 
     for (int i = 0; i < 25; i++)
     {
-        AABB3     aabb3     = AABB3(m_testShapes[i].m_centerPosition - Vec3::ONE, m_testShapes[i].m_centerPosition + Vec3::ONE);
-        Sphere3   sphere3   = Sphere3(m_testShapes[i].m_centerPosition, m_testShapes[i].m_radius);
-        Cylinder3 cylinder3 = Cylinder3(m_testShapes[i].m_centerPosition - Vec3::Z_BASIS, m_testShapes[i].m_centerPosition + Vec3::Z_BASIS, m_testShapes[i].m_radius);
+        TestShape3D testShape         = m_testShapes[i];
+        AABB3       aabb3             = AABB3(testShape.m_centerPosition - Vec3::ONE, testShape.m_centerPosition + Vec3::ONE);
+        Sphere3     sphere3           = Sphere3(testShape.m_centerPosition, testShape.m_radius);
+        Cylinder3   cylinder3         = Cylinder3(testShape.m_centerPosition - Vec3::Z_BASIS, testShape.m_centerPosition + Vec3::Z_BASIS, testShape.m_radius);
+        Mat44       orientationMatrix = testShape.m_orientation.GetAsMatrix_IFwd_JLeft_KUp();
+        OBB3        obb3              = OBB3(testShape.m_centerPosition, testShape.m_halfDimensions, orientationMatrix.GetIBasis3D(), orientationMatrix.GetJBasis3D(), orientationMatrix.GetKBasis3D());
+        Plane3      plane3            = Plane3(testShape.m_centerPosition.GetNormalized(), testShape.m_distanceFromOrigin);
 
         if (m_storedRay != nullptr)
         {
@@ -544,30 +596,44 @@ void GameShapes3D::RenderRaycastResult() const
 
         RaycastResult3D result;
 
-        if (m_testShapes[i].m_type == eTestShapeType::AABB3)
+        if (testShape.m_type == eTestShapeType::AABB3)
         {
             result = RaycastVsAABB3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, aabb3.m_mins, aabb3.m_maxs);
         }
-        else if (m_testShapes[i].m_type == eTestShapeType::SPHERE3)
+        else if (testShape.m_type == eTestShapeType::SPHERE3)
         {
             result = RaycastVsSphere3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, sphere3.m_centerPosition, sphere3.m_radius);
         }
-        else if (m_testShapes[i].m_type == eTestShapeType::CYLINDER3)
+        else if (testShape.m_type == eTestShapeType::CYLINDER3)
         {
             result = RaycastVsCylinderZ3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, cylinder3.GetCenterPositionXY(), cylinder3.GetFloatRange(), cylinder3.m_radius);
         }
-        else if (m_testShapes[i].m_type == eTestShapeType::OBB3)
+        else if (testShape.m_type == eTestShapeType::OBB3)
         {
+            result = RaycastVsOBB3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, obb3);
         }
-        else if (m_testShapes[i].m_type == eTestShapeType::PLANE3)
+        else if (testShape.m_type == eTestShapeType::PLANE3)
         {
+            result = RaycastVsPlane3D(ray.m_startPosition, ray.m_forwardNormal, ray.m_maxLength, plane3);
         }
 
-        if (result.m_didImpact == true)
+        float const lengthSquared = (result.m_impactPosition - m_worldCamera->GetPosition()).GetLengthSquared();
+
+        if (result.m_didImpact)
         {
-            AddVertsForArrow3D(raycastResultVerts, result.m_impactPosition, result.m_impactPosition + result.m_impactNormal, 0.8f, 0.03f, 0.06f, Rgba8::YELLOW);
-            AddVertsForSphere3D(raycastResultVerts, result.m_impactPosition, 0.1f);
+            if (lengthSquared < minLengthSquared)
+            {
+                minLengthSquared = lengthSquared;
+                closestResult    = result;
+                hasValidImpact   = true;
+            }
         }
+    }
+
+    if (hasValidImpact)
+    {
+        AddVertsForArrow3D(raycastResultVerts, closestResult.m_impactPosition, closestResult.m_impactPosition + closestResult.m_impactNormal, 0.8f, 0.03f, 0.06f, Rgba8::YELLOW);
+        AddVertsForSphere3D(raycastResultVerts, closestResult.m_impactPosition, 0.1f);
     }
 
     g_theRenderer->SetModelConstants();
@@ -588,27 +654,33 @@ void GameShapes3D::RenderNearestPoint() const
 
     for (int i = 0; i < 25; i++)
     {
-        AABB3     aabb3     = AABB3(m_testShapes[i].m_centerPosition - Vec3::ONE, m_testShapes[i].m_centerPosition + Vec3::ONE);
-        Sphere3   sphere3   = Sphere3(m_testShapes[i].m_centerPosition, m_testShapes[i].m_radius);
-        Cylinder3 cylinder3 = Cylinder3(m_testShapes[i].m_centerPosition - Vec3::Z_BASIS, m_testShapes[i].m_centerPosition + Vec3::Z_BASIS, m_testShapes[i].m_radius);
+        TestShape3D testShape         = m_testShapes[i];
+        AABB3       aabb3             = AABB3(testShape.m_centerPosition - Vec3::ONE, testShape.m_centerPosition + Vec3::ONE);
+        Sphere3     sphere3           = Sphere3(testShape.m_centerPosition, testShape.m_radius);
+        Cylinder3   cylinder3         = Cylinder3(testShape.m_centerPosition - Vec3::Z_BASIS, testShape.m_centerPosition + Vec3::Z_BASIS, testShape.m_radius);
+        Mat44       orientationMatrix = testShape.m_orientation.GetAsMatrix_IFwd_JLeft_KUp();
+        OBB3        obb3              = OBB3(testShape.m_centerPosition, testShape.m_halfDimensions, orientationMatrix.GetIBasis3D(), orientationMatrix.GetJBasis3D(), orientationMatrix.GetKBasis3D());
+        Plane3      plane3            = Plane3(testShape.m_centerPosition.GetNormalized(), testShape.m_distanceFromOrigin);
 
-        if (m_testShapes[i].m_type == eTestShapeType::AABB3)
+        if (testShape.m_type == eTestShapeType::AABB3)
         {
             nearestPoint = aabb3.GetNearestPoint(m_worldCamera->GetPosition());
         }
-        else if (m_testShapes[i].m_type == eTestShapeType::SPHERE3)
+        else if (testShape.m_type == eTestShapeType::SPHERE3)
         {
             nearestPoint = sphere3.GetNearestPoint(m_worldCamera->GetPosition());
         }
-        else if (m_testShapes[i].m_type == eTestShapeType::CYLINDER3)
+        else if (testShape.m_type == eTestShapeType::CYLINDER3)
         {
             nearestPoint = cylinder3.GetNearestPoint(m_worldCamera->GetPosition());
         }
-        else if (m_testShapes[i].m_type == eTestShapeType::OBB3)
+        else if (testShape.m_type == eTestShapeType::OBB3)
         {
+            nearestPoint = obb3.GetNearestPoint(m_worldCamera->GetPosition());
         }
-        else if (m_testShapes[i].m_type == eTestShapeType::PLANE3)
+        else if (testShape.m_type == eTestShapeType::PLANE3)
         {
+            nearestPoint = plane3.GetNearestPoint(m_worldCamera->GetPosition());
         }
 
         float const lengthSquared = (nearestPoint - m_worldCamera->GetPosition()).GetLengthSquared();
@@ -619,9 +691,11 @@ void GameShapes3D::RenderNearestPoint() const
             closestNearestPoint = nearestPoint;
         }
 
+        // Nearest point on every test shapes.
         AddVertsForSphere3D(nearestPointVerts, nearestPoint, 0.1f, Rgba8::ORANGE);
     }
 
+    // Closest nearest point.
     AddVertsForSphere3D(nearestPointVerts, closestNearestPoint, 0.1f, Rgba8::GREEN);
 
     g_theRenderer->SetModelConstants();
@@ -635,53 +709,68 @@ void GameShapes3D::RenderNearestPoint() const
 
 void GameShapes3D::RenderStoredRaycastResult() const
 {
-    VertexList_PCU storedRaycastResultVerts;
-    bool           isStoredRayImpact = false;
+    if (m_storedRay == nullptr) return;
+
+    VertexList_PCU  storedRaycastResultVerts;
+    bool            isStoredRayImpact = false;
+    RaycastResult3D closestResult;
+    float           minLengthSquared = FLOAT_MAX;
+    bool            hasValidImpact   = false;
+
 
     for (int i = 0; i < 25; i++)
     {
-        AABB3     aabb3     = AABB3(m_testShapes[i].m_centerPosition - Vec3::ONE, m_testShapes[i].m_centerPosition + Vec3::ONE);
-        Sphere3   sphere3   = Sphere3(m_testShapes[i].m_centerPosition, m_testShapes[i].m_radius);
-        Cylinder3 cylinder3 = Cylinder3(m_testShapes[i].m_centerPosition - Vec3::Z_BASIS, m_testShapes[i].m_centerPosition + Vec3::Z_BASIS, m_testShapes[i].m_radius);
-
-        if (m_storedRay == nullptr)
-        {
-            continue;
-        }
+        TestShape3D testShape         = m_testShapes[i];
+        AABB3       aabb3             = AABB3(testShape.m_centerPosition - Vec3::ONE, testShape.m_centerPosition + Vec3::ONE);
+        Sphere3     sphere3           = Sphere3(testShape.m_centerPosition, testShape.m_radius);
+        Cylinder3   cylinder3         = Cylinder3(testShape.m_centerPosition - Vec3::Z_BASIS, testShape.m_centerPosition + Vec3::Z_BASIS, testShape.m_radius);
+        Mat44       orientationMatrix = testShape.m_orientation.GetAsMatrix_IFwd_JLeft_KUp();
+        OBB3        obb3              = OBB3(testShape.m_centerPosition, testShape.m_halfDimensions, orientationMatrix.GetIBasis3D(), orientationMatrix.GetJBasis3D(), orientationMatrix.GetKBasis3D());
+        Plane3      plane3            = Plane3(testShape.m_centerPosition.GetNormalized(), testShape.m_distanceFromOrigin);
 
         RaycastResult3D result;
 
-        if (m_testShapes[i].m_type == eTestShapeType::AABB3)
+        if (testShape.m_type == eTestShapeType::AABB3)
         {
             result = RaycastVsAABB3D(m_storedRay->m_startPosition, m_storedRay->m_forwardNormal, m_storedRay->m_maxLength, aabb3.m_mins, aabb3.m_maxs);
         }
-        else if (m_testShapes[i].m_type == eTestShapeType::SPHERE3)
+        else if (testShape.m_type == eTestShapeType::SPHERE3)
         {
             result = RaycastVsSphere3D(m_storedRay->m_startPosition, m_storedRay->m_forwardNormal, m_storedRay->m_maxLength, sphere3.m_centerPosition, sphere3.m_radius);
         }
-        else if (m_testShapes[i].m_type == eTestShapeType::CYLINDER3)
+        else if (testShape.m_type == eTestShapeType::CYLINDER3)
         {
             result = RaycastVsCylinderZ3D(m_storedRay->m_startPosition, m_storedRay->m_forwardNormal, m_storedRay->m_maxLength, cylinder3.GetCenterPositionXY(), cylinder3.GetFloatRange(), cylinder3.m_radius);
         }
-        else if (m_testShapes[i].m_type == eTestShapeType::OBB3)
+        else if (testShape.m_type == eTestShapeType::OBB3)
         {
+            result = RaycastVsOBB3D(m_storedRay->m_startPosition, m_storedRay->m_forwardNormal, m_storedRay->m_maxLength, obb3);
         }
-        else if (m_testShapes[i].m_type == eTestShapeType::PLANE3)
+        else if (testShape.m_type == eTestShapeType::PLANE3)
         {
+            result = RaycastVsPlane3D(m_storedRay->m_startPosition, m_storedRay->m_forwardNormal, m_storedRay->m_maxLength, plane3);
         }
 
-        if (result.m_didImpact == true)
+        if (result.m_didImpact)
         {
-            isStoredRayImpact = true;
-            AddVertsForArrow3D(storedRaycastResultVerts, m_storedRay->m_startPosition, result.m_impactPosition, 0.8f, 0.03f, 0.06f, Rgba8::RED);
-            AddVertsForArrow3D(storedRaycastResultVerts, result.m_impactPosition, result.m_impactPosition + result.m_impactNormal, 0.8f, 0.03f, 0.06f, Rgba8::YELLOW);
-            AddVertsForArrow3D(storedRaycastResultVerts, result.m_impactPosition, m_storedRay->m_startPosition + m_storedRay->m_forwardNormal * m_storedRay->m_maxLength, 0.8f, 0.03f, 0.06f, Rgba8::GREY);
-            AddVertsForSphere3D(storedRaycastResultVerts, result.m_impactPosition, 0.1f);
+            float lengthSquared = (result.m_impactPosition - m_storedRay->m_startPosition).GetLengthSquared();
+            if (lengthSquared < minLengthSquared)
+            {
+                minLengthSquared = lengthSquared;
+                closestResult    = result;
+                hasValidImpact   = true;
+            }
         }
     }
 
-    if (isStoredRayImpact == false &&
-        m_storedRay != nullptr)
+    if (hasValidImpact)
+    {
+        AddVertsForArrow3D(storedRaycastResultVerts, m_storedRay->m_startPosition, closestResult.m_impactPosition, 0.8f, 0.03f, 0.06f, Rgba8::RED);
+        AddVertsForArrow3D(storedRaycastResultVerts, closestResult.m_impactPosition, closestResult.m_impactPosition + closestResult.m_impactNormal, 0.8f, 0.03f, 0.06f, Rgba8::YELLOW);
+        AddVertsForArrow3D(storedRaycastResultVerts, closestResult.m_impactPosition, m_storedRay->m_startPosition + m_storedRay->m_forwardNormal * m_storedRay->m_maxLength, 0.8f, 0.03f, 0.06f, Rgba8::GREY);
+        AddVertsForSphere3D(storedRaycastResultVerts, closestResult.m_impactPosition, 0.1f);
+    }
+    else
     {
         AddVertsForArrow3D(storedRaycastResultVerts, m_storedRay->m_startPosition, m_storedRay->m_startPosition + m_storedRay->m_forwardNormal * m_storedRay->m_maxLength, 0.8f, 0.03f, 0.06f, Rgba8::GREEN);
     }
@@ -712,42 +801,43 @@ void GameShapes3D::RenderShapes() const
         Cylinder3   cylinder3         = Cylinder3(testShape.m_centerPosition - Vec3::Z_BASIS, testShape.m_centerPosition + Vec3::Z_BASIS, testShape.m_radius);
         Mat44       orientationMatrix = testShape.m_orientation.GetAsMatrix_IFwd_JLeft_KUp();
         OBB3        obb3              = OBB3(testShape.m_centerPosition, testShape.m_halfDimensions, orientationMatrix.GetIBasis3D(), orientationMatrix.GetJBasis3D(), orientationMatrix.GetKBasis3D());
+        Plane3      plane3            = Plane3(testShape.m_centerPosition.GetNormalized(), testShape.m_distanceFromOrigin);
 
         if (testShape.m_type == eTestShapeType::AABB3)
         {
-            // if (IsPointInsideAABB3D(m_worldCamera->GetPosition(), aabb3.m_mins, aabb3.m_maxs))
-            // {
-            //     AddVertsForWireframeAABB3D(insideVerts, aabb3, 0.05f, testShape.m_currentColor);
-            // }
-            // else
-            // {
-            //     AddVertsForAABB3D(outsideVerts, aabb3, testShape.m_currentColor);
-            // }
+            if (IsPointInsideAABB3D(m_worldCamera->GetPosition(), aabb3.m_mins, aabb3.m_maxs))
+            {
+                AddVertsForWireframeAABB3D(insideVerts, aabb3, 0.05f, testShape.m_currentColor);
+            }
+            else
+            {
+                AddVertsForAABB3D(outsideVerts, aabb3, testShape.m_currentColor);
+            }
         }
 
         if (testShape.m_type == eTestShapeType::SPHERE3)
         {
-            // if (IsPointInsideSphere3D(m_worldCamera->GetPosition(), sphere3.m_centerPosition, sphere3.m_radius))
-            // {
-            //     Rgba8 color = Rgba8(0, 0, testShape.m_currentColor.b, testShape.m_currentColor.a);
-            //     AddVertsForWireframeSphere3D(insideVerts, sphere3.m_centerPosition, sphere3.m_radius, 0.05f, color);
-            // }
-            // else
-            // {
-            //     AddVertsForSphere3D(outsideVerts, sphere3.m_centerPosition, sphere3.m_radius, testShape.m_currentColor);
-            // }
+            if (IsPointInsideSphere3D(m_worldCamera->GetPosition(), sphere3.m_centerPosition, sphere3.m_radius))
+            {
+                Rgba8 color = Rgba8(0, 0, testShape.m_currentColor.b, testShape.m_currentColor.a);
+                AddVertsForWireframeSphere3D(insideVerts, sphere3.m_centerPosition, sphere3.m_radius, 0.05f, color);
+            }
+            else
+            {
+                AddVertsForSphere3D(outsideVerts, sphere3.m_centerPosition, sphere3.m_radius, testShape.m_currentColor);
+            }
         }
 
         if (testShape.m_type == eTestShapeType::CYLINDER3)
         {
-            // if (IsPointInsideZCylinder3D(m_worldCamera->GetPosition(), cylinder3.m_startPosition, cylinder3.m_endPosition, cylinder3.m_radius))
-            // {
-            //     AddVertsForWireframeCylinder3D(insideVerts, cylinder3.m_startPosition, cylinder3.m_endPosition, cylinder3.m_radius, 0.05f, testShape.m_currentColor, AABB2(Vec2::ZERO, Vec2::ONE));
-            // }
-            // else
-            // {
-            //     AddVertsForCylinder3D(outsideVerts, cylinder3.m_startPosition, cylinder3.m_endPosition, cylinder3.m_radius, testShape.m_currentColor, AABB2(Vec2::ZERO, Vec2::ONE));
-            // }
+            if (IsPointInsideZCylinder3D(m_worldCamera->GetPosition(), cylinder3.m_startPosition, cylinder3.m_endPosition, cylinder3.m_radius))
+            {
+                AddVertsForWireframeCylinder3D(insideVerts, cylinder3.m_startPosition, cylinder3.m_endPosition, cylinder3.m_radius, 0.05f, testShape.m_currentColor, AABB2(Vec2::ZERO, Vec2::ONE));
+            }
+            else
+            {
+                AddVertsForCylinder3D(outsideVerts, cylinder3.m_startPosition, cylinder3.m_endPosition, cylinder3.m_radius, testShape.m_currentColor, AABB2(Vec2::ZERO, Vec2::ONE));
+            }
         }
 
         if (testShape.m_type == eTestShapeType::OBB3)
@@ -756,6 +846,26 @@ void GameShapes3D::RenderShapes() const
         }
         if (testShape.m_type == eTestShapeType::PLANE3)
         {
+            Vec3 planeCenterPosition = plane3.GetOriginPoint();
+            Vec3 left, up;
+            plane3.m_normal.GetOrthonormalBasis(plane3.m_normal, &left, &up);
+
+            float gridLineLength = 20.f;
+
+            for (int j = -(int)gridLineLength / 2; j < (int)gridLineLength / 2; j++)
+            {
+                float lineWidth = 0.01f;
+                if (j == 0) lineWidth = 0.05f;
+
+                Vec3 obb3PositionX = planeCenterPosition + (float)j * left;
+                Vec3 obb3PositionY = planeCenterPosition + (float)j * up;
+                OBB3 boundsX       = OBB3(obb3PositionX, Vec3(lineWidth, lineWidth, gridLineLength / 2.f), plane3.m_normal, left, up);
+                OBB3 boundsY       = OBB3(obb3PositionY, Vec3(lineWidth, gridLineLength / 2.f, lineWidth), plane3.m_normal, left, up);
+
+
+                AddVertsForOBB3D(insideVerts, boundsX, Rgba8::RED);
+                AddVertsForOBB3D(insideVerts, boundsY, Rgba8::GREEN);
+            }
         }
 
         g_theRenderer->SetBlendMode(eBlendMode::OPAQUE);
@@ -787,7 +897,7 @@ void GameShapes3D::RenderPlayerBasis() const
     g_theRenderer->SetBlendMode(eBlendMode::OPAQUE);
     g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_BACK);
     g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(eDepthMode::READ_WRITE_LESS_EQUAL);
+    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
     g_theRenderer->BindTexture(nullptr);
     g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
@@ -796,14 +906,15 @@ void GameShapes3D::GenerateRandomShapes()
 {
     for (int i = 0; i < 25; i++)
     {
-        float const randomYaw    = g_theRNG->RollRandomFloatInRange(0.f, 360.f);
-        int const   randomNum    = g_theRNG->RollRandomIntInRange(0, 4);
-        float const randomRadius = g_theRNG->RollRandomFloatInRange(1.f, 3.f);
+        int const   randomNum                = g_theRNG->RollRandomIntInRange(0, 4);
+        float const randomRadius             = g_theRNG->RollRandomFloatInRange(1.f, 3.f);
+        float const randomDistanceFromOrigin = g_theRNG->RollRandomFloatInRange(10.f, 30.f);
 
-        m_testShapes[i].m_centerPosition = RollVec3InRange(FloatRange(-5.f, 5.f), FloatRange(-5.f, 5.f), FloatRange(-5.f, 5.f));
-        m_testShapes[i].m_orientation    = EulerAngles(randomYaw, 0.f, 0.f);
-        m_testShapes[i].m_radius         = randomRadius;
-        m_testShapes[i].m_halfDimensions = RollVec3InRange(FloatRange(1.f, 3.f), FloatRange(1.f, 3.f), FloatRange(1.f, 3.f));
+        m_testShapes[i].m_centerPosition     = RollVec3InRange(FloatRange(-10.f, 10.f), FloatRange(-10.f, 10.f), FloatRange(-10.f, 10.f));
+        m_testShapes[i].m_orientation        = RollEulerAngleInRange(FloatRange(0.f, 360.f), FloatRange(0.f, 360.f), FloatRange(0.f, 360.f));
+        m_testShapes[i].m_radius             = randomRadius;
+        m_testShapes[i].m_distanceFromOrigin = randomDistanceFromOrigin;
+        m_testShapes[i].m_halfDimensions     = RollVec3InRange(FloatRange(1.f, 3.f), FloatRange(1.f, 3.f), FloatRange(1.f, 3.f));
 
         switch (randomNum)
         {
@@ -832,4 +943,16 @@ Vec3 GameShapes3D::RollVec3InRange(FloatRange const& rangeX,
     float const z = g_theRNG->RollRandomFloatInRange(rangeZ.m_min, rangeZ.m_max);
 
     return Vec3(x, y, z);
+}
+
+//----------------------------------------------------------------------------------------------------
+EulerAngles GameShapes3D::RollEulerAngleInRange(FloatRange const& rangeX,
+                                                FloatRange const& rangeY,
+                                                FloatRange const& rangeZ) const
+{
+    float const x = g_theRNG->RollRandomFloatInRange(rangeX.m_min, rangeX.m_max);
+    float const y = g_theRNG->RollRandomFloatInRange(rangeY.m_min, rangeY.m_max);
+    float const z = g_theRNG->RollRandomFloatInRange(rangeZ.m_min, rangeZ.m_max);
+
+    return EulerAngles(x, y, z);
 }
