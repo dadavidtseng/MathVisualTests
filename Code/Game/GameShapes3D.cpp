@@ -12,6 +12,7 @@
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Math/AABB3.hpp"
 #include "Engine/Math/Cylinder3.hpp"
+#include "Engine/Math/Disc2.hpp"
 #include "Engine/Math/FloatRange.hpp"
 #include "Engine/Math/MathUtils.hpp"
 #include "Engine/Math/OBB3.hpp"
@@ -40,8 +41,8 @@ GameShapes3D::GameShapes3D()
 
     m_screenCamera->SetOrthoGraphicView(m_space.m_mins, m_space.m_maxs);
     m_worldCamera->SetPerspectiveGraphicView(m_space.GetWidthOverHeightRatios(), 60.f, 0.1f, 100.f);
-    m_screenCamera->SetNormalizedViewport(AABB2(Vec2::ZERO, Vec2::ONE));
-    m_worldCamera->SetNormalizedViewport(AABB2(Vec2::ZERO, Vec2::ONE));
+    m_screenCamera->SetNormalizedViewport(AABB2::ZERO_TO_ONE);
+    m_worldCamera->SetNormalizedViewport(AABB2::ZERO_TO_ONE);
     m_worldCamera->SetPosition(Vec3(-2.f, 0.f, 1.f));
 
 
@@ -440,14 +441,14 @@ void GameShapes3D::UpdateShapes()
                 shapeB.m_type == eTestShapeType::PLANE3)
             {
                 Plane3 plane  = Plane3(shapeB.m_centerPosition.GetNormalized(), shapeB.m_distanceFromOrigin);
-                isOverlapping = DoAABB3AndPlaneOverlap3D(aabb3A,plane);
+                isOverlapping = DoAABB3AndPlane3Overlap3D(aabb3A, plane);
             }
             // OBB3 vs. Plane3
             else if (shapeA.m_type == eTestShapeType::OBB3 &&
                 shapeB.m_type == eTestShapeType::PLANE3)
             {
                 Plane3 plane  = Plane3(shapeB.m_centerPosition.GetNormalized(), shapeB.m_distanceFromOrigin);
-                isOverlapping = DoOBB3AndPlaneOverlap3D(obb3A, plane);
+                isOverlapping = DoOBB3AndPlane3Overlap3D(obb3A, plane);
             }
 
             if (isOverlapping)
@@ -707,16 +708,15 @@ void GameShapes3D::RenderNearestPoint() const
     g_theRenderer->DrawVertexArray(static_cast<int>(nearestPointVerts.size()), nearestPointVerts.data());
 }
 
+//----------------------------------------------------------------------------------------------------
 void GameShapes3D::RenderStoredRaycastResult() const
 {
     if (m_storedRay == nullptr) return;
 
     VertexList_PCU  storedRaycastResultVerts;
-    bool            isStoredRayImpact = false;
     RaycastResult3D closestResult;
     float           minLengthSquared = FLOAT_MAX;
     bool            hasValidImpact   = false;
-
 
     for (int i = 0; i < 25; i++)
     {
@@ -842,7 +842,13 @@ void GameShapes3D::RenderShapes() const
 
         if (testShape.m_type == eTestShapeType::OBB3)
         {
-            AddVertsForOBB3D(outsideVerts, obb3, testShape.m_currentColor);
+            if (IsPointInsideOBB3D(m_worldCamera->GetPosition(), obb3))
+            {
+                AddVertsForWireframeOBB3D(insideVerts, obb3, testShape.m_currentColor);
+            }
+            {
+                AddVertsForOBB3D(outsideVerts, obb3, testShape.m_currentColor);
+            }
         }
         if (testShape.m_type == eTestShapeType::PLANE3)
         {
@@ -902,6 +908,7 @@ void GameShapes3D::RenderPlayerBasis() const
     g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
 
+//----------------------------------------------------------------------------------------------------
 void GameShapes3D::GenerateRandomShapes()
 {
     for (int i = 0; i < 25; i++)

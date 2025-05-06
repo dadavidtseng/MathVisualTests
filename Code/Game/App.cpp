@@ -38,8 +38,8 @@ STATIC bool App::m_isQuitting = false;
 //----------------------------------------------------------------------------------------------------
 std::vector<std::function<void()>> App::s_gameModeConstructors =
 {
-    [] { DeleteAndCreateNewGame<GameRaycastVsDiscs>(); },
     [] { DeleteAndCreateNewGame<GameNearestPoint>(); },
+    [] { DeleteAndCreateNewGame<GameRaycastVsDiscs>(); },
     [] { DeleteAndCreateNewGame<GameRaycastVsLineSegments>(); },
     [] { DeleteAndCreateNewGame<GameRaycastVsAABBs>(); },
     [] { DeleteAndCreateNewGame<GameShapes3D>(); },
@@ -98,6 +98,7 @@ void App::Startup()
 
     m_devConsoleCamera->SetOrthoGraphicView(bottomLeft, screenTopRight);
 
+
     DevConsoleConfig devConsoleConfig;
     devConsoleConfig.m_defaultRenderer = g_theRenderer;
     devConsoleConfig.m_defaultFontName = "SquirrelFixedFont";
@@ -114,7 +115,7 @@ void App::Startup()
     g_theBitmapFont = g_theRenderer->CreateOrGetBitmapFontFromFile("Data/Fonts/SquirrelFixedFont"); // DO NOT SPECIFY FILE .EXTENSION!!  (Important later on.)
     g_theRNG        = new RandomNumberGenerator();
     g_theGame       = new GameNearestPoint();
-
+    m_devConsoleCamera->SetNormalizedViewport(AABB2(Vec2::ZERO, Vec2::ONE));
     // m_gameClock = new Clock(Clock::GetSystemClock());
 }
 
@@ -201,7 +202,10 @@ bool App::OnCloseButtonClicked(EventArgs& arg)
 }
 
 //----------------------------------------------------------------------------------------------------
-void App::RequestQuit() { m_isQuitting = true; }
+void App::RequestQuit()
+{
+    m_isQuitting = true;
+}
 
 //----------------------------------------------------------------------------------------------------
 void App::BeginFrame() const
@@ -237,10 +241,7 @@ void App::Render() const
 
     g_theRenderer->ClearScreen(clearColor);
     g_theGame->Render();
-
-    AABB2 const box = AABB2(Vec2::ZERO, Vec2(1600.f, 30.f));
-
-    g_theDevConsole->Render(box);
+    g_theDevConsole->Render(AABB2(Vec2::ZERO, Vec2(1600.f, 30.f)));
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -255,7 +256,7 @@ void App::EndFrame() const
 }
 
 //----------------------------------------------------------------------------------------------------
-void App::LoadGameConfig(char const* gameConfigXmlFilePath)
+void App::LoadGameConfig(char const* gameConfigXmlFilePath) const
 {
     XmlDocument     gameConfigXml;
     XmlResult const result = gameConfigXml.LoadFile(gameConfigXmlFilePath);

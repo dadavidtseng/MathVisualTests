@@ -21,7 +21,7 @@ Game::~Game()
 {
     SafeDeletePointer(m_screenCamera);
     SafeDeletePointer(m_worldCamera);
-    SafeDeletePointer(m_gameClock);
+    // SafeDeletePointer(m_gameClock);
 }
 
 //----------------------------------------------------------------------------------------------------

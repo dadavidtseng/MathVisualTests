@@ -5,8 +5,6 @@
 //----------------------------------------------------------------------------------------------------
 #include "Game/GameCurves2D.hpp"
 
-// #include <algorithm>
-
 #include "Engine/Core/Clock.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Input/InputSystem.hpp"
@@ -14,17 +12,17 @@
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/DebugRenderSystem.hpp"
 #include "Engine/Renderer/Renderer.hpp"
-#include "Engine/Renderer/Window.hpp"
 #include "Game/App.hpp"
 #include "Game/GameCommon.hpp"
 
+//----------------------------------------------------------------------------------------------------
 STATIC std::vector<EasingFunctionInfo> GameCurves2D::s_easingFunctions =
 {
-    {"SmoothStart2", [](float const t) { return SmoothStart2(t); }},
-    {"SmoothStart3", [](float const t) { return SmoothStart3(t); }},
-    {"SmoothStart4", [](float const t) { return SmoothStart4(t); }},
-    {"SmoothStart5", [](float const t) { return SmoothStart5(t); }},
-    {"SmoothStart6", [](float const t) { return SmoothStart6(t); }},
+    {"SmoothStart2", [](float const t) { return SmoothStartN(t, 2); }},
+    {"SmoothStart3", [](float const t) { return SmoothStartN(t, 3); }},
+    {"SmoothStart4", [](float const t) { return SmoothStartN(t, 4); }},
+    {"SmoothStart5", [](float const t) { return SmoothStartN(t, 5); }},
+    {"SmoothStart6", [](float const t) { return SmoothStartN(t, 6); }},
     {"SmoothStop2", [](float const t) { return SmoothStop2(t); }},
     {"SmoothStop3", [](float const t) { return SmoothStop3(t); }},
     {"SmoothStop4", [](float const t) { return SmoothStop4(t); }},
@@ -47,10 +45,8 @@ GameCurves2D::GameCurves2D()
 
     m_screenCamera->SetOrthoGraphicView(Vec2::ZERO, Vec2(screenSizeX, screenSizeY));
     m_worldCamera->SetOrthoGraphicView(Vec2::ZERO, Vec2(screenSizeX, screenSizeY));
-    float x = (float)Window::s_mainWindow->GetClientDimensions().x;
-    float y = (float)Window::s_mainWindow->GetClientDimensions().y;
-    // m_worldCamera->m_viewPort = AABB2(Vec2::ZERO, Vec2(x, y));
-    // m_screenCamera->m_viewPort = AABB2(Vec2::ZERO, Vec2(x, y));
+    m_screenCamera->SetNormalizedViewport(AABB2::ZERO_TO_ONE);
+    m_worldCamera->SetNormalizedViewport(AABB2::ZERO_TO_ONE);
 
     m_gameClock = new Clock(Clock::GetSystemClock());
 

@@ -12,8 +12,6 @@
 #include "Engine/Renderer/Texture.hpp"
 #include "Game/Game.hpp"
 
-struct Rgba8;
-
 //----------------------------------------------------------------------------------------------------
 enum class eTestShapeType : int8_t
 {
@@ -23,7 +21,7 @@ enum class eTestShapeType : int8_t
     CYLINDER3,
     OBB3,
     PLANE3,
-    PLAYER
+    COUNT
 };
 
 //----------------------------------------------------------------------------------------------------
@@ -69,6 +67,7 @@ private:
 
     void GenerateRandomShapes();
 
+    // Utils
     Vec3        RollVec3InRange(FloatRange const& rangeX, FloatRange const& rangeY, FloatRange const& rangeZ) const;
     EulerAngles RollEulerAngleInRange(FloatRange const& rangeX, FloatRange const& rangeY, FloatRange const& rangeZ) const;
 

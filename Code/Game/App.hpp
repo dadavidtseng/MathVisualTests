@@ -47,7 +47,7 @@ private:
     void Render() const;
     void EndFrame() const;
 
-    void LoadGameConfig(char const* gameConfigXmlFilePath);
+    void LoadGameConfig(char const* gameConfigXmlFilePath) const;
     void UpdateFromFromKeyboard();
     void UpdateFromController();
     void UpdateCursorMode();

@@ -23,10 +23,7 @@ GameRaycastVsLineSegments::GameRaycastVsLineSegments()
     float const screenSizeX = g_gameConfigBlackboard.GetValue("screenSizeX", 1600.f);
     float const screenSizeY = g_gameConfigBlackboard.GetValue("screenSizeY", 800.f);
     m_screenCamera->SetOrthoGraphicView(Vec2::ZERO, Vec2(screenSizeX, screenSizeY));
-    float x = (float)Window::s_mainWindow->GetClientDimensions().x;
-    float y = (float)Window::s_mainWindow->GetClientDimensions().y;
-    // m_worldCamera->m_viewPort = AABB2(Vec2::ZERO, Vec2(x, y));
-    // m_screenCamera->m_viewPort = AABB2(Vec2::ZERO, Vec2(x, y));
+    m_screenCamera->SetNormalizedViewport(AABB2::ZERO_TO_ONE);
     m_gameClock = new Clock(Clock::GetSystemClock());
 
     GenerateRandomLineSegmentInScreen();
