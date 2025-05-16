@@ -9,6 +9,7 @@
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Math/MathUtils.hpp"
+#include "Engine/Math/RandomNumberGenerator.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/DebugRenderSystem.hpp"
 #include "Engine/Renderer/Renderer.hpp"
@@ -183,10 +184,10 @@ void GameCurves2D::GenerateEaseFunction()
 void GameCurves2D::GenerateCubicBezierCurves()
 {
     m_cubicBezierCurve2D                  = CubicBezierCurve2D();
-    m_cubicBezierCurve2D.m_startPosition  = m_boundB.GetRandomPointInBounds();
-    m_cubicBezierCurve2D.m_guidePosition1 = m_boundB.GetRandomPointInBounds();
-    m_cubicBezierCurve2D.m_guidePosition2 = m_boundB.GetRandomPointInBounds();
-    m_cubicBezierCurve2D.m_endPosition    = m_boundB.GetRandomPointInBounds();
+    m_cubicBezierCurve2D.m_startPosition  = GenerateRandomPointInBounds(m_boundB);
+    m_cubicBezierCurve2D.m_guidePosition1 = GenerateRandomPointInBounds(m_boundB);
+    m_cubicBezierCurve2D.m_guidePosition2 = GenerateRandomPointInBounds(m_boundB);
+    m_cubicBezierCurve2D.m_endPosition    = GenerateRandomPointInBounds(m_boundB);
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -197,16 +198,25 @@ void GameCurves2D::GenerateCubicHermiteCurves()
     // for (int i = 0; i < g_theRNG->RollRandomIntInRange(0, 5); i++)
     for (int i = 0; i < 2; i++)
     {
-        m_cubicHermiteCurve2D.m_startPosition = m_boundC.GetRandomPointInBounds();
-        m_cubicHermiteCurve2D.m_endPosition   = m_boundC.GetRandomPointInBounds();
-        m_cubicHermiteCurve2D.m_startVelocity = m_boundC.GetRandomPointInBounds() * 0.5f;
-        m_cubicHermiteCurve2D.m_endVelocity   = m_boundC.GetRandomPointInBounds() * 0.5f;
+        m_cubicHermiteCurve2D.m_startPosition = GenerateRandomPointInBounds(m_boundC);
+        m_cubicHermiteCurve2D.m_endPosition   = GenerateRandomPointInBounds(m_boundC);
+        m_cubicHermiteCurve2D.m_startVelocity = GenerateRandomPointInBounds(m_boundC) * 0.5f;
+        m_cubicHermiteCurve2D.m_endVelocity   = GenerateRandomPointInBounds(m_boundC) * 0.5f;
 
         m_points.push_back(m_cubicHermiteCurve2D.m_startPosition);
         m_points.push_back(m_cubicHermiteCurve2D.m_endPosition);
     }
 
     m_catmullRomSpline2D = CatmullRomSpline2D(m_points);
+}
+
+//----------------------------------------------------------------------------------------------------
+Vec2 GameCurves2D::GenerateRandomPointInBounds(AABB2 const& aabb2) const
+{
+    float const randomX = g_theRNG->RollRandomFloatInRange(aabb2.m_mins.x, aabb2.m_maxs.x);
+    float const randomY = g_theRNG->RollRandomFloatInRange(aabb2.m_mins.y, aabb2.m_maxs.y);
+
+    return Vec2(randomX, randomY);
 }
 
 //----------------------------------------------------------------------------------------------------

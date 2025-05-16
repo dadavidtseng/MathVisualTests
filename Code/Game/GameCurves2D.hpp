@@ -39,6 +39,7 @@ private:
     void GenerateEaseFunction();
     void GenerateCubicBezierCurves();
     void GenerateCubicHermiteCurves();
+    Vec2 GenerateRandomPointInBounds(AABB2 const& aabb2) const;
 
     void RenderShapes() const;
     void RenderAABB2s() const;
