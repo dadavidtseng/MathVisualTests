@@ -5,8 +5,6 @@
 //----------------------------------------------------------------------------------------------------
 #include "Game/App.hpp"
 
-#include "GameCurves2D.hpp"
-#include "GamePachinkoMachine2D.hpp"
 #include "Engine/Core/Clock.hpp"
 #include "Engine/Core/DevConsole.hpp"
 #include "Engine/Core/EngineCommon.hpp"
@@ -18,7 +16,9 @@
 #include "Engine/Renderer/Renderer.hpp"
 #include "Engine/Renderer/Window.hpp"
 #include "Game/GameCommon.hpp"
+#include "Game/GameCurves2D.hpp"
 #include "Game/GameNearestPoint.hpp"
+#include "Game/GamePachinkoMachine2D.hpp"
 #include "Game/GameRaycastVsAABBs.hpp"
 #include "Game/GameRaycastVsDiscs.hpp"
 #include "Game/GameRaycastVsLineSegments.hpp"
@@ -79,11 +79,11 @@ void App::Startup()
     windowConfig.m_windowTitle = "Math Visual Tests";
     g_theWindow                = new Window(windowConfig);
 
-    RenderConfig renderConfig;
+    sRenderConfig renderConfig;
     renderConfig.m_window = g_theWindow;
     g_theRenderer         = new Renderer(renderConfig);
 
-    DebugRenderConfig debugConfig;
+    sDebugRenderConfig debugConfig;
     debugConfig.m_renderer = g_theRenderer;
     debugConfig.m_fontName = "SquirrelFixedFont";
 
@@ -99,7 +99,7 @@ void App::Startup()
     m_devConsoleCamera->SetOrthoGraphicView(bottomLeft, screenTopRight);
 
 
-    DevConsoleConfig devConsoleConfig;
+    sDevConsoleConfig devConsoleConfig;
     devConsoleConfig.m_defaultRenderer = g_theRenderer;
     devConsoleConfig.m_defaultFontName = "SquirrelFixedFont";
     devConsoleConfig.m_defaultCamera   = m_devConsoleCamera;
@@ -125,34 +125,23 @@ void App::Startup()
 void App::Shutdown()
 {
     // Destroy all Engine Subsystem
-    delete g_theGame;
-    g_theGame = nullptr;
-
-    delete g_theRNG;
-    g_theRNG = nullptr;
-
-    delete g_theBitmapFont;
-    g_theBitmapFont = nullptr;
+    SafeDeletePointer(g_theGame);
+    SafeDeletePointer(g_theRNG);
+    SafeDeletePointer(g_theBitmapFont);
+    SafeDeletePointer(m_devConsoleCamera);
 
     g_theInput->Shutdown();
     g_theDevConsole->Shutdown();
 
-    delete m_devConsoleCamera;
-    m_devConsoleCamera = nullptr;
-
     DebugRenderSystemShutdown();
     g_theRenderer->Shutdown();
+
     g_theWindow->Shutdown();
     g_theEventSystem->Shutdown();
 
-    delete g_theRenderer;
-    g_theRenderer = nullptr;
-
-    delete g_theWindow;
-    g_theWindow = nullptr;
-
-    delete g_theInput;
-    g_theInput = nullptr;
+    SafeDeletePointer(g_theInput);
+    SafeDeletePointer(g_theRenderer);
+    SafeDeletePointer(g_theWindow);
 }
 
 //----------------------------------------------------------------------------------------------------
