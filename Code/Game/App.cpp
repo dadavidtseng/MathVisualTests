@@ -14,7 +14,7 @@
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/DebugRenderSystem.hpp"
 #include "Engine/Renderer/Renderer.hpp"
-#include "Engine/Renderer/Window.hpp"
+#include "Engine/Platform/Window.hpp"
 #include "Game/GameCommon.hpp"
 #include "Game/GameCurves2D.hpp"
 #include "Game/GameNearestPoint.hpp"
@@ -52,15 +52,15 @@ void App::Startup()
 {
     LoadGameConfig("Data/GameConfig.xml");
 
-    EventSystemConfig eventSystemConfig;
+    sEventSystemConfig eventSystemConfig;
     g_theEventSystem = new EventSystem(eventSystemConfig);
     g_theEventSystem->SubscribeEventCallbackFunction("OnCloseButtonClicked", OnCloseButtonClicked);
     g_theEventSystem->SubscribeEventCallbackFunction("quit", OnCloseButtonClicked);
 
-    InputSystemConfig inputConfig;
+    sInputSystemConfig inputConfig;
     g_theInput = new InputSystem(inputConfig);
 
-    WindowConfig windowConfig;
+    sWindowConfig windowConfig;
     windowConfig.m_aspectRatio = 2.f;
     windowConfig.m_inputSystem = g_theInput;
 
@@ -211,7 +211,7 @@ void App::BeginFrame() const
 void App::Update()
 {
     Clock::TickSystemClock();
-    g_theInput->SetCursorMode(CursorMode::POINTER);
+    g_theInput->SetCursorMode(eCursorMode::POINTER);
     UpdateFromFromKeyboard();
     UpdateFromController();
     g_theGame->Update();
@@ -303,10 +303,10 @@ void App::UpdateCursorMode()
 
     if (shouldUsePointerMode == true)
     {
-        g_theInput->SetCursorMode(CursorMode::POINTER);
+        g_theInput->SetCursorMode(eCursorMode::POINTER);
     }
     else
     {
-        g_theInput->SetCursorMode(CursorMode::FPS);
+        g_theInput->SetCursorMode(eCursorMode::FPS);
     }
 }

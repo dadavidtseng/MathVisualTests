@@ -12,9 +12,7 @@
 #include "Engine/Math/MathUtils.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
 #include "Engine/Math/RaycastUtils.hpp"
-#include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/Renderer.hpp"
-#include "Engine/Renderer/Window.hpp"
 #include "Game/GameCommon.hpp"
 
 //----------------------------------------------------------------------------------------------------

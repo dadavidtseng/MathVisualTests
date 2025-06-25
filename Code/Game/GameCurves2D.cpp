@@ -58,7 +58,7 @@ GameCurves2D::GameCurves2D()
 //----------------------------------------------------------------------------------------------------
 void GameCurves2D::Update()
 {
-    g_theInput->SetCursorMode(CursorMode::POINTER);
+    g_theInput->SetCursorMode(eCursorMode::POINTER);
 
     float const deltaSeconds = static_cast<float>(m_gameClock->GetDeltaSeconds());
 

@@ -9,9 +9,7 @@
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Math/RaycastUtils.hpp"
-#include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/Renderer.hpp"
-#include "Engine/Renderer/Window.hpp"
 #include "Game/App.hpp"
 #include "Game/GameCommon.hpp"
 

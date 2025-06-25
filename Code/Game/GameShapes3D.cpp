@@ -74,7 +74,7 @@ GameShapes3D::GameShapes3D()
 //----------------------------------------------------------------------------------------------------
 void GameShapes3D::Update()
 {
-    g_theInput->SetCursorMode(CursorMode::FPS);
+    g_theInput->SetCursorMode(eCursorMode::FPS);
 
     float const deltaSeconds = static_cast<float>(m_gameClock->GetDeltaSeconds());
 

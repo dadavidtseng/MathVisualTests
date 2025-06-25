@@ -18,7 +18,7 @@
 #include "Engine/Renderer/Camera.hpp"
 #include "Engine/Renderer/DebugRenderSystem.hpp"
 #include "Engine/Renderer/Renderer.hpp"
-#include "Engine/Renderer/Window.hpp"
+
 
 //----------------------------------------------------------------------------------------------------
 GamePachinkoMachine2D::GamePachinkoMachine2D()
@@ -43,7 +43,7 @@ GamePachinkoMachine2D::GamePachinkoMachine2D()
 
 void GamePachinkoMachine2D::Update()
 {
-    g_theInput->SetCursorMode(CursorMode::POINTER);
+    g_theInput->SetCursorMode(eCursorMode::POINTER);
 
     float const deltaSeconds = static_cast<float>(m_gameClock->GetDeltaSeconds());
 
