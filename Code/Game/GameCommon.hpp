@@ -23,7 +23,7 @@ extern Window*                g_theWindow;
 
 //----------------------------------------------------------------------------------------------------
 template <typename T>
-void SafeDeletePointer(T*& pointer)
+void GAME_SAFE_RELEASE(T*& pointer)
 {
     delete pointer;
     pointer = nullptr;

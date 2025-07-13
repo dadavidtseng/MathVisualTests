@@ -324,7 +324,7 @@ void GameShapes3D::UpdateFromKeyboard(float deltaSeconds)
         }
         else
         {
-            SafeDeletePointer(m_storedRay);
+            GAME_SAFE_RELEASE(m_storedRay);
             m_raycastResultText = "space=lock raycast; ";
         }
     }
