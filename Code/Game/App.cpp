@@ -11,10 +11,10 @@
 #include "Engine/Core/EventSystem.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
+#include "Engine/Platform/Window.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/DebugRenderSystem.hpp"
 #include "Engine/Renderer/Renderer.hpp"
-#include "Engine/Platform/Window.hpp"
 #include "Game/GameCommon.hpp"
 #include "Game/GameCurves2D.hpp"
 #include "Game/GameNearestPoint.hpp"
@@ -53,16 +53,16 @@ void App::Startup()
     LoadGameConfig("Data/GameConfig.xml");
 
     sEventSystemConfig eventSystemConfig;
-    g_theEventSystem = new EventSystem(eventSystemConfig);
-    g_theEventSystem->SubscribeEventCallbackFunction("OnCloseButtonClicked", OnCloseButtonClicked);
-    g_theEventSystem->SubscribeEventCallbackFunction("quit", OnCloseButtonClicked);
+    g_eventSystem = new EventSystem(eventSystemConfig);
+    g_eventSystem->SubscribeEventCallbackFunction("OnCloseButtonClicked", OnCloseButtonClicked);
+    g_eventSystem->SubscribeEventCallbackFunction("quit", OnCloseButtonClicked);
 
     sInputSystemConfig inputConfig;
-    g_theInput = new InputSystem(inputConfig);
+    g_input = new InputSystem(inputConfig);
 
     sWindowConfig windowConfig;
     windowConfig.m_aspectRatio = 2.f;
-    windowConfig.m_inputSystem = g_theInput;
+    windowConfig.m_inputSystem = g_input;
 
     windowConfig.m_consoleTitle[0]  = " .----------------.  .----------------.  .----------------.\n";
     windowConfig.m_consoleTitle[1]  = "| .--------------. || .--------------. || .--------------. |\n";
@@ -79,7 +79,7 @@ void App::Startup()
     windowConfig.m_windowTitle = "Math Visual Tests";
     g_theWindow                = new Window(windowConfig);
 
-    sRenderConfig renderConfig;
+    sRendererConfig renderConfig;
     renderConfig.m_window = g_theWindow;
     g_theRenderer         = new Renderer(renderConfig);
 
@@ -103,14 +103,14 @@ void App::Startup()
     devConsoleConfig.m_defaultRenderer = g_theRenderer;
     devConsoleConfig.m_defaultFontName = "SquirrelFixedFont";
     devConsoleConfig.m_defaultCamera   = m_devConsoleCamera;
-    g_theDevConsole                    = new DevConsole(devConsoleConfig);
+    g_devConsole                    = new DevConsole(devConsoleConfig);
 
-    g_theEventSystem->Startup();
+    g_eventSystem->Startup();
     g_theWindow->Startup();
     g_theRenderer->Startup();
     DebugRenderSystemStartup(debugConfig);
-    g_theDevConsole->StartUp();
-    g_theInput->Startup();
+    g_devConsole->StartUp();
+    g_input->Startup();
 
     g_theBitmapFont = g_theRenderer->CreateOrGetBitmapFontFromFile("Data/Fonts/SquirrelFixedFont"); // DO NOT SPECIFY FILE .EXTENSION!!  (Important later on.)
     g_theRNG        = new RandomNumberGenerator();
@@ -130,16 +130,16 @@ void App::Shutdown()
     GAME_SAFE_RELEASE(g_theBitmapFont);
     GAME_SAFE_RELEASE(m_devConsoleCamera);
 
-    g_theInput->Shutdown();
-    g_theDevConsole->Shutdown();
+    g_input->Shutdown();
+    g_devConsole->Shutdown();
 
     DebugRenderSystemShutdown();
     g_theRenderer->Shutdown();
 
     g_theWindow->Shutdown();
-    g_theEventSystem->Shutdown();
+    g_eventSystem->Shutdown();
 
-    GAME_SAFE_RELEASE(g_theInput);
+    GAME_SAFE_RELEASE(g_input);
     GAME_SAFE_RELEASE(g_theRenderer);
     GAME_SAFE_RELEASE(g_theWindow);
 }
@@ -199,19 +199,19 @@ void App::RequestQuit()
 //----------------------------------------------------------------------------------------------------
 void App::BeginFrame() const
 {
-    g_theEventSystem->BeginFrame();
+    g_eventSystem->BeginFrame();
     g_theWindow->BeginFrame();
     g_theRenderer->BeginFrame();
     DebugRenderBeginFrame();
-    g_theDevConsole->BeginFrame();
-    g_theInput->BeginFrame();
+    g_devConsole->BeginFrame();
+    g_input->BeginFrame();
 }
 
 //----------------------------------------------------------------------------------------------------
 void App::Update()
 {
     Clock::TickSystemClock();
-    g_theInput->SetCursorMode(eCursorMode::POINTER);
+    g_input->SetCursorMode(eCursorMode::POINTER);
     UpdateFromFromKeyboard();
     UpdateFromController();
     g_theGame->Update();
@@ -230,18 +230,18 @@ void App::Render() const
 
     g_theRenderer->ClearScreen(clearColor);
     g_theGame->Render();
-    g_theDevConsole->Render(AABB2(Vec2::ZERO, Vec2(1600.f, 30.f)));
+    g_devConsole->Render(AABB2(Vec2::ZERO, Vec2(1600.f, 30.f)));
 }
 
 //----------------------------------------------------------------------------------------------------
 void App::EndFrame() const
 {
-    g_theEventSystem->EndFrame();
+    g_eventSystem->EndFrame();
     g_theWindow->EndFrame();
     g_theRenderer->EndFrame();
     DebugRenderEndFrame();
-    g_theDevConsole->EndFrame();
-    g_theInput->EndFrame();
+    g_devConsole->EndFrame();
+    g_input->EndFrame();
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -272,14 +272,14 @@ void App::UpdateFromFromKeyboard()
 {
     int constexpr gameModeCount = static_cast<int>(eGameMode::COUNT);
 
-    if (g_theInput->WasKeyJustPressed(KEYCODE_F6))
+    if (g_input->WasKeyJustPressed(KEYCODE_F6))
     {
         // Backward
         m_currentGameMode = static_cast<eGameMode>((static_cast<int>(m_currentGameMode) + gameModeCount - 1) % gameModeCount);
         s_gameModeConstructors[static_cast<int>(m_currentGameMode)]();
     }
 
-    if (g_theInput->WasKeyJustPressed(KEYCODE_F7))
+    if (g_input->WasKeyJustPressed(KEYCODE_F7))
     {
         // Forward
         m_currentGameMode = static_cast<eGameMode>((static_cast<int>(m_currentGameMode) + 1) % gameModeCount);
@@ -290,7 +290,7 @@ void App::UpdateFromFromKeyboard()
 //----------------------------------------------------------------------------------------------------
 void App::UpdateFromController()
 {
-    XboxController const& controller = g_theInput->GetController(0);
+    XboxController const& controller = g_input->GetController(0);
 
     UNUSED(controller)
 }
@@ -299,14 +299,14 @@ void App::UpdateFromController()
 void App::UpdateCursorMode()
 {
     bool const doesWindowHasFocus   = GetActiveWindow() == g_theWindow->GetWindowHandle();
-    bool const shouldUsePointerMode = !doesWindowHasFocus || g_theDevConsole->IsOpen();
+    bool const shouldUsePointerMode = !doesWindowHasFocus || g_devConsole->IsOpen();
 
     if (shouldUsePointerMode == true)
     {
-        g_theInput->SetCursorMode(eCursorMode::POINTER);
+        g_input->SetCursorMode(eCursorMode::POINTER);
     }
     else
     {
-        g_theInput->SetCursorMode(eCursorMode::FPS);
+        g_input->SetCursorMode(eCursorMode::FPS);
     }
 }

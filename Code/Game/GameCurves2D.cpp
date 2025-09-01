@@ -58,7 +58,7 @@ GameCurves2D::GameCurves2D()
 //----------------------------------------------------------------------------------------------------
 void GameCurves2D::Update()
 {
-    g_theInput->SetCursorMode(eCursorMode::POINTER);
+    g_input->SetCursorMode(eCursorMode::POINTER);
 
     float const deltaSeconds = static_cast<float>(m_gameClock->GetDeltaSeconds());
 
@@ -115,37 +115,37 @@ void GameCurves2D::Render() const
 void GameCurves2D::UpdateFromKeyboard(float deltaSeconds)
 {
     UNUSED(deltaSeconds)
-    if (g_theInput->WasKeyJustPressed(KEYCODE_O)) m_gameClock->StepSingleFrame();
-    if (g_theInput->WasKeyJustPressed(KEYCODE_T)) m_gameClock->SetTimeScale(0.1f);
-    if (g_theInput->WasKeyJustReleased(KEYCODE_T)) m_gameClock->SetTimeScale(1.f);
-    if (g_theInput->WasKeyJustPressed(KEYCODE_P)) m_gameClock->TogglePause();
-    if (g_theInput->WasKeyJustPressed(KEYCODE_ESC)) App::RequestQuit();
-    if (g_theInput->WasKeyJustPressed(KEYCODE_F8))
+    if (g_input->WasKeyJustPressed(KEYCODE_O)) m_gameClock->StepSingleFrame();
+    if (g_input->WasKeyJustPressed(KEYCODE_T)) m_gameClock->SetTimeScale(0.1f);
+    if (g_input->WasKeyJustReleased(KEYCODE_T)) m_gameClock->SetTimeScale(1.f);
+    if (g_input->WasKeyJustPressed(KEYCODE_P)) m_gameClock->TogglePause();
+    if (g_input->WasKeyJustPressed(KEYCODE_ESC)) App::RequestQuit();
+    if (g_input->WasKeyJustPressed(KEYCODE_F8))
     {
         m_catmullRomSpline2D.ResetAllPoints(m_points);
         m_points.clear();
         GenerateRandomShapes();
     }
 
-    XboxController const& controller = g_theInput->GetController(0);
+    XboxController const& controller = g_input->GetController(0);
 
-    if (g_theInput->WasKeyJustPressed(KEYCODE_H) || controller.WasButtonJustPressed(XBOX_BUTTON_START))
+    if (g_input->WasKeyJustPressed(KEYCODE_H) || controller.WasButtonJustPressed(XBOX_BUTTON_START))
     {
         m_worldCamera->SetPosition(Vec3::ZERO);
         m_worldCamera->SetOrientation(EulerAngles::ZERO);
     }
 
-    if (g_theInput->IsKeyDown(KEYCODE_W)) m_cubicBezierCurve2D.m_guidePosition1 += Vec2(0.1f, 0.1f);
-    if (g_theInput->IsKeyDown(KEYCODE_S)) m_cubicBezierCurve2D.m_guidePosition2 += Vec2(0.1f, 0.1f);
+    if (g_input->IsKeyDown(KEYCODE_W)) m_cubicBezierCurve2D.m_guidePosition1 += Vec2(0.1f, 0.1f);
+    if (g_input->IsKeyDown(KEYCODE_S)) m_cubicBezierCurve2D.m_guidePosition2 += Vec2(0.1f, 0.1f);
 
-    if (g_theInput->WasKeyJustPressed(KEYCODE_W)) m_easeIndex++;
-    if (g_theInput->WasKeyJustPressed(KEYCODE_E)) m_easeIndex--;
+    if (g_input->WasKeyJustPressed(KEYCODE_W)) m_easeIndex++;
+    if (g_input->WasKeyJustPressed(KEYCODE_E)) m_easeIndex--;
 
     int const size = static_cast<int>(s_easingFunctions.size());
     m_easeIndex    = (m_easeIndex + size) % size;
 
-    if (g_theInput->WasKeyJustPressed(KEYCODE_M)) m_numSubDivisions *= 2;
-    if (g_theInput->WasKeyJustPressed(KEYCODE_N)) m_numSubDivisions /= 2;
+    if (g_input->WasKeyJustPressed(KEYCODE_M)) m_numSubDivisions *= 2;
+    if (g_input->WasKeyJustPressed(KEYCODE_N)) m_numSubDivisions /= 2;
     m_numSubDivisions = m_numSubDivisions < 1 ? 1 : m_numSubDivisions;
 }
 

@@ -8,11 +8,9 @@
 #include "Engine/Core/Clock.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Core/ErrorWarningAssert.hpp"
-#include "Engine/Core/VertexUtils.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Math/AABB3.hpp"
 #include "Engine/Math/Cylinder3.hpp"
-#include "Engine/Math/Disc2.hpp"
 #include "Engine/Math/FloatRange.hpp"
 #include "Engine/Math/MathUtils.hpp"
 #include "Engine/Math/OBB3.hpp"
@@ -23,6 +21,7 @@
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/DebugRenderSystem.hpp"
 #include "Engine/Renderer/Renderer.hpp"
+#include "Engine/Renderer/VertexUtils.hpp"
 #include "Game/App.hpp"
 #include "Game/GameCommon.hpp"
 
@@ -74,7 +73,7 @@ GameShapes3D::GameShapes3D()
 //----------------------------------------------------------------------------------------------------
 void GameShapes3D::Update()
 {
-    g_theInput->SetCursorMode(eCursorMode::FPS);
+    g_input->SetCursorMode(eCursorMode::FPS);
 
     float const deltaSeconds = static_cast<float>(m_gameClock->GetDeltaSeconds());
 
@@ -82,7 +81,7 @@ void GameShapes3D::Update()
     UpdateFromKeyboard(deltaSeconds);
     UpdateFromController(deltaSeconds);
 
-    if (g_theInput->WasKeyJustPressed(NUMCODE_6))
+    if (g_input->WasKeyJustPressed(NUMCODE_6))
     {
         DebugAddWorldCylinder(m_worldCamera->GetPosition(), m_worldCamera->GetPosition() + Vec3::Z_BASIS * 2, 1.f, 10.f, true, Rgba8::WHITE, Rgba8::RED);
     }
@@ -155,16 +154,16 @@ void GameShapes3D::Render() const
 //----------------------------------------------------------------------------------------------------
 void GameShapes3D::UpdateFromKeyboard(float deltaSeconds)
 {
-    if (g_theInput->WasKeyJustPressed(KEYCODE_O)) m_gameClock->StepSingleFrame();
-    if (g_theInput->WasKeyJustPressed(KEYCODE_T)) m_gameClock->SetTimeScale(0.1f);
-    if (g_theInput->WasKeyJustReleased(KEYCODE_T)) m_gameClock->SetTimeScale(1.f);
-    if (g_theInput->WasKeyJustPressed(KEYCODE_P)) m_gameClock->TogglePause();
-    if (g_theInput->WasKeyJustPressed(KEYCODE_ESC)) App::RequestQuit();
-    if (g_theInput->WasKeyJustPressed(KEYCODE_F8)) GenerateRandomShapes();
+    if (g_input->WasKeyJustPressed(KEYCODE_O)) m_gameClock->StepSingleFrame();
+    if (g_input->WasKeyJustPressed(KEYCODE_T)) m_gameClock->SetTimeScale(0.1f);
+    if (g_input->WasKeyJustReleased(KEYCODE_T)) m_gameClock->SetTimeScale(1.f);
+    if (g_input->WasKeyJustPressed(KEYCODE_P)) m_gameClock->TogglePause();
+    if (g_input->WasKeyJustPressed(KEYCODE_ESC)) App::RequestQuit();
+    if (g_input->WasKeyJustPressed(KEYCODE_F8)) GenerateRandomShapes();
 
-    XboxController const& controller = g_theInput->GetController(0);
+    XboxController const& controller = g_input->GetController(0);
 
-    if (g_theInput->WasKeyJustPressed(KEYCODE_H) || controller.WasButtonJustPressed(XBOX_BUTTON_START))
+    if (g_input->WasKeyJustPressed(KEYCODE_H) || controller.WasButtonJustPressed(XBOX_BUTTON_START))
     {
         m_worldCamera->SetPosition(Vec3::ZERO);
         m_worldCamera->SetOrientation(EulerAngles::ZERO);
@@ -180,17 +179,17 @@ void GameShapes3D::UpdateFromKeyboard(float deltaSeconds)
     Vec2 const leftStickInput = controller.GetLeftStick().GetPosition();
     Vec3       targetPosition = m_worldCamera->GetPosition();
 
-    if (g_theInput->IsKeyDown(KEYCODE_SHIFT) || controller.IsButtonDown(XBOX_BUTTON_A)) deltaSeconds *= 10.f;
+    if (g_input->IsKeyDown(KEYCODE_SHIFT) || controller.IsButtonDown(XBOX_BUTTON_A)) deltaSeconds *= 10.f;
     targetPosition += Vec3(leftStickInput.y, -leftStickInput.x, 0.f) * moveSpeed * deltaSeconds;
 
-    if (g_theInput->IsKeyDown(KEYCODE_W)) targetPosition += forward * moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_S)) targetPosition -= forward * moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_A)) targetPosition += left * moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_D)) targetPosition -= left * moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_Z) || controller.IsButtonDown(XBOX_BUTTON_LSHOULDER)) targetPosition -= Vec3::Z_BASIS * moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_C) || controller.IsButtonDown(XBOX_BUTTON_RSHOULDER)) targetPosition += Vec3::Z_BASIS * moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_Z)) targetPosition -= Vec3::Z_BASIS * moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_C)) targetPosition += Vec3::Z_BASIS * moveSpeed * deltaSeconds;
+    if (g_input->IsKeyDown(KEYCODE_W)) targetPosition += forward * moveSpeed * deltaSeconds;
+    if (g_input->IsKeyDown(KEYCODE_S)) targetPosition -= forward * moveSpeed * deltaSeconds;
+    if (g_input->IsKeyDown(KEYCODE_A)) targetPosition += left * moveSpeed * deltaSeconds;
+    if (g_input->IsKeyDown(KEYCODE_D)) targetPosition -= left * moveSpeed * deltaSeconds;
+    if (g_input->IsKeyDown(KEYCODE_Z) || controller.IsButtonDown(XBOX_BUTTON_LSHOULDER)) targetPosition -= Vec3::Z_BASIS * moveSpeed * deltaSeconds;
+    if (g_input->IsKeyDown(KEYCODE_C) || controller.IsButtonDown(XBOX_BUTTON_RSHOULDER)) targetPosition += Vec3::Z_BASIS * moveSpeed * deltaSeconds;
+    if (g_input->IsKeyDown(KEYCODE_Z)) targetPosition -= Vec3::Z_BASIS * moveSpeed * deltaSeconds;
+    if (g_input->IsKeyDown(KEYCODE_C)) targetPosition += Vec3::Z_BASIS * moveSpeed * deltaSeconds;
 
 
     Vec2 const rightStickInput = controller.GetRightStick().GetPosition();
@@ -200,19 +199,19 @@ void GameShapes3D::UpdateFromKeyboard(float deltaSeconds)
     targetEulerAngles.m_yawDegrees -= rightStickInput.x * 0.125f;
     targetEulerAngles.m_pitchDegrees -= rightStickInput.y * 0.125f;
 
-    targetEulerAngles.m_yawDegrees -= g_theInput->GetCursorClientDelta().x * 0.125f;
-    targetEulerAngles.m_pitchDegrees += g_theInput->GetCursorClientDelta().y * 0.125f;
+    targetEulerAngles.m_yawDegrees -= g_input->GetCursorClientDelta().x * 0.125f;
+    targetEulerAngles.m_pitchDegrees += g_input->GetCursorClientDelta().y * 0.125f;
     targetEulerAngles.m_pitchDegrees = GetClamped(targetEulerAngles.m_pitchDegrees, -89.9f, 89.9f);
 
     float const leftTriggerInput  = controller.GetLeftTrigger();
     float const rightTriggerInput = controller.GetRightTrigger();
 
-    if (leftTriggerInput != 0.f || g_theInput->IsKeyDown(KEYCODE_E))
+    if (leftTriggerInput != 0.f || g_input->IsKeyDown(KEYCODE_E))
     {
         targetEulerAngles.m_rollDegrees -= 90.f * deltaSeconds;
     }
 
-    if (rightTriggerInput != 0.f || g_theInput->IsKeyDown(KEYCODE_Q))
+    if (rightTriggerInput != 0.f || g_input->IsKeyDown(KEYCODE_Q))
     {
         targetEulerAngles.m_rollDegrees += 90.f * deltaSeconds;
     }
@@ -227,7 +226,7 @@ void GameShapes3D::UpdateFromKeyboard(float deltaSeconds)
     float closestDistance = FLOAT_MAX;
     int   closestIndex    = -1;
 
-    if (g_theInput->WasKeyJustPressed(KEYCODE_LEFT_MOUSE))
+    if (g_input->WasKeyJustPressed(KEYCODE_LEFT_MOUSE))
     {
         for (int i = 0; i < 25; i++)
         {
@@ -315,7 +314,7 @@ void GameShapes3D::UpdateFromKeyboard(float deltaSeconds)
     }
 
 
-    if (g_theInput->WasKeyJustPressed(KEYCODE_SPACE))
+    if (g_input->WasKeyJustPressed(KEYCODE_SPACE))
     {
         if (m_storedRay == nullptr)
         {

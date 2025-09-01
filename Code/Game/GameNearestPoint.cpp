@@ -59,7 +59,7 @@ void GameNearestPoint::Render() const
 //----------------------------------------------------------------------------------------------------
 void GameNearestPoint::UpdateFromKeyboard(float const deltaSeconds)
 {
-    if (g_theInput->WasKeyJustPressed(KEYCODE_F8))
+    if (g_input->WasKeyJustPressed(KEYCODE_F8))
     {
         GenerateRandomShapes();
 
@@ -68,24 +68,24 @@ void GameNearestPoint::UpdateFromKeyboard(float const deltaSeconds)
         m_referencePoint          = Vec2(screenCenterX, screenCenterY);
     }
 
-    if (g_theInput->WasKeyJustPressed(KEYCODE_O)) m_gameClock->StepSingleFrame();
-    if (g_theInput->WasKeyJustPressed(KEYCODE_T)) m_gameClock->SetTimeScale(0.1f);
-    if (g_theInput->WasKeyJustReleased(KEYCODE_T)) m_gameClock->SetTimeScale(1.f);
-    if (g_theInput->WasKeyJustPressed(KEYCODE_P)) m_gameClock->TogglePause();
-    if (g_theInput->WasKeyJustPressed(KEYCODE_ESC)) App::RequestQuit();
+    if (g_input->WasKeyJustPressed(KEYCODE_O)) m_gameClock->StepSingleFrame();
+    if (g_input->WasKeyJustPressed(KEYCODE_T)) m_gameClock->SetTimeScale(0.1f);
+    if (g_input->WasKeyJustReleased(KEYCODE_T)) m_gameClock->SetTimeScale(1.f);
+    if (g_input->WasKeyJustPressed(KEYCODE_P)) m_gameClock->TogglePause();
+    if (g_input->WasKeyJustPressed(KEYCODE_ESC)) App::RequestQuit();
 
-    if (g_theInput->IsKeyDown(KEYCODE_W)) m_referencePoint.y += m_moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_S)) m_referencePoint.y -= m_moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_A)) m_referencePoint.x -= m_moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_D)) m_referencePoint.x += m_moveSpeed * deltaSeconds;
+    if (g_input->IsKeyDown(KEYCODE_W)) m_referencePoint.y += m_moveSpeed * deltaSeconds;
+    if (g_input->IsKeyDown(KEYCODE_S)) m_referencePoint.y -= m_moveSpeed * deltaSeconds;
+    if (g_input->IsKeyDown(KEYCODE_A)) m_referencePoint.x -= m_moveSpeed * deltaSeconds;
+    if (g_input->IsKeyDown(KEYCODE_D)) m_referencePoint.x += m_moveSpeed * deltaSeconds;
 
-    if (g_theInput->IsKeyDown(KEYCODE_LEFT_MOUSE)) m_referencePoint = GetMouseWorldPos();
+    if (g_input->IsKeyDown(KEYCODE_LEFT_MOUSE)) m_referencePoint = GetMouseWorldPos();
 }
 
 //----------------------------------------------------------------------------------------------------
 void GameNearestPoint::UpdateFromController(float const deltaSeconds)
 {
-    XboxController const controller = g_theInput->GetController(0);
+    XboxController const controller = g_input->GetController(0);
 
     m_referencePoint += controller.GetLeftStick().GetPosition() * m_moveSpeed * deltaSeconds;
 }

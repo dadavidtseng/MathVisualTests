@@ -5,11 +5,8 @@
 //----------------------------------------------------------------------------------------------------
 #include "Game/GamePachinkoMachine2D.hpp"
 
-#include "App.hpp"
-#include "GameCommon.hpp"
 #include "Engine/Core/Clock.hpp"
 #include "Engine/Core/EngineCommon.hpp"
-#include "Engine/Core/VertexUtils.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Math/FloatRange.hpp"
 #include "Engine/Math/MathUtils.hpp"
@@ -18,6 +15,9 @@
 #include "Engine/Renderer/Camera.hpp"
 #include "Engine/Renderer/DebugRenderSystem.hpp"
 #include "Engine/Renderer/Renderer.hpp"
+#include "Engine/Renderer/VertexUtils.hpp"
+#include "Game/App.hpp"
+#include "Game/GameCommon.hpp"
 
 
 //----------------------------------------------------------------------------------------------------
@@ -43,7 +43,7 @@ GamePachinkoMachine2D::GamePachinkoMachine2D()
 
 void GamePachinkoMachine2D::Update()
 {
-    g_theInput->SetCursorMode(eCursorMode::POINTER);
+    g_input->SetCursorMode(eCursorMode::POINTER);
 
     float const deltaSeconds = static_cast<float>(m_gameClock->GetDeltaSeconds());
 
@@ -106,30 +106,30 @@ void GamePachinkoMachine2D::Render() const
 
 void GamePachinkoMachine2D::UpdateFromKeyboard(float const deltaSeconds)
 {
-    if (g_theInput->WasKeyJustPressed(KEYCODE_O)) m_gameClock->StepSingleFrame();
-    if (g_theInput->WasKeyJustPressed(KEYCODE_T)) m_gameClock->SetTimeScale(0.05f);
-    if (g_theInput->WasKeyJustReleased(KEYCODE_T)) m_gameClock->SetTimeScale(1.f);
-    if (g_theInput->WasKeyJustPressed(KEYCODE_P)) m_gameClock->TogglePause();
-    if (g_theInput->WasKeyJustPressed(KEYCODE_ESC)) App::RequestQuit();
-    if (g_theInput->WasKeyJustPressed(KEYCODE_F8))
+    if (g_input->WasKeyJustPressed(KEYCODE_O)) m_gameClock->StepSingleFrame();
+    if (g_input->WasKeyJustPressed(KEYCODE_T)) m_gameClock->SetTimeScale(0.05f);
+    if (g_input->WasKeyJustReleased(KEYCODE_T)) m_gameClock->SetTimeScale(1.f);
+    if (g_input->WasKeyJustPressed(KEYCODE_P)) m_gameClock->TogglePause();
+    if (g_input->WasKeyJustPressed(KEYCODE_ESC)) App::RequestQuit();
+    if (g_input->WasKeyJustPressed(KEYCODE_F8))
     {
         GenerateRandomShapes();
     }
 
-    if (g_theInput->WasKeyJustPressed(KEYCODE_F8)) GenerateRandomLineSegmentInScreen();
-    if (g_theInput->IsKeyDown(KEYCODE_W)) m_lineSegment.m_startPosition.y += m_moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_S)) m_lineSegment.m_startPosition.y -= m_moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_A)) m_lineSegment.m_startPosition.x -= m_moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_D)) m_lineSegment.m_startPosition.x += m_moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_I)) m_lineSegment.m_endPosition.y += m_moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_K)) m_lineSegment.m_endPosition.y -= m_moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_J)) m_lineSegment.m_endPosition.x -= m_moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_L)) m_lineSegment.m_endPosition.x += m_moveSpeed * deltaSeconds;
-    if (g_theInput->IsKeyDown(KEYCODE_LEFT_MOUSE)) m_lineSegment.m_startPosition = GetMouseWorldPos();
-    if (g_theInput->IsKeyDown(KEYCODE_RIGHT_MOUSE)) m_lineSegment.m_endPosition = GetMouseWorldPos();
+    if (g_input->WasKeyJustPressed(KEYCODE_F8)) GenerateRandomLineSegmentInScreen();
+    if (g_input->IsKeyDown(KEYCODE_W)) m_lineSegment.m_startPosition.y += m_moveSpeed * deltaSeconds;
+    if (g_input->IsKeyDown(KEYCODE_S)) m_lineSegment.m_startPosition.y -= m_moveSpeed * deltaSeconds;
+    if (g_input->IsKeyDown(KEYCODE_A)) m_lineSegment.m_startPosition.x -= m_moveSpeed * deltaSeconds;
+    if (g_input->IsKeyDown(KEYCODE_D)) m_lineSegment.m_startPosition.x += m_moveSpeed * deltaSeconds;
+    if (g_input->IsKeyDown(KEYCODE_I)) m_lineSegment.m_endPosition.y += m_moveSpeed * deltaSeconds;
+    if (g_input->IsKeyDown(KEYCODE_K)) m_lineSegment.m_endPosition.y -= m_moveSpeed * deltaSeconds;
+    if (g_input->IsKeyDown(KEYCODE_J)) m_lineSegment.m_endPosition.x -= m_moveSpeed * deltaSeconds;
+    if (g_input->IsKeyDown(KEYCODE_L)) m_lineSegment.m_endPosition.x += m_moveSpeed * deltaSeconds;
+    if (g_input->IsKeyDown(KEYCODE_LEFT_MOUSE)) m_lineSegment.m_startPosition = GetMouseWorldPos();
+    if (g_input->IsKeyDown(KEYCODE_RIGHT_MOUSE)) m_lineSegment.m_endPosition = GetMouseWorldPos();
 
-    if (g_theInput->IsKeyDown(KEYCODE_N) ||
-        g_theInput->WasKeyJustPressed(KEYCODE_SPACE))
+    if (g_input->IsKeyDown(KEYCODE_N) ||
+        g_input->WasKeyJustPressed(KEYCODE_SPACE))
     {
         Ball ball;
         ball.m_position              = Vec2(m_lineSegment.m_startPosition.x, m_lineSegment.m_startPosition.y);
@@ -142,18 +142,18 @@ void GamePachinkoMachine2D::UpdateFromKeyboard(float const deltaSeconds)
         m_ballList.push_back(ball);
     }
 
-    if (g_theInput->WasKeyJustPressed(KEYCODE_B))
+    if (g_input->WasKeyJustPressed(KEYCODE_B))
     {
         m_wallList[0].m_isWarped = !m_wallList[0].m_isWarped;
         m_isWallWarpEnabled      = !m_isWallWarpEnabled;
     }
 
-    if (g_theInput->WasKeyJustPressed(KEYCODE_G)) m_ballElasticity -= m_ballElasticityDelta;
-    if (g_theInput->WasKeyJustPressed(KEYCODE_H)) m_ballElasticity += m_ballElasticityDelta;
+    if (g_input->WasKeyJustPressed(KEYCODE_G)) m_ballElasticity -= m_ballElasticityDelta;
+    if (g_input->WasKeyJustPressed(KEYCODE_H)) m_ballElasticity += m_ballElasticityDelta;
     m_ballElasticity = GetClampedZeroToOne(m_ballElasticity);
 
-    if (g_theInput->WasKeyJustPressed(KEYCODE_LEFT_BRACKET)) m_fixedTimeStep *= 0.9f;
-    if (g_theInput->WasKeyJustPressed(KEYCODE_RIGHT_BRACKET)) m_fixedTimeStep *= 1.1f;
+    if (g_input->WasKeyJustPressed(KEYCODE_LEFT_BRACKET)) m_fixedTimeStep *= 0.9f;
+    if (g_input->WasKeyJustPressed(KEYCODE_RIGHT_BRACKET)) m_fixedTimeStep *= 1.1f;
 }
 
 void GamePachinkoMachine2D::UpdateFromController(float deltaSeconds)

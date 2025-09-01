@@ -6,7 +6,7 @@
 #include "Game/Game.hpp"
 
 #include "Engine/Core/EngineCommon.hpp"
-#include "Engine/Core/VertexUtils.hpp"
+#include "Engine/Renderer/VertexUtils.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Math/AABB2.hpp"
 #include "Engine/Math/MathUtils.hpp"
@@ -27,7 +27,7 @@ Game::~Game()
 //----------------------------------------------------------------------------------------------------
 Vec2 Game::GetMouseWorldPos() const
 {
-    Vec2 const  mouseUV    = g_theInput->GetCursorNormalizedPosition();
+    Vec2 const  mouseUV    = g_input->GetCursorNormalizedPosition();
     Vec2 const  bottomLeft = m_screenCamera->GetOrthographicBottomLeft();
     Vec2 const  topRight   = m_screenCamera->GetOrthographicTopRight();
     AABB2 const orthoBounds(bottomLeft, topRight);
