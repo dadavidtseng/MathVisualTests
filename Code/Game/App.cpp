@@ -4,17 +4,7 @@
 
 //----------------------------------------------------------------------------------------------------
 #include "Game/App.hpp"
-
-#include "Engine/Core/Clock.hpp"
-#include "Engine/Core/DevConsole.hpp"
-#include "Engine/Core/EngineCommon.hpp"
-#include "Engine/Core/EventSystem.hpp"
-#include "Engine/Input/InputSystem.hpp"
-#include "Engine/Math/RandomNumberGenerator.hpp"
-#include "Engine/Platform/Window.hpp"
-#include "Engine/Renderer/BitmapFont.hpp"
-#include "Engine/Renderer/DebugRenderSystem.hpp"
-#include "Engine/Renderer/Renderer.hpp"
+//----------------------------------------------------------------------------------------------------
 #include "Game/GameCommon.hpp"
 #include "Game/GameCurves2D.hpp"
 #include "Game/GameNearestPoint.hpp"
@@ -22,15 +12,23 @@
 #include "Game/GameRaycastVsAABBs.hpp"
 #include "Game/GameRaycastVsDiscs.hpp"
 #include "Game/GameRaycastVsLineSegments.hpp"
+#include "Game/GameConvexScene.hpp"
 #include "Game/GameShapes3D.hpp"
+//----------------------------------------------------------------------------------------------------
+#include "Engine/Core/Clock.hpp"
+#include "Engine/Core/DevConsole.hpp"
+#include "Engine/Core/Engine.hpp"
+#include "Engine/Core/EngineCommon.hpp"
+#include "Engine/Core/EventSystem.hpp"
+#include "Engine/Input/InputSystem.hpp"
+#include "Engine/Math/RandomNumberGenerator.hpp"
+#include "Engine/Platform/Window.hpp"
+#include "Engine/Renderer/DebugRenderSystem.hpp"
+#include "Engine/Renderer/Renderer.hpp"
 
 //----------------------------------------------------------------------------------------------------
-App*                   g_theApp        = nullptr;      // Created and owned by Main_Windows.cpp
-BitmapFont*            g_theBitmapFont = nullptr;      // Created and owned by the App
-Game*                  g_theGame       = nullptr;      // Created and owned by the App
-Renderer*              g_theRenderer   = nullptr;      // Created and owned by the App
-RandomNumberGenerator* g_theRNG        = nullptr;      // Created and owned by the App
-Window*                g_theWindow     = nullptr;      // Created and owned by the App
+App*                   g_app        = nullptr;      // Created and owned by Main_Windows.cpp
+Game*                  g_game       = nullptr;      // Created and owned by the App
 
 //----------------------------------------------------------------------------------------------------
 STATIC bool App::m_isQuitting = false;
@@ -44,79 +42,33 @@ std::vector<std::function<void()>> App::s_gameModeConstructors =
     [] { DeleteAndCreateNewGame<GameRaycastVsAABBs>(); },
     [] { DeleteAndCreateNewGame<GameShapes3D>(); },
     [] { DeleteAndCreateNewGame<GameCurves2D>(); },
-    [] { DeleteAndCreateNewGame<GamePachinkoMachine2D>(); }
+    [] { DeleteAndCreateNewGame<GamePachinkoMachine2D>(); },
+    [] { DeleteAndCreateNewGame<GameConvexScene>(); }
 };
+
+//----------------------------------------------------------------------------------------------------
+App::App()
+{
+    GEngine::Get().Construct();
+}
+
+//----------------------------------------------------------------------------------------------------
+App::~App()
+{
+    GEngine::Get().Destruct();
+}
 
 //----------------------------------------------------------------------------------------------------
 void App::Startup()
 {
+    GEngine::Get().Startup();
+
     LoadGameConfig("Data/GameConfig.xml");
 
-    sEventSystemConfig eventSystemConfig;
-    g_eventSystem = new EventSystem(eventSystemConfig);
     g_eventSystem->SubscribeEventCallbackFunction("OnCloseButtonClicked", OnCloseButtonClicked);
     g_eventSystem->SubscribeEventCallbackFunction("quit", OnCloseButtonClicked);
 
-    sInputSystemConfig inputConfig;
-    g_input = new InputSystem(inputConfig);
-
-    sWindowConfig windowConfig;
-    windowConfig.m_aspectRatio = 2.f;
-    windowConfig.m_inputSystem = g_input;
-
-    windowConfig.m_consoleTitle[0]  = " .----------------.  .----------------.  .----------------.\n";
-    windowConfig.m_consoleTitle[1]  = "| .--------------. || .--------------. || .--------------. |\n";
-    windowConfig.m_consoleTitle[2]  = "| | ____    ____ | || | ____   ____  | || |  _________   | |\n";
-    windowConfig.m_consoleTitle[3]  = "| ||_   \\  /   _|| || ||_  _| |_  _| | || | |  _   _  |  | |\n";
-    windowConfig.m_consoleTitle[4]  = "| |  |   \\/   |  | || |  \\ \\   / /   | || | |_/ | | \\_|  | |\n";
-    windowConfig.m_consoleTitle[5]  = "| |  | |\\  /| |  | || |   \\ \\ / /    | || |     | |      | |\n";
-    windowConfig.m_consoleTitle[6]  = "| | _| |_\\/_| |_ | || |    \\ ' /     | || |    _| |_     | |\n";
-    windowConfig.m_consoleTitle[7]  = "| ||_____||_____|| || |     \\_/      | || |   |_____|    | |\n";
-    windowConfig.m_consoleTitle[8]  = "| |              | || |              | || |              | |\n";
-    windowConfig.m_consoleTitle[9]  = "| '--------------' || '--------------' || '--------------' |\n";
-    windowConfig.m_consoleTitle[10] = " '----------------'  '----------------'  '----------------' \n";
-
-    windowConfig.m_windowTitle = "Math Visual Tests";
-    g_theWindow                = new Window(windowConfig);
-
-    sRendererConfig renderConfig;
-    renderConfig.m_window = g_theWindow;
-    g_theRenderer         = new Renderer(renderConfig);
-
-    sDebugRenderConfig debugConfig;
-    debugConfig.m_renderer = g_theRenderer;
-    debugConfig.m_fontName = "SquirrelFixedFont";
-
-    // Initialize devConsoleCamera
-    m_devConsoleCamera = new Camera();
-
-    Vec2 const bottomLeft = Vec2::ZERO;
-
-    float const screenSizeX    = g_gameConfigBlackboard.GetValue("screenSizeX", 1600.f);
-    float const screenSizeY    = g_gameConfigBlackboard.GetValue("screenSizeY", 800.f);
-    Vec2 const  screenTopRight = Vec2(screenSizeX, screenSizeY);
-
-    m_devConsoleCamera->SetOrthoGraphicView(bottomLeft, screenTopRight);
-
-
-    sDevConsoleConfig devConsoleConfig;
-    devConsoleConfig.m_defaultRenderer = g_theRenderer;
-    devConsoleConfig.m_defaultFontName = "SquirrelFixedFont";
-    devConsoleConfig.m_defaultCamera   = m_devConsoleCamera;
-    g_devConsole                    = new DevConsole(devConsoleConfig);
-
-    g_eventSystem->Startup();
-    g_theWindow->Startup();
-    g_theRenderer->Startup();
-    DebugRenderSystemStartup(debugConfig);
-    g_devConsole->StartUp();
-    g_input->Startup();
-
-    g_theBitmapFont = g_theRenderer->CreateOrGetBitmapFontFromFile("Data/Fonts/SquirrelFixedFont"); // DO NOT SPECIFY FILE .EXTENSION!!  (Important later on.)
-    g_theRNG        = new RandomNumberGenerator();
-    g_theGame       = new GameNearestPoint();
-    m_devConsoleCamera->SetNormalizedViewport(AABB2(Vec2::ZERO, Vec2::ONE));
-    // m_gameClock = new Clock(Clock::GetSystemClock());
+    g_game       = new GameNearestPoint();
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -124,24 +76,12 @@ void App::Startup()
 //
 void App::Shutdown()
 {
-    // Destroy all Engine Subsystem
-    GAME_SAFE_RELEASE(g_theGame);
-    GAME_SAFE_RELEASE(g_theRNG);
-    GAME_SAFE_RELEASE(g_theBitmapFont);
-    GAME_SAFE_RELEASE(m_devConsoleCamera);
+    GAME_SAFE_RELEASE(g_game);
 
-    g_input->Shutdown();
-    g_devConsole->Shutdown();
+    g_eventSystem->UnsubscribeEventCallbackFunction("quit", OnCloseButtonClicked);
+    g_eventSystem->UnsubscribeEventCallbackFunction("OnCloseButtonClicked", OnCloseButtonClicked);
 
-    DebugRenderSystemShutdown();
-    g_theRenderer->Shutdown();
-
-    g_theWindow->Shutdown();
-    g_eventSystem->Shutdown();
-
-    GAME_SAFE_RELEASE(g_input);
-    GAME_SAFE_RELEASE(g_theRenderer);
-    GAME_SAFE_RELEASE(g_theWindow);
+    GEngine::Get().Shutdown();
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -172,13 +112,13 @@ void App::DeleteAndCreateNewGame()
 {
     static_assert(std::is_base_of_v<Game, T>, "T must be a subclass of Game");
 
-    if (g_theGame != nullptr)
+    if (g_game != nullptr)
     {
-        delete g_theGame;
-        g_theGame = nullptr;
+        delete g_game;
+        g_game = nullptr;
     }
 
-    g_theGame = new T();
+    g_game = new T();
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -200,8 +140,8 @@ void App::RequestQuit()
 void App::BeginFrame() const
 {
     g_eventSystem->BeginFrame();
-    g_theWindow->BeginFrame();
-    g_theRenderer->BeginFrame();
+    g_window->BeginFrame();
+    g_renderer->BeginFrame();
     DebugRenderBeginFrame();
     g_devConsole->BeginFrame();
     g_input->BeginFrame();
@@ -214,7 +154,7 @@ void App::Update()
     g_input->SetCursorMode(eCursorMode::POINTER);
     UpdateFromFromKeyboard();
     UpdateFromController();
-    g_theGame->Update();
+    g_game->Update();
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -228,8 +168,8 @@ void App::Render() const
 {
     Rgba8 const clearColor = Rgba8::BLACK;
 
-    g_theRenderer->ClearScreen(clearColor);
-    g_theGame->Render();
+    g_renderer->ClearScreen(clearColor);
+    g_game->Render();
     g_devConsole->Render(AABB2(Vec2::ZERO, Vec2(1600.f, 30.f)));
 }
 
@@ -237,8 +177,8 @@ void App::Render() const
 void App::EndFrame() const
 {
     g_eventSystem->EndFrame();
-    g_theWindow->EndFrame();
-    g_theRenderer->EndFrame();
+    g_window->EndFrame();
+    g_renderer->EndFrame();
     DebugRenderEndFrame();
     g_devConsole->EndFrame();
     g_input->EndFrame();
@@ -298,7 +238,7 @@ void App::UpdateFromController()
 //----------------------------------------------------------------------------------------------------
 void App::UpdateCursorMode()
 {
-    bool const doesWindowHasFocus   = GetActiveWindow() == g_theWindow->GetWindowHandle();
+    bool const doesWindowHasFocus   = GetActiveWindow() == g_window->GetWindowHandle();
     bool const shouldUsePointerMode = !doesWindowHasFocus || g_devConsole->IsOpen();
 
     if (shouldUsePointerMode == true)

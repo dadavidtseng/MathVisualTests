@@ -23,6 +23,7 @@ enum class eGameMode : int8_t
     SHAPES_3D,
     CURVES_2D,
     PACHINKO_2D,
+    CONVEX_SCENE,
     COUNT
 };
 

@@ -16,6 +16,7 @@ class GameShapes3D;
 class GameRaycastVsAABBs;
 class GameRaycastVsLineSegments;
 class GameNearestPoint;
+class GameConvexScene;
 class GameRaycastVsDiscs;
 
 //-Forward-Declaration--------------------------------------------------------------------------------
@@ -26,8 +27,8 @@ class Camera;
 class App
 {
 public:
-    App()  = default;
-    ~App() = default;
+    App() ;
+    ~App();
 
     void Startup();
     void Shutdown();
@@ -54,6 +55,5 @@ private:
 
     // Clock*    m_gameClock        = nullptr;
     eGameMode m_currentGameMode  = eGameMode::NEAREST_POINT;
-    Camera*   m_devConsoleCamera = nullptr;
 };
 
