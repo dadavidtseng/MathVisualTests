@@ -14,6 +14,7 @@
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/Camera.hpp"
 #include "Engine/Renderer/Renderer.hpp"
+#include "Engine/Resource/ResourceSubsystem.hpp"
 #include "Game/GameCommon.hpp"
 
 //----------------------------------------------------------------------------------------------------
@@ -46,14 +47,16 @@ void Game::RenderCurrentModeText(char const* currentModeText) const
     float const currentModeTextBoxMaxY = g_gameConfigBlackboard.GetValue("currentModeTextBoxMaxY", 800.f);
     AABB2 const currentModeTextBox(Vec2(currentModeTextBoxMinX, currentModeTextBoxMinY), Vec2(currentModeTextBoxMaxX, currentModeTextBoxMaxY));
 
-    g_theBitmapFont->AddVertsForTextInBox2D(verts, currentModeText, currentModeTextBox, 20.f, Rgba8::YELLOW);
-    g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
-    g_theRenderer->BindTexture(&g_theBitmapFont->GetTexture());
-    g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+    BitmapFont*    bitmapFont = g_resourceSubsystem->CreateOrGetBitmapFontFromFile("Data/Fonts/SquirrelFixedFont");
+
+    bitmapFont->AddVertsForTextInBox2D(verts, currentModeText, currentModeTextBox, 20.f, Rgba8::YELLOW);
+    g_renderer->SetModelConstants();
+    g_renderer->SetBlendMode(eBlendMode::ALPHA);
+    g_renderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_renderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_renderer->SetDepthMode(eDepthMode::DISABLED);
+    g_renderer->BindTexture(&bitmapFont->GetTexture());
+    g_renderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -68,14 +71,15 @@ void Game::RenderControlText() const
     AABB2 const currentModeTextBox(Vec2(currentControlTextBoxMinX, currentControlTextBoxMinY), Vec2(currentControlTextBoxMaxX, currentControlTextBoxMaxY));
 
     const char* currentControlText = "F8 to randomize; LMB/RMB set ray start/end, IJKL move end, arrows move ray, hold T=slow";
-    g_theBitmapFont->AddVertsForTextInBox2D(verts, currentControlText, currentModeTextBox, 20.f, Rgba8::GREEN);
-    g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
-    g_theRenderer->BindTexture(&g_theBitmapFont->GetTexture());
-    g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+    BitmapFont*    bitmapFont = g_resourceSubsystem->CreateOrGetBitmapFontFromFile("Data/Fonts/SquirrelFixedFont");
+    bitmapFont->AddVertsForTextInBox2D(verts, currentControlText, currentModeTextBox, 20.f, Rgba8::GREEN);
+    g_renderer->SetModelConstants();
+    g_renderer->SetBlendMode(eBlendMode::ALPHA);
+    g_renderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_renderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_renderer->SetDepthMode(eDepthMode::DISABLED);
+    g_renderer->BindTexture(&bitmapFont->GetTexture());
+    g_renderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -83,8 +87,8 @@ Vec2 Game::GenerateRandomPointInScreen() const
 {
     float const screenSizeX = g_gameConfigBlackboard.GetValue("screenSizeX", 1600.f);
     float const screenSizeY = g_gameConfigBlackboard.GetValue("screenSizeY", 800.f);
-    float const randomX     = g_theRNG->RollRandomFloatInRange(0, screenSizeX);
-    float const randomY     = g_theRNG->RollRandomFloatInRange(0, screenSizeY);
+    float const randomX     = g_rng->RollRandomFloatInRange(0, screenSizeX);
+    float const randomY     = g_rng->RollRandomFloatInRange(0, screenSizeY);
 
     return Vec2(randomX, randomY);
 }

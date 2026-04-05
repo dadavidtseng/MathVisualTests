@@ -43,14 +43,14 @@ void GameRaycastVsAABBs::Update()
 //----------------------------------------------------------------------------------------------------
 void GameRaycastVsAABBs::Render() const
 {
-    g_theRenderer->BeginCamera(*m_screenCamera);
+    g_renderer->BeginCamera(*m_screenCamera);
 
     RenderAABB2s2D();
     RenderRaycastResult();
     RenderCurrentModeText("CurrentMode: RaycastVsAABBs");
     RenderControlText();
 
-    g_theRenderer->EndCamera(*m_screenCamera);
+    g_renderer->EndCamera(*m_screenCamera);
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -94,13 +94,13 @@ void GameRaycastVsAABBs::RenderAABB2s2D() const
         AddVertsForAABB2D(verts, m_AABB2s[i], Rgba8::BLUE);
     }
 
-    g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
-    g_theRenderer->BindTexture(nullptr);
-    g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+    g_renderer->SetModelConstants();
+    g_renderer->SetBlendMode(eBlendMode::ALPHA);
+    g_renderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_renderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_renderer->SetDepthMode(eDepthMode::DISABLED);
+    g_renderer->BindTexture(nullptr);
+    g_renderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -154,13 +154,13 @@ void GameRaycastVsAABBs::RenderRaycastResult() const
         AddVertsForDisc2D(verts, closestResult.m_impactPosition, 5.f);
     }
 
-    g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
-    g_theRenderer->BindTexture(nullptr);
-    g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+    g_renderer->SetModelConstants();
+    g_renderer->SetBlendMode(eBlendMode::ALPHA);
+    g_renderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_renderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_renderer->SetDepthMode(eDepthMode::DISABLED);
+    g_renderer->BindTexture(nullptr);
+    g_renderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -177,8 +177,8 @@ void GameRaycastVsAABBs::GenerateRandomAABB2s2D()
 
     for (int i = 0; i < 8; ++i)
     {
-        float const randomWidth  = g_theRNG->RollRandomFloatInRange(10.f, screenSizeX / 5.f);
-        float const randomHeight = g_theRNG->RollRandomFloatInRange(10.f, screenSizeY / 5.f);
+        float const randomWidth  = g_rng->RollRandomFloatInRange(10.f, screenSizeX / 5.f);
+        float const randomHeight = g_rng->RollRandomFloatInRange(10.f, screenSizeY / 5.f);
 
         Vec2 center     = GenerateRandomPointInScreen();
         Vec2 randomMins = ClampPointToScreen(center - Vec2(randomWidth / 2.f, randomHeight / 2.f), randomWidth / 2.f, randomHeight / 2.f);

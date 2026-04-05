@@ -7,7 +7,6 @@
 
 #include "Engine/Core/Clock.hpp"
 #include "Engine/Core/EngineCommon.hpp"
-#include "Engine/Core/ErrorWarningAssert.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Math/AABB3.hpp"
 #include "Engine/Math/Cylinder3.hpp"
@@ -22,6 +21,7 @@
 #include "Engine/Renderer/DebugRenderSystem.hpp"
 #include "Engine/Renderer/Renderer.hpp"
 #include "Engine/Renderer/VertexUtils.hpp"
+#include "Engine/Resource/ResourceSubsystem.hpp"
 #include "Game/App.hpp"
 #include "Game/GameCommon.hpp"
 
@@ -51,7 +51,7 @@ GameShapes3D::GameShapes3D()
 
     m_gameClock = new Clock(Clock::GetSystemClock());
 
-    m_texture = g_theRenderer->CreateOrGetTextureFromFile("Data/Images/Test_StbiFlippedAndOpenGL.png");
+    m_texture = g_resourceSubsystem->CreateOrGetTextureFromFile("Data/Images/Test_StbiFlippedAndOpenGL.png");
 
     // Initialize DebugRenderSystem for world basis and world text.
     DebugAddWorldBasis(Mat44(), -1.f);
@@ -95,7 +95,7 @@ void GameShapes3D::Render() const
 {
     //-Start-of-World-Camera--------------------------------------------------------------------------
 
-    g_theRenderer->BeginCamera(*m_worldCamera);
+    g_renderer->BeginCamera(*m_worldCamera);
 
     RenderShapes();
     RenderPlayerBasis();
@@ -119,7 +119,7 @@ void GameShapes3D::Render() const
     //------------------------------------------------------------------------------------------------
     //-Start-of-Screen-Camera-------------------------------------------------------------------------
 
-    g_theRenderer->BeginCamera(*m_screenCamera);
+    g_renderer->BeginCamera(*m_screenCamera);
 
     RenderCurrentModeText("CurrentMode: 3D Shapes");
 
@@ -134,17 +134,18 @@ void GameShapes3D::Render() const
     AABB2 const currentModeTextBox(Vec2(currentControlTextBoxMinX, currentControlTextBoxMinY), Vec2(currentControlTextBoxMaxX, currentControlTextBoxMaxY));
 
     String const currentControlText = "F8 to randomize; WASD:fly, ZC:fly vertical, hold T=slow";
-    g_theBitmapFont->AddVertsForTextInBox2D(verts, currentControlText, currentModeTextBox, 20.f, Rgba8::GREEN);
-    g_theBitmapFont->AddVertsForTextInBox2D(verts, m_raycastResultText + m_grabbedShapeText, AABB2(Vec2(currentModeTextBox.m_mins.x, currentModeTextBox.m_mins.y - 20.f), Vec2(currentModeTextBox.m_maxs.x, currentModeTextBox.m_maxs.y - 20.f)), 20.f, Rgba8::GREEN);
-    g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
-    g_theRenderer->BindTexture(&g_theBitmapFont->GetTexture());
-    g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+    BitmapFont*    bitmapFont = g_resourceSubsystem->CreateOrGetBitmapFontFromFile("Data/Fonts/SquirrelFixedFont");
+    bitmapFont->AddVertsForTextInBox2D(verts, currentControlText, currentModeTextBox, 20.f, Rgba8::GREEN);
+    bitmapFont->AddVertsForTextInBox2D(verts, m_raycastResultText + m_grabbedShapeText, AABB2(Vec2(currentModeTextBox.m_mins.x, currentModeTextBox.m_mins.y - 20.f), Vec2(currentModeTextBox.m_maxs.x, currentModeTextBox.m_maxs.y - 20.f)), 20.f, Rgba8::GREEN);
+    g_renderer->SetModelConstants();
+    g_renderer->SetBlendMode(eBlendMode::ALPHA);
+    g_renderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_renderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_renderer->SetDepthMode(eDepthMode::DISABLED);
+    g_renderer->BindTexture(&bitmapFont->GetTexture());
+    g_renderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 
-    g_theRenderer->EndCamera(*m_screenCamera);
+    g_renderer->EndCamera(*m_screenCamera);
 
     //-End-of-Screen-Camera---------------------------------------------------------------------------
 
@@ -636,13 +637,13 @@ void GameShapes3D::RenderRaycastResult() const
         AddVertsForSphere3D(raycastResultVerts, closestResult.m_impactPosition, 0.1f);
     }
 
-    g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(eDepthMode::READ_WRITE_LESS_EQUAL);
-    g_theRenderer->BindTexture(nullptr);
-    g_theRenderer->DrawVertexArray(static_cast<int>(raycastResultVerts.size()), raycastResultVerts.data());
+    g_renderer->SetModelConstants();
+    g_renderer->SetBlendMode(eBlendMode::ALPHA);
+    g_renderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_renderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_renderer->SetDepthMode(eDepthMode::READ_WRITE_LESS_EQUAL);
+    g_renderer->BindTexture(nullptr);
+    g_renderer->DrawVertexArray(static_cast<int>(raycastResultVerts.size()), raycastResultVerts.data());
 }
 
 void GameShapes3D::RenderNearestPoint() const
@@ -698,13 +699,13 @@ void GameShapes3D::RenderNearestPoint() const
     // Closest nearest point.
     AddVertsForSphere3D(nearestPointVerts, closestNearestPoint, 0.1f, Rgba8::GREEN);
 
-    g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(eDepthMode::READ_WRITE_LESS_EQUAL);
-    g_theRenderer->BindTexture(nullptr);
-    g_theRenderer->DrawVertexArray(static_cast<int>(nearestPointVerts.size()), nearestPointVerts.data());
+    g_renderer->SetModelConstants();
+    g_renderer->SetBlendMode(eBlendMode::ALPHA);
+    g_renderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_renderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_renderer->SetDepthMode(eDepthMode::READ_WRITE_LESS_EQUAL);
+    g_renderer->BindTexture(nullptr);
+    g_renderer->DrawVertexArray(static_cast<int>(nearestPointVerts.size()), nearestPointVerts.data());
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -774,13 +775,13 @@ void GameShapes3D::RenderStoredRaycastResult() const
         AddVertsForArrow3D(storedRaycastResultVerts, m_storedRay->m_startPosition, m_storedRay->m_startPosition + m_storedRay->m_forwardNormal * m_storedRay->m_maxLength, 0.8f, 0.03f, 0.06f, Rgba8::GREEN);
     }
 
-    g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(eDepthMode::READ_WRITE_LESS_EQUAL);
-    g_theRenderer->BindTexture(nullptr);
-    g_theRenderer->DrawVertexArray(static_cast<int>(storedRaycastResultVerts.size()), storedRaycastResultVerts.data());
+    g_renderer->SetModelConstants();
+    g_renderer->SetBlendMode(eBlendMode::ALPHA);
+    g_renderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_renderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_renderer->SetDepthMode(eDepthMode::READ_WRITE_LESS_EQUAL);
+    g_renderer->BindTexture(nullptr);
+    g_renderer->DrawVertexArray(static_cast<int>(storedRaycastResultVerts.size()), storedRaycastResultVerts.data());
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -873,15 +874,15 @@ void GameShapes3D::RenderShapes() const
             }
         }
 
-        g_theRenderer->SetBlendMode(eBlendMode::OPAQUE);
-        g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_BACK);
-        g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
-        g_theRenderer->SetDepthMode(eDepthMode::READ_WRITE_LESS_EQUAL);
-        g_theRenderer->BindTexture(m_texture);
-        g_theRenderer->DrawVertexArray(static_cast<int>(outsideVerts.size()), outsideVerts.data());
+        g_renderer->SetBlendMode(eBlendMode::OPAQUE);
+        g_renderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_BACK);
+        g_renderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+        g_renderer->SetDepthMode(eDepthMode::READ_WRITE_LESS_EQUAL);
+        g_renderer->BindTexture(m_texture);
+        g_renderer->DrawVertexArray(static_cast<int>(outsideVerts.size()), outsideVerts.data());
 
-        g_theRenderer->BindTexture(nullptr);
-        g_theRenderer->DrawVertexArray(static_cast<int>(insideVerts.size()), insideVerts.data());
+        g_renderer->BindTexture(nullptr);
+        g_renderer->DrawVertexArray(static_cast<int>(insideVerts.size()), insideVerts.data());
     }
 }
 
@@ -898,13 +899,13 @@ void GameShapes3D::RenderPlayerBasis() const
     AddVertsForArrow3D(verts, worldCameraPosition + forwardNormal, worldCameraPosition + forwardNormal + Vec3::Y_BASIS * 0.1f, 0.8f, 0.001f, 0.003f, Rgba8::GREEN);
     AddVertsForArrow3D(verts, worldCameraPosition + forwardNormal, worldCameraPosition + forwardNormal + Vec3::Z_BASIS * 0.1f, 0.8f, 0.001f, 0.003f, Rgba8::BLUE);
 
-    g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(eBlendMode::OPAQUE);
-    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_BACK);
-    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
-    g_theRenderer->BindTexture(nullptr);
-    g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+    g_renderer->SetModelConstants();
+    g_renderer->SetBlendMode(eBlendMode::OPAQUE);
+    g_renderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_BACK);
+    g_renderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_renderer->SetDepthMode(eDepthMode::DISABLED);
+    g_renderer->BindTexture(nullptr);
+    g_renderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -912,9 +913,9 @@ void GameShapes3D::GenerateRandomShapes()
 {
     for (int i = 0; i < 25; i++)
     {
-        int const   randomNum                = g_theRNG->RollRandomIntInRange(0, 4);
-        float const randomRadius             = g_theRNG->RollRandomFloatInRange(1.f, 3.f);
-        float const randomDistanceFromOrigin = g_theRNG->RollRandomFloatInRange(10.f, 30.f);
+        int const   randomNum                = g_rng->RollRandomIntInRange(0, 4);
+        float const randomRadius             = g_rng->RollRandomFloatInRange(1.f, 3.f);
+        float const randomDistanceFromOrigin = g_rng->RollRandomFloatInRange(10.f, 30.f);
 
         m_testShapes[i].m_centerPosition     = RollVec3InRange(FloatRange(-10.f, 10.f), FloatRange(-10.f, 10.f), FloatRange(-10.f, 10.f));
         m_testShapes[i].m_orientation        = RollEulerAngleInRange(FloatRange(0.f, 360.f), FloatRange(0.f, 360.f), FloatRange(0.f, 360.f));
@@ -944,9 +945,9 @@ Vec3 GameShapes3D::RollVec3InRange(FloatRange const& rangeX,
                                    FloatRange const& rangeY,
                                    FloatRange const& rangeZ) const
 {
-    float const x = g_theRNG->RollRandomFloatInRange(rangeX.m_min, rangeX.m_max);
-    float const y = g_theRNG->RollRandomFloatInRange(rangeY.m_min, rangeY.m_max);
-    float const z = g_theRNG->RollRandomFloatInRange(rangeZ.m_min, rangeZ.m_max);
+    float const x = g_rng->RollRandomFloatInRange(rangeX.m_min, rangeX.m_max);
+    float const y = g_rng->RollRandomFloatInRange(rangeY.m_min, rangeY.m_max);
+    float const z = g_rng->RollRandomFloatInRange(rangeZ.m_min, rangeZ.m_max);
 
     return Vec3(x, y, z);
 }
@@ -956,9 +957,9 @@ EulerAngles GameShapes3D::RollEulerAngleInRange(FloatRange const& rangeX,
                                                 FloatRange const& rangeY,
                                                 FloatRange const& rangeZ) const
 {
-    float const x = g_theRNG->RollRandomFloatInRange(rangeX.m_min, rangeX.m_max);
-    float const y = g_theRNG->RollRandomFloatInRange(rangeY.m_min, rangeY.m_max);
-    float const z = g_theRNG->RollRandomFloatInRange(rangeZ.m_min, rangeZ.m_max);
+    float const x = g_rng->RollRandomFloatInRange(rangeX.m_min, rangeX.m_max);
+    float const y = g_rng->RollRandomFloatInRange(rangeY.m_min, rangeY.m_max);
+    float const z = g_rng->RollRandomFloatInRange(rangeZ.m_min, rangeZ.m_max);
 
     return EulerAngles(x, y, z);
 }

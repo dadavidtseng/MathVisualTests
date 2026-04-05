@@ -16,6 +16,7 @@
 #include "Engine/Renderer/DebugRenderSystem.hpp"
 #include "Engine/Renderer/Renderer.hpp"
 #include "Engine/Renderer/VertexUtils.hpp"
+#include "Engine/Resource/ResourceSubsystem.hpp"
 #include "Game/App.hpp"
 #include "Game/GameCommon.hpp"
 
@@ -63,17 +64,17 @@ void GamePachinkoMachine2D::Render() const
 {
     //-Start-of-World-Camera--------------------------------------------------------------------------
 
-    g_theRenderer->BeginCamera(*m_worldCamera);
+    g_renderer->BeginCamera(*m_worldCamera);
 
     RenderShapes();
 
-    g_theRenderer->EndCamera(*m_worldCamera);
+    g_renderer->EndCamera(*m_worldCamera);
 
     //-End-of-World-Camera----------------------------------------------------------------------------
     //------------------------------------------------------------------------------------------------
     //-Start-of-Screen-Camera-------------------------------------------------------------------------
 
-    g_theRenderer->BeginCamera(*m_screenCamera);
+    g_renderer->BeginCamera(*m_screenCamera);
 
     RenderCurrentModeText("CurrentMode: GamePachinkoMachine2D");
 
@@ -87,16 +88,17 @@ void GamePachinkoMachine2D::Render() const
 
     char const*  isWallWarpEnabledText = m_isWallWarpEnabled ? "On" : "Off";
     String const currentControlText    = Stringf("F8 to randomize; LMB/RMB/WASD/IJKL=move\nhold T=slow, space/N=ball(%d)\ne=%.2f(G/H), B=bottom warp (%s), timestep=%.2fms, (P,[,]), dt=%.2fms", m_ballList.size(), m_ballElasticity, isWallWarpEnabledText, m_fixedTimeStep * 1000.f, m_physicsTimeOwed);
-    g_theBitmapFont->AddVertsForTextInBox2D(verts, currentControlText, currentModeTextBox, 20.f, Rgba8::GREEN, 1.f, Vec2::ZERO, OVERRUN);
-    g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
-    g_theRenderer->BindTexture(&g_theBitmapFont->GetTexture());
-    g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+    BitmapFont*    bitmapFont = g_resourceSubsystem->CreateOrGetBitmapFontFromFile("Data/Fonts/SquirrelFixedFont");
+    bitmapFont->AddVertsForTextInBox2D(verts, currentControlText, currentModeTextBox, 20.f, Rgba8::GREEN, 1.f, Vec2::ZERO, eTextBoxMode::OVERRUN);
+    g_renderer->SetModelConstants();
+    g_renderer->SetBlendMode(eBlendMode::ALPHA);
+    g_renderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_renderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_renderer->SetDepthMode(eDepthMode::DISABLED);
+    g_renderer->BindTexture(&bitmapFont->GetTexture());
+    g_renderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 
-    g_theRenderer->EndCamera(*m_screenCamera);
+    g_renderer->EndCamera(*m_screenCamera);
 
     //-End-of-Screen-Camera---------------------------------------------------------------------------
 
@@ -135,8 +137,8 @@ void GamePachinkoMachine2D::UpdateFromKeyboard(float const deltaSeconds)
         ball.m_position              = Vec2(m_lineSegment.m_startPosition.x, m_lineSegment.m_startPosition.y);
         ball.m_velocity              = Vec2(m_lineSegment.m_endPosition - m_lineSegment.m_startPosition) * 3.f;
         FloatRange const radiusRange = FloatRange(g_gameConfigBlackboard.GetValue("GamePachinkoMachine2D.Ball.Radius", FloatRange::ZERO));
-        ball.m_color                 = Interpolate(Rgba8::BLUE, Rgba8::WHITE, g_theRNG->RollRandomFloatZeroToOne());
-        ball.m_radius                = g_theRNG->RollRandomFloatInRange(radiusRange.m_min, radiusRange.m_max);
+        ball.m_color                 = Interpolate(Rgba8::BLUE, Rgba8::WHITE, g_rng->RollRandomFloatZeroToOne());
+        ball.m_radius                = g_rng->RollRandomFloatInRange(radiusRange.m_min, radiusRange.m_max);
         ball.m_elasticity            = m_ballElasticity;
 
         m_ballList.push_back(ball);
@@ -236,8 +238,8 @@ void GamePachinkoMachine2D::GenerateRandomShapes()
         Bumper bumper          = Bumper();
         bumper.m_type          = eBumperType::DISC2;
         bumper.m_startPosition = GenerateRandomPointInScreen();
-        bumper.m_radius        = g_theRNG->RollRandomFloatInRange(discRadiusRange.m_min, discRadiusRange.m_max);
-        bumper.m_elasticity    = g_theRNG->RollRandomFloatInRange(elasticityRange.m_min, elasticityRange.m_max);
+        bumper.m_radius        = g_rng->RollRandomFloatInRange(discRadiusRange.m_min, discRadiusRange.m_max);
+        bumper.m_elasticity    = g_rng->RollRandomFloatInRange(elasticityRange.m_min, elasticityRange.m_max);
         bumper.m_color         = Interpolate(Rgba8::RED, Rgba8::GREEN, bumper.m_elasticity);
         m_bumperList.push_back(bumper);
     }
@@ -250,10 +252,10 @@ void GamePachinkoMachine2D::GenerateRandomShapes()
         Vec2 tempEndPosition            = GenerateRandomPointInScreen();
         Vec2 tempVelocity               = tempEndPosition - tempStartPosition;
         bumper.m_startPosition          = tempStartPosition;
-        float const randomCapsuleLength = g_theRNG->RollRandomFloatInRange(capsuleLengthRange.m_min, capsuleLengthRange.m_max);
+        float const randomCapsuleLength = g_rng->RollRandomFloatInRange(capsuleLengthRange.m_min, capsuleLengthRange.m_max);
         bumper.m_endPosition            = tempStartPosition + tempVelocity.GetNormalized() * randomCapsuleLength;
-        bumper.m_radius                 = g_theRNG->RollRandomFloatInRange(capsuleRadiusRange.m_min, capsuleRadiusRange.m_max);
-        bumper.m_elasticity             = g_theRNG->RollRandomFloatInRange(elasticityRange.m_min, elasticityRange.m_max);
+        bumper.m_radius                 = g_rng->RollRandomFloatInRange(capsuleRadiusRange.m_min, capsuleRadiusRange.m_max);
+        bumper.m_elasticity             = g_rng->RollRandomFloatInRange(elasticityRange.m_min, elasticityRange.m_max);
         bumper.m_color                  = Interpolate(Rgba8::RED, Rgba8::GREEN, bumper.m_elasticity);
         m_bumperList.push_back(bumper);
     }
@@ -266,10 +268,10 @@ void GamePachinkoMachine2D::GenerateRandomShapes()
         Vec2 tempEndPosition        = GenerateRandomPointInScreen();
         Vec2 tempVelocity           = tempEndPosition - tempStartPosition;
         bumper.m_startPosition      = tempStartPosition;
-        float const randomObb2Width = g_theRNG->RollRandomFloatInRange(obb2WidthRange.m_min, obb2WidthRange.m_max);
+        float const randomObb2Width = g_rng->RollRandomFloatInRange(obb2WidthRange.m_min, obb2WidthRange.m_max);
         bumper.m_endPosition        = tempStartPosition + tempVelocity.GetNormalized() * randomObb2Width;
-        bumper.m_halfDimension      = Vec2(g_theRNG->RollRandomFloatInRange(obb2WidthRange.m_min, obb2WidthRange.m_max), g_theRNG->RollRandomFloatInRange(obb2WidthRange.m_min, obb2WidthRange.m_max));
-        bumper.m_elasticity         = g_theRNG->RollRandomFloatInRange(elasticityRange.m_min, elasticityRange.m_max);
+        bumper.m_halfDimension      = Vec2(g_rng->RollRandomFloatInRange(obb2WidthRange.m_min, obb2WidthRange.m_max), g_rng->RollRandomFloatInRange(obb2WidthRange.m_min, obb2WidthRange.m_max));
+        bumper.m_elasticity         = g_rng->RollRandomFloatInRange(elasticityRange.m_min, elasticityRange.m_max);
         bumper.m_color              = Interpolate(Rgba8::RED, Rgba8::GREEN, bumper.m_elasticity);
         m_bumperList.push_back(bumper);
     }
@@ -342,11 +344,11 @@ void GamePachinkoMachine2D::RenderShapes() const
 
 
 
-    g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
-    g_theRenderer->BindTexture(nullptr);
-    g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+    g_renderer->SetModelConstants();
+    g_renderer->SetBlendMode(eBlendMode::ALPHA);
+    g_renderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_renderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_renderer->SetDepthMode(eDepthMode::DISABLED);
+    g_renderer->BindTexture(nullptr);
+    g_renderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }

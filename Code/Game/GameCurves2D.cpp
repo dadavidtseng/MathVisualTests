@@ -13,6 +13,7 @@
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/DebugRenderSystem.hpp"
 #include "Engine/Renderer/Renderer.hpp"
+#include "Engine/Resource/ResourceSubsystem.hpp"
 #include "Game/App.hpp"
 #include "Game/GameCommon.hpp"
 
@@ -72,17 +73,17 @@ void GameCurves2D::Render() const
 {
     //-Start-of-World-Camera--------------------------------------------------------------------------
 
-    g_theRenderer->BeginCamera(*m_worldCamera);
+    g_renderer->BeginCamera(*m_worldCamera);
 
     RenderShapes();
 
-    g_theRenderer->EndCamera(*m_worldCamera);
+    g_renderer->EndCamera(*m_worldCamera);
 
     //-End-of-World-Camera----------------------------------------------------------------------------
     //------------------------------------------------------------------------------------------------
     //-Start-of-Screen-Camera-------------------------------------------------------------------------
 
-    g_theRenderer->BeginCamera(*m_screenCamera);
+    g_renderer->BeginCamera(*m_screenCamera);
 
     RenderCurrentModeText("CurrentMode: Curves 2D");
 
@@ -95,16 +96,17 @@ void GameCurves2D::Render() const
     AABB2 const currentModeTextBox(Vec2(currentControlTextBoxMinX, currentControlTextBoxMinY - 20.f), Vec2(currentControlTextBoxMaxX, currentControlTextBoxMaxY - 20.f));
 
     String const currentControlText = Stringf("F8 to randomize; W/E=pre/next easing function,\nN/M=curve subdivisions(%d), hold T=slow", m_numSubDivisions);
-    g_theBitmapFont->AddVertsForTextInBox2D(verts, currentControlText, currentModeTextBox, 20.f, Rgba8::GREEN, 1.f, Vec2::ZERO, eTextBoxMode::OVERRUN);
-    g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
-    g_theRenderer->BindTexture(&g_theBitmapFont->GetTexture());
-    g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+    BitmapFont*    bitmapFont = g_resourceSubsystem->CreateOrGetBitmapFontFromFile("Data/Fonts/SquirrelFixedFont");
+    bitmapFont->AddVertsForTextInBox2D(verts, currentControlText, currentModeTextBox, 20.f, Rgba8::GREEN, 1.f, Vec2::ZERO, eTextBoxMode::OVERRUN);
+    g_renderer->SetModelConstants();
+    g_renderer->SetBlendMode(eBlendMode::ALPHA);
+    g_renderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_renderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_renderer->SetDepthMode(eDepthMode::DISABLED);
+    g_renderer->BindTexture(&bitmapFont->GetTexture());
+    g_renderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 
-    g_theRenderer->EndCamera(*m_screenCamera);
+    g_renderer->EndCamera(*m_screenCamera);
 
     //-End-of-Screen-Camera---------------------------------------------------------------------------
 
@@ -213,8 +215,8 @@ void GameCurves2D::GenerateCubicHermiteCurves()
 //----------------------------------------------------------------------------------------------------
 Vec2 GameCurves2D::GenerateRandomPointInBounds(AABB2 const& aabb2) const
 {
-    float const randomX = g_theRNG->RollRandomFloatInRange(aabb2.m_mins.x, aabb2.m_maxs.x);
-    float const randomY = g_theRNG->RollRandomFloatInRange(aabb2.m_mins.y, aabb2.m_maxs.y);
+    float const randomX = g_rng->RollRandomFloatInRange(aabb2.m_mins.x, aabb2.m_maxs.x);
+    float const randomY = g_rng->RollRandomFloatInRange(aabb2.m_mins.y, aabb2.m_maxs.y);
 
     return Vec2(randomX, randomY);
 }
@@ -241,13 +243,13 @@ void GameCurves2D::RenderAABB2s() const
     AddVertsForAABB2D(verts, m_boundB, boundsColor);
     AddVertsForAABB2D(verts, m_boundC, boundsColor);
 
-    g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
-    g_theRenderer->BindTexture(nullptr);
-    g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+    g_renderer->SetModelConstants();
+    g_renderer->SetBlendMode(eBlendMode::ALPHA);
+    g_renderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_renderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_renderer->SetDepthMode(eDepthMode::DISABLED);
+    g_renderer->BindTexture(nullptr);
+    g_renderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -307,28 +309,30 @@ void GameCurves2D::RenderEaseFunctions() const
 
     AddVertsForDisc2D(verts, position, m_discRadius, Rgba8::WHITE);
 
-    g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
-    g_theRenderer->BindTexture(nullptr);
-    g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+    g_renderer->SetModelConstants();
+    g_renderer->SetBlendMode(eBlendMode::ALPHA);
+    g_renderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_renderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_renderer->SetDepthMode(eDepthMode::DISABLED);
+    g_renderer->BindTexture(nullptr);
+    g_renderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+
+    BitmapFont*    bitmapFont = g_resourceSubsystem->CreateOrGetBitmapFontFromFile("Data/Fonts/SquirrelFixedFont");
 
     // Render EaseFunction text
     VertexList_PCU  textVerts;
     float constexpr textHeight        = 25.f;
-    float const     textWidth         = g_theBitmapFont->GetTextWidth(textHeight, s_easingFunctions[m_easeIndex].easeFunctionName);
+    float const     textWidth         = bitmapFont->GetTextWidth(textHeight, s_easingFunctions[m_easeIndex].easeFunctionName);
     Vec2 const      textStartPosition = Vec2((m_boundAChild.m_mins.x + m_boundAChild.m_maxs.x - textWidth) * 0.5f, m_boundAChild.m_mins.y - textHeight);
 
-    g_theBitmapFont->AddVertsForText2D(textVerts, s_easingFunctions[m_easeIndex].easeFunctionName, textStartPosition, textHeight);
-    g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
-    g_theRenderer->BindTexture(&g_theBitmapFont->GetTexture());
-    g_theRenderer->DrawVertexArray(static_cast<int>(textVerts.size()), textVerts.data());
+    bitmapFont->AddVertsForText2D(textVerts, s_easingFunctions[m_easeIndex].easeFunctionName, textStartPosition, textHeight);
+    g_renderer->SetModelConstants();
+    g_renderer->SetBlendMode(eBlendMode::ALPHA);
+    g_renderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_renderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_renderer->SetDepthMode(eDepthMode::DISABLED);
+    g_renderer->BindTexture(&bitmapFont->GetTexture());
+    g_renderer->DrawVertexArray(static_cast<int>(textVerts.size()), textVerts.data());
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -390,13 +394,13 @@ void GameCurves2D::RenderCubicBezierCurves() const
     Vec2 const  greenPoint        = m_cubicBezierCurve2D.EvaluateAtApproximateDistance(distanceAlongPath, m_numSubDivisions);
     AddVertsForDisc2D(verts, greenPoint, m_discRadius, Rgba8::GREEN);
 
-    g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
-    g_theRenderer->BindTexture(nullptr);
-    g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+    g_renderer->SetModelConstants();
+    g_renderer->SetBlendMode(eBlendMode::ALPHA);
+    g_renderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_renderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_renderer->SetDepthMode(eDepthMode::DISABLED);
+    g_renderer->BindTexture(nullptr);
+    g_renderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -441,11 +445,11 @@ void GameCurves2D::RenderCubicHermiteCurves() const
     Vec2 const  greenPoint        = m_catmullRomSpline2D.EvaluateAtApproximateDistance(distanceAlongPath, m_numSubDivisions);
     AddVertsForDisc2D(verts, greenPoint, m_discRadius, Rgba8::GREEN);
 
-    g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
-    g_theRenderer->BindTexture(nullptr);
-    g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+    g_renderer->SetModelConstants();
+    g_renderer->SetBlendMode(eBlendMode::ALPHA);
+    g_renderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_renderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_renderer->SetDepthMode(eDepthMode::DISABLED);
+    g_renderer->BindTexture(nullptr);
+    g_renderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }

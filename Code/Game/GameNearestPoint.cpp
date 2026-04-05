@@ -45,7 +45,7 @@ void GameNearestPoint::Update()
 //----------------------------------------------------------------------------------------------------
 void GameNearestPoint::Render() const
 {
-    g_theRenderer->BeginCamera(*m_screenCamera);
+    g_renderer->BeginCamera(*m_screenCamera);
 
     RenderShapes();
     RenderNearestPoints();
@@ -53,7 +53,7 @@ void GameNearestPoint::Render() const
     RenderCurrentModeText("CurrentMode: NearestPoint");
     RenderControlText();
 
-    g_theRenderer->EndCamera(*m_screenCamera);
+    g_renderer->EndCamera(*m_screenCamera);
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -134,13 +134,13 @@ void GameNearestPoint::RenderShapes() const
         }
     }
 
-    g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
-    g_theRenderer->BindTexture(nullptr);
-    g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+    g_renderer->SetModelConstants();
+    g_renderer->SetBlendMode(eBlendMode::ALPHA);
+    g_renderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_renderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_renderer->SetDepthMode(eDepthMode::DISABLED);
+    g_renderer->BindTexture(nullptr);
+    g_renderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -211,13 +211,13 @@ void GameNearestPoint::RenderNearestPoints() const
 
     AddVertsForDisc2D(verts, closestNearestPoint, 5.f, Rgba8::GREEN);
 
-    g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
-    g_theRenderer->BindTexture(nullptr);
-    g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+    g_renderer->SetModelConstants();
+    g_renderer->SetBlendMode(eBlendMode::ALPHA);
+    g_renderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_renderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_renderer->SetDepthMode(eDepthMode::DISABLED);
+    g_renderer->BindTexture(nullptr);
+    g_renderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -225,20 +225,20 @@ void GameNearestPoint::RenderReferencePoint() const
 {
     VertexList_PCU verts;
     AddVertsForDisc2D(verts, m_referencePoint, 3.f);
-    g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
-    g_theRenderer->BindTexture(nullptr);
-    g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+    g_renderer->SetModelConstants();
+    g_renderer->SetBlendMode(eBlendMode::ALPHA);
+    g_renderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_renderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_renderer->SetDepthMode(eDepthMode::DISABLED);
+    g_renderer->BindTexture(nullptr);
+    g_renderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
 
 //----------------------------------------------------------------------------------------------------
 void GameNearestPoint::GenerateRandomDisc2D()
 {
     Vec2        centerPosition = GenerateRandomPointInScreen();
-    float const randomRadius   = g_theRNG->RollRandomFloatInRange(10.f, 100.f);
+    float const randomRadius   = g_rng->RollRandomFloatInRange(10.f, 100.f);
 
     centerPosition = ClampPointToScreen(centerPosition, randomRadius);
 
@@ -252,7 +252,7 @@ void GameNearestPoint::GenerateRandomLineSegment2D()
 {
     Vec2        startPosition   = GenerateRandomPointInScreen();
     Vec2        endPosition     = GenerateRandomPointInScreen();
-    float const randomThickness = g_theRNG->RollRandomFloatInRange(1.f, 5.f);
+    float const randomThickness = g_rng->RollRandomFloatInRange(1.f, 5.f);
 
     startPosition = ClampPointToScreen(startPosition, randomThickness);
     endPosition   = ClampPointToScreen(endPosition, randomThickness);
@@ -269,7 +269,7 @@ void GameNearestPoint::GenerateRandomInfiniteLine2D()
 {
     Vec2        startPosition   = GenerateRandomPointInScreen();
     Vec2        endPosition     = GenerateRandomPointInScreen();
-    float const randomThickness = g_theRNG->RollRandomFloatInRange(1.f, 5.f);
+    float const randomThickness = g_rng->RollRandomFloatInRange(1.f, 5.f);
 
     startPosition = ClampPointToScreen(startPosition, randomThickness);
     endPosition   = ClampPointToScreen(endPosition, randomThickness);
@@ -319,8 +319,8 @@ void GameNearestPoint::GenerateRandomAABB2D()
 {
     float const screenSizeX  = g_gameConfigBlackboard.GetValue("screenSizeX", 1600.f);
     float const screenSizeY  = g_gameConfigBlackboard.GetValue("screenSizeY", 800.f);
-    float const randomWidth  = g_theRNG->RollRandomFloatInRange(10.f, screenSizeX / 5.f);
-    float const randomHeight = g_theRNG->RollRandomFloatInRange(10.f, screenSizeY / 5.f);
+    float const randomWidth  = g_rng->RollRandomFloatInRange(10.f, screenSizeX / 5.f);
+    float const randomHeight = g_rng->RollRandomFloatInRange(10.f, screenSizeY / 5.f);
 
     Vec2 const centerPosition = GenerateRandomPointInScreen();
     Vec2 const randomMins     = ClampPointToScreen(centerPosition - Vec2(randomWidth / 2.f, randomHeight / 2.f), randomWidth / 2.f, randomHeight / 2.f);
@@ -336,11 +336,11 @@ void GameNearestPoint::GenerateRandomOBB2D()
 {
     float const screenSizeX    = g_gameConfigBlackboard.GetValue("screenSizeX", 1600.f);
     float const screenSizeY    = g_gameConfigBlackboard.GetValue("screenSizeY", 800.f);
-    float const randomIBasisX  = g_theRNG->RollRandomFloatZeroToOne();
-    float const randomIBasisY  = g_theRNG->RollRandomFloatZeroToOne();
+    float const randomIBasisX  = g_rng->RollRandomFloatZeroToOne();
+    float const randomIBasisY  = g_rng->RollRandomFloatZeroToOne();
     Vec2 const  centerPosition = GenerateRandomPointInScreen();
-    Vec2 const  halfDimensions = Vec2(g_theRNG->RollRandomFloatInRange(10.f, screenSizeX / 5.f),
-                                     g_theRNG->RollRandomFloatInRange(10.f, screenSizeY / 5.f));
+    Vec2 const  halfDimensions = Vec2(g_rng->RollRandomFloatInRange(10.f, screenSizeX / 5.f),
+                                     g_rng->RollRandomFloatInRange(10.f, screenSizeY / 5.f));
 
     m_testShapes[static_cast<int>(eTestShape2DType::OBB2)].m_type           = eTestShape2DType::OBB2;
     m_testShapes[static_cast<int>(eTestShape2DType::OBB2)].m_startPosition  = centerPosition - halfDimensions;
@@ -354,7 +354,7 @@ void GameNearestPoint::GenerateRandomCapsule2D()
 {
     Vec2        startPosition = GenerateRandomPointInScreen();
     Vec2        endPosition   = GenerateRandomPointInScreen();
-    float const randomRadius  = g_theRNG->RollRandomFloatInRange(10.f, 100.f);
+    float const randomRadius  = g_rng->RollRandomFloatInRange(10.f, 100.f);
 
     startPosition = ClampPointToScreen(startPosition, randomRadius);
     endPosition   = ClampPointToScreen(endPosition, randomRadius);

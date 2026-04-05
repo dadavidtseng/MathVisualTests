@@ -42,14 +42,14 @@ void GameRaycastVsDiscs::Update()
 //----------------------------------------------------------------------------------------------------
 void GameRaycastVsDiscs::Render() const
 {
-    g_theRenderer->BeginCamera(*m_screenCamera);
+    g_renderer->BeginCamera(*m_screenCamera);
 
     RenderDisc2();
     RenderRaycastResult();
     RenderCurrentModeText("CurrentMode: RaycastVsDiscs");
     RenderControlText();
 
-    g_theRenderer->EndCamera(*m_screenCamera);
+    g_renderer->EndCamera(*m_screenCamera);
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -94,7 +94,7 @@ void GameRaycastVsDiscs::GenerateRandomDiscs2D()
 {
     for (int i = 0; i < 8; ++i)
     {
-        float const randomRadius = g_theRNG->RollRandomFloatInRange(10.f, 100.f);
+        float const randomRadius = g_rng->RollRandomFloatInRange(10.f, 100.f);
         Vec2        center       = GenerateRandomPointInScreen();
         center                   = ClampPointToScreen(center, randomRadius);
 
@@ -109,13 +109,13 @@ void GameRaycastVsDiscs::RenderDisc2() const
     {
         VertexList_PCU verts;
         AddVertsForDisc2D(verts, m_randomDisc[i].m_position, m_randomDisc[i].m_radius, Rgba8::BLUE);
-        g_theRenderer->SetModelConstants();
-        g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
-        g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
-        g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
-        g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
-        g_theRenderer->BindTexture(nullptr);
-        g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+        g_renderer->SetModelConstants();
+        g_renderer->SetBlendMode(eBlendMode::ALPHA);
+        g_renderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+        g_renderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+        g_renderer->SetDepthMode(eDepthMode::DISABLED);
+        g_renderer->BindTexture(nullptr);
+        g_renderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
     }
 }
 
@@ -179,13 +179,13 @@ void GameRaycastVsDiscs::RenderRaycastResult() const
         }
     }
 
-    g_theRenderer->SetModelConstants();
-    g_theRenderer->SetBlendMode(eBlendMode::ALPHA);
-    g_theRenderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
-    g_theRenderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
-    g_theRenderer->SetDepthMode(eDepthMode::DISABLED);
-    g_theRenderer->BindTexture(nullptr);
-    g_theRenderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
+    g_renderer->SetModelConstants();
+    g_renderer->SetBlendMode(eBlendMode::ALPHA);
+    g_renderer->SetRasterizerMode(eRasterizerMode::SOLID_CULL_NONE);
+    g_renderer->SetSamplerMode(eSamplerMode::POINT_CLAMP);
+    g_renderer->SetDepthMode(eDepthMode::DISABLED);
+    g_renderer->BindTexture(nullptr);
+    g_renderer->DrawVertexArray(static_cast<int>(verts.size()), verts.data());
 }
 
 //----------------------------------------------------------------------------------------------------
