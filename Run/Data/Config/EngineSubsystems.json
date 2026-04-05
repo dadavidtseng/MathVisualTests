@@ -47,7 +47,7 @@
                 "_note": "Window configuration is ACTIVELY READ from this config (Engine.cpp lines 265-294)",
                 "windowType": "WINDOWED",
                 "aspectRatio": 2.0,
-                "windowTitle": "ConvexSceneEditor",
+                "windowTitle": "MathVisualTests",
                 "_available_windowTypes": [
                     "WINDOWED",
                     "BORDERLESS",
